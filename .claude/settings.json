@@ -7,7 +7,11 @@
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
       "Read(//tmp/**)",
-      "Bash(npx create-next-app@latest sdd-next --typescript --tailwind --eslint --app --src-dir --no-turbopack --import-alias \"@/*\" --yes)"
+      "Bash(npx create-next-app@latest sdd-next --typescript --tailwind --eslint --app --src-dir --no-turbopack --import-alias \"@/*\" --yes)",
+      "Bash(find /home/diego/projetos/claude/sdd-udemy -not -path */.git/* -type d)",
+      "Bash(npm audit:*)",
+      "Bash(npm show:*)",
+      "Bash(npx shadcn@latest init --defaults)"
     ]
   },
   "mcpServers": {
