@@ -2,45 +2,44 @@
 
 ## Purpose
 
-Este documento define as regras técnicas não-negociáveis que governam todas as implementações na plataforma de delivery (curso SDD/Udemy). Toda ambiguidade deve ser resolvida explicitamente — nunca assumida.
+Este documento define as regras tecnicas nao-negociaveis que governam todas as implementacoes na plataforma Kanban para gerenciamento de sprints (curso SDD/Udemy), incluindo principios de Clean Code e SOLID como obrigacoes de design. Toda ambiguidade deve ser resolvida explicitamente — nunca assumida.
 
 ---
 
 ## Must Do
 
-1. Toda lógica de negócio deve residir na camada Domain e ser independente de frameworks, transporte e persistência.
-2. Todos os erros devem ser propagados com estrutura padronizada contendo código de erro, mensagem e metadados contextuais (requestId, timestamp).
-3. Toda entrada externa deve ser validada no limite do sistema (adapter HTTP inbound) antes de chegar ao Domain.
-4. Toda operação que altera estado deve ser registrada em log estruturado (JSON).
-5. Toda mudança de código deve ser rastreável a um requisito funcional, user story ou cenário BDD documentado em `docs/`.
-6. Imagens Docker devem sempre fixar uma versão estável específica — nunca usar a tag `latest`.
-7. Todos os testes (UT, IT, GH, PT, ST) devem ser escritos antes do código de produção correspondente — a implementação de uma unidade começa apenas depois que o teste que a especifica existe e falha (red). Código de produção escrito antes do teste correspondente deve ser revertido ou reescrito após o teste estar em falha.
+1. Toda lógica de negócio deve residir exclusivamente na camada Domain — controllers, repositories e adapters não podem conter regras de negócio.
+2. Drizzle deve ser usado apenas em adapters de persistência (repositories concretos) — nunca importado em entidades Domain ou casos de uso.
+3. Route Handlers (`app/api/**/route.ts`), Server Actions e componentes React são adapters de transporte — toda lógica de negócio deve ser delegada ao Domain via Port.
+4. Toda entrada externa deve ser validada no adapter HTTP inbound antes de chegar ao Domain — o Domain jamais recebe dados não validados.
+5. Erros devem ser propagados com estrutura padronizada contendo: código, mensagem, requestId e timestamp — nunca silenciados.
+6. Operações que alteram estado devem gerar log estruturado (JSON) obrigatório via stack de observabilidade (OpenTelemetry/Loki).
+7. Toda mudança de código deve ter rastreabilidade explícita a um artefato SDD (`requirements.md`, `scenarios.feature` ou `tasks.md`).
+8. Os princípios SOLID (SRP, OCP, LSP, ISP, DIP) devem ser aplicados sempre que pertinentes ao contexto da implementação — nenhum princípio deve ser ignorado sem justificativa explícita.
 
 ---
 
 ## Ask Before Proceeding
 
-8. Se um requisito ou critério de aceitação for ambíguo ou tiver múltiplas interpretações possíveis, pare e solicite clareza antes de implementar.
-9. Se houver mais de uma opção arquitetural válida (ex.: onde alocar uma responsabilidade entre Domain, Port ou Adapter), pare e apresente as opções para decisão explícita.
-10. Se uma mudança afetar o contrato de uma Port (interface inbound ou outbound), pare e confirme o impacto nos adapters antes de prosseguir.
-11. Se uma implementação exigir violar uma regra desta constituição, pare e escale para revisão — nunca viole silenciosamente.
-12. Se qualquer artefato SDD da feature (`prd.md`, `stories.md`, `scenarios.feature`, `requirements.md`, `nf-requirements.md`, `design.md`, `test-strategy.md`, `tasks.md`) ainda não estiver concluído, pare e não inicie a implementação.
+9. Se um requisito, critério de aceitação ou comportamento esperado estiver incompleto ou ambíguo, pare e solicite clareza — não comece a implementar com suposições.
+10. Se houver múltiplas abordagens técnicas válidas para um problema (ex: estratégia de cache, sincronismo vs. assincronismo, escolha de pattern), descreva as opções e aguarde decisão explícita antes de prosseguir.
+11. Se uma mudança impactar a API pública, o esquema do banco de dados ou qualquer contrato compartilhado entre módulos, registre o impacto e obtenha aprovação explícita antes de implementar.
+12. Se uma implementação parecer conflitar com uma regra desta constituição, interrompa, documente o conflito e aguarde resolução — nunca assuma uma exceção sem autorização explícita.
 
 ---
 
 ## Never Do
 
-13. Nunca importar Drizzle (ou qualquer client de banco de dados) diretamente em entidades de Domain ou em casos de uso — acesso a dados pertence exclusivamente aos adapters outbound.
-14. Nunca colocar lógica de negócio em Route Handlers (`app/api/**/route.ts`), Server Actions ou componentes React — esses artefatos são adapters de transporte, não domínio.
-15. Nunca engolir erros silenciosamente (catch vazio, `console.log` sem re-throw) — todo erro deve ser propagado ou registrado com estrutura padronizada.
-16. Nunca acoplar o Domain a tipos ou interfaces de frameworks (Next.js, Drizzle, React) — o Domain deve depender apenas de tipos próprios e das Ports.
-17. Nunca assumir o comportamento de um requisito não especificado — pare e solicite clareza.
-18. Nunca usar Redux para armazenar dados que podem ser buscados no servidor via Server Components ou Server Actions.
+13. Nunca importar Drizzle (ou qualquer ORM/cliente de banco) em entidades Domain ou em casos de uso — persistência é responsabilidade exclusiva de adapters de repositório.
+14. Nunca colocar lógica de negócio fora da camada Domain — Route Handlers, Server Actions, componentes React e repositories concretos não podem conter regras de negócio.
+15. Nunca silenciar erros (swallow): capturar uma exceção e não propagá-la, não logá-la ou retornar uma resposta genérica sem contexto é proibido.
+16. Nunca importar tipos ou módulos de Next.js, React, Drizzle ou next-auth dentro de entidades Domain ou casos de uso — o Domain depende apenas de tipos próprios e das Ports.
+17. Nunca assumir um requisito não especificado para desbloquear a implementação — a ausência de clareza é um bloqueio, não uma permissão implícita.
 
 ---
 
 ## Enforcement
 
-19. Todo plano de implementação deve declarar explicitamente como cada regra desta constituição é satisfeita — planos que omitem esse mapeamento são inválidos.
-20. Qualquer implementação que viole uma regra desta constituição é inválida e deve ser corrigida antes do merge.
-21. Se houver ambiguidade ou falta de clareza que impeça aplicar uma regra desta constituição, a implementação deve ser bloqueada até que a clareza seja obtida.
+18. Todo plano de implementação deve declarar explicitamente como cada task está alinhada com as regras desta constituição antes de a implementação começar.
+19. Qualquer implementação que viole uma regra desta constituição é inválida e deve ser corrigida antes do merge — sem exceções não documentadas.
+20. Se houver qualquer ponto de clareza faltando (requisito aberto, decisão pendente, conflito com a constituição), a implementação é bloqueada até resolução explícita.
