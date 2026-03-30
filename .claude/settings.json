@@ -11,7 +11,8 @@
       "Bash(find /home/diego/projetos/claude/sdd-udemy -not -path */.git/* -type d)",
       "Bash(npm audit:*)",
       "Bash(npm show:*)",
-      "Bash(npx shadcn@latest init --defaults)"
+      "Bash(npx shadcn@latest init --defaults)",
+      "Bash(npm run:*)"
     ]
   },
   "mcpServers": {
