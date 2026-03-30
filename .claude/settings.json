@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(npm --version)",
+      "Bash(docker --version)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Read(//tmp/**)",
+      "Bash(npx create-next-app@latest sdd-next --typescript --tailwind --eslint --app --src-dir --no-turbopack --import-alias \"@/*\" --yes)"
+    ]
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    }
+  }
+}
