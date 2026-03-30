@@ -3,7 +3,6 @@
 # Adicione/descomente serviços conforme as features forem exigindo.
 
 services:
-
   # MySQL 8.0 — banco de dados principal
   mysql:
     image: mysql:8.0.36
@@ -28,8 +27,8 @@ services:
     image: mailhog/mailhog:v1.0.1
     container_name: kanban_mailhog
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
 
   # Jaeger — rastreamento distribuído (all-in-one inclui receptor OTLP)
   jaeger:
@@ -38,9 +37,9 @@ services:
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
     ports:
-      - "16686:16686"  # Jaeger UI
-      - "4317:4317"    # OTLP gRPC
-      - "4318:4318"    # OTLP HTTP
+      - "16686:16686" # Jaeger UI
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
 
   # Prometheus — coleta de métricas
   prometheus:
