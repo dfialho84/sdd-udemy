@@ -6,7 +6,7 @@
 
 ### T-01: Criar entidade `User` com campos e invariantes de domínio
 
-- [ ] Criar a entidade `User` na camada domain com os campos: id (UUID), name, email, password_hash, birth_date, avatar_url (nullable), status (pending/active), created_at e updated_at. A entidade não deve ter dependência de frameworks, ORM ou HTTP.
+- [x] Criar a entidade `User` na camada domain com os campos: id (UUID), name, email, password_hash, birth_date, avatar_url (nullable), status (pending/active), created_at e updated_at. A entidade não deve ter dependência de frameworks, ORM ou HTTP.
 
 **Rastreabilidade:** REQ-1 · REQ-8
 **Depende de:** —

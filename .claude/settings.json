@@ -12,7 +12,10 @@
       "Bash(npm audit:*)",
       "Bash(npm show:*)",
       "Bash(npx shadcn@latest init --defaults)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)"
     ]
   },
   "mcpServers": {
