@@ -16,7 +16,7 @@
 
 ### T-02: Criar migration da tabela `users`
 
-- [ ] Criar a migration para a tabela `users` com todos os campos do modelo de dados, incluindo constraint UNIQUE no campo `email` e os tipos definidos no design (UUID para id, ENUM para status, DATE para birth_date, VARCHAR nullable para avatar_url).
+- [x] Criar a migration para a tabela `users` com todos os campos do modelo de dados, incluindo constraint UNIQUE no campo `email` e os tipos definidos no design (UUID para id, ENUM para status, DATE para birth_date, VARCHAR nullable para avatar_url).
 
 **Rastreabilidade:** REQ-1 · REQ-8
 **Depende de:** T-01
@@ -26,7 +26,7 @@
 
 ### T-03: Implementar schema de validação de entrada do `POST /api/auth/register`
 
-- [ ] Criar o schema Zod (ou equivalente) que valida todos os campos do payload de registro: presença dos obrigatórios (name, email, password, passwordConfirmation, birthDate), formato de email, política de senha (mínimo 8 caracteres com maiúsculas, minúsculas, números e caracteres especiais), coincidência entre password e passwordConfirmation, e avatar_url como opcional.
+- [x] Criar o schema Zod (ou equivalente) que valida todos os campos do payload de registro: presença dos obrigatórios (name, email, password, passwordConfirmation, birthDate), formato de email, política de senha (mínimo 8 caracteres com maiúsculas, minúsculas, números e caracteres especiais), coincidência entre password e passwordConfirmation, e avatar_url como opcional.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · REQ-4 · REQ-5 · REQ-6
 **Depende de:** —
@@ -40,7 +40,7 @@
 
 ### T-04: Implementar handler de erro HTTP 400 para campos obrigatórios ausentes no `RegisterUserHandler`
 
-- [ ] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }` quando qualquer campo obrigatório estiver ausente, identificando o campo faltante na mensagem. Nenhum registro deve ser criado nesse caminho.
+- [x] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }` quando qualquer campo obrigatório estiver ausente, identificando o campo faltante na mensagem. Nenhum registro deve ser criado nesse caminho.
 
 **Rastreabilidade:** REQ-2 · REQ-7
 **Depende de:** T-03
@@ -54,7 +54,7 @@
 
 ### T-05: Implementar port `UserRepository` (interface)
 
-- [ ] Definir a interface `UserRepository` na camada domain com os métodos: `create`, `findByEmail`, `findById`, `delete` e `activate`. A interface não deve referenciar nenhum tipo de ORM, banco de dados ou framework.
+- [x] Definir a interface `UserRepository` na camada domain com os métodos: `create`, `findByEmail`, `findById`, `delete` e `activate`. A interface não deve referenciar nenhum tipo de ORM, banco de dados ou framework.
 
 **Rastreabilidade:** REQ-3 · REQ-8 · REQ-10 · REQ-12
 **Depende de:** T-01
@@ -64,7 +64,7 @@
 
 ### T-06: Implementar `RegisterUserUseCase` com verificação de unicidade de email
 
-- [ ] Implementar o `RegisterUserUseCase` com o método `execute`. Incluir a verificação de unicidade de email via `UserRepository.findByEmail`: se o email já existir, lançar erro com código 409 e a mensagem exigida por REQ-3, sem criar nenhum registro. O caso de uso deve orquestrar todo o fluxo feliz descrito no design (hash de senha, criação do usuário, geração e persistência do token, envio de email e log estruturado).
+- [x] Implementar o `RegisterUserUseCase` com o método `execute`. Incluir a verificação de unicidade de email via `UserRepository.findByEmail`: se o email já existir, lançar erro com código 409 e a mensagem exigida por REQ-3, sem criar nenhum registro. O caso de uso deve orquestrar todo o fluxo feliz descrito no design (hash de senha, criação do usuário, geração e persistência do token, envio de email e log estruturado).
 
 **Rastreabilidade:** REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-6
 **Depende de:** T-05
