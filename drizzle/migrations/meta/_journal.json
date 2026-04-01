@@ -8,6 +8,13 @@
       "when": 1774979749334,
       "tag": "0000_curved_colonel_america",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1775003840234,
+      "tag": "0001_strong_hellion",
+      "breakpoints": true
     }
   ]
 }

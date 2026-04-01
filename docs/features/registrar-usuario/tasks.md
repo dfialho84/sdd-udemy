@@ -74,7 +74,7 @@
 
 ### T-07: Implementar handler de erro HTTP 409 para email duplicado no `RegisterUserHandler`
 
-- [ ] No `RegisterUserHandler`, capturar o erro de email duplicado lançado pelo `RegisterUserUseCase` e retornar HTTP 409 com a mensagem "Este email já está cadastrado. Tente fazer login ou use outro endereço." na estrutura padronizada.
+- [x] No `RegisterUserHandler`, capturar o erro de email duplicado lançado pelo `RegisterUserUseCase` e retornar HTTP 409 com a mensagem "Este email já está cadastrado. Tente fazer login ou use outro endereço." na estrutura padronizada.
 
 **Rastreabilidade:** REQ-3
 **Depende de:** T-06
@@ -84,7 +84,7 @@
 
 ### T-08: Implementar `DrizzleUserRepository` — métodos `create` e `findByEmail`
 
-- [ ] Implementar a classe `DrizzleUserRepository` como adapter outbound concreto de `UserRepository`, cobrindo os métodos `create` e `findByEmail`. A implementação deve usar Drizzle ORM sobre MySQL e não pode ser importada na camada domain ou nos casos de uso.
+- [x] Implementar a classe `DrizzleUserRepository` como adapter outbound concreto de `UserRepository`, cobrindo os métodos `create` e `findByEmail`. A implementação deve usar Drizzle ORM sobre MySQL e não pode ser importada na camada domain ou nos casos de uso.
 
 **Rastreabilidade:** REQ-3 · REQ-8
 **Depende de:** T-02 · T-05
@@ -94,7 +94,7 @@
 
 ### T-09: Cobrir UT-3 — `RegisterUserUseCase.execute()` (unitário)
 
-- [ ] Implementar os testes unitários do `RegisterUserUseCase` cobrindo: (a) fluxo feliz com email inédito — hash gerado, usuário criado com status `pending`, token persistido, email enviado e log emitido; (b) email já cadastrado — erro 409, nenhum registro criado; (c) falha no envio de email — falha logada em JSON, conta permanece `pending`. Todos os colaboradores devem ser mockados.
+- [x] Implementar os testes unitários do `RegisterUserUseCase` cobrindo: (a) fluxo feliz com email inédito — hash gerado, usuário criado com status `pending`, token persistido, email enviado e log emitido; (b) email já cadastrado — erro 409, nenhum registro criado; (c) falha no envio de email — falha logada em JSON, conta permanece `pending`. Todos os colaboradores devem ser mockados.
 
 **Rastreabilidade:** REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-2 · NFR-6 · Scenario: "Cadastro realizado com dados validos"
 **Depende de:** T-06
@@ -104,7 +104,7 @@
 
 ### T-10: Cobrir IT-1 — `DrizzleUserRepository.create()` e `findByEmail()` (integração)
 
-- [ ] Implementar o teste de integração IT-1 cobrindo: (a) criação de usuário com todos os campos e recuperação correta por email; (b) segunda criação com email duplicado lança erro de constraint UNIQUE.
+- [x] Implementar o teste de integração IT-1 cobrindo: (a) criação de usuário com todos os campos e recuperação correta por email; (b) segunda criação com email duplicado lança erro de constraint UNIQUE.
 
 **Rastreabilidade:** REQ-3 · REQ-8
 **Depende de:** T-08
@@ -118,7 +118,7 @@
 
 ### T-11: Implementar handler de erro HTTP 400 para senha fora da política no `RegisterUserHandler`
 
-- [ ] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a mensagem "A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais." quando a senha não atender à política. Nenhum registro deve ser criado.
+- [x] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a mensagem "A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais." quando a senha não atender à política. Nenhum registro deve ser criado.
 
 **Rastreabilidade:** REQ-4 · REQ-7
 **Depende de:** T-03
@@ -128,7 +128,7 @@
 
 ### T-12: Implementar port `PasswordHasher` (interface)
 
-- [ ] Definir a interface `PasswordHasher` na camada domain com o método `hash(password: string): Promise<string>`. A interface não deve referenciar argon2 ou qualquer dependência de infraestrutura.
+- [x] Definir a interface `PasswordHasher` na camada domain com o método `hash(password: string): Promise<string>`. A interface não deve referenciar argon2 ou qualquer dependência de infraestrutura.
 
 **Rastreabilidade:** REQ-4 · NFR-2
 **Depende de:** —
@@ -138,7 +138,7 @@
 
 ### T-13: Implementar `Argon2PasswordHasher`
 
-- [ ] Implementar a classe `Argon2PasswordHasher` como adapter outbound concreto de `PasswordHasher`, usando argon2id com os parâmetros: 64 MB de memória, 3 iterações e paralelismo 2.
+- [x] Implementar a classe `Argon2PasswordHasher` como adapter outbound concreto de `PasswordHasher`, usando argon2id com os parâmetros: 64 MB de memória, 3 iterações e paralelismo 2.
 
 **Rastreabilidade:** REQ-4 · NFR-2
 **Depende de:** T-12
@@ -148,7 +148,7 @@
 
 ### T-14: Cobrir UT-6 — `Argon2PasswordHasher.hash()` (unitário)
 
-- [ ] Implementar os testes unitários UT-6 cobrindo: (a) hash gerado é diferente da senha em texto simples; (b) hash da mesma senha é verificável (`verify` retorna `true`).
+- [x] Implementar os testes unitários UT-6 cobrindo: (a) hash gerado é diferente da senha em texto simples; (b) hash da mesma senha é verificável (`verify` retorna `true`).
 
 **Rastreabilidade:** NFR-2 · Scenario: "Cadastro com dados invalidos no formulario"
 **Depende de:** T-13
@@ -158,7 +158,7 @@
 
 ### T-15: Cobrir PT-2 — benchmark de `Argon2PasswordHasher.hash()` (performance)
 
-- [ ] Implementar o benchmark PT-2 medindo o tempo de execução de `Argon2PasswordHasher.hash()` com os parâmetros de produção em 10 execuções consecutivas. O teste deve reportar média e valor máximo e falhar se o máximo exceder 1.000 ms.
+- [x] Implementar o benchmark PT-2 medindo o tempo de execução de `Argon2PasswordHasher.hash()` com os parâmetros de produção em 10 execuções consecutivas. O teste deve reportar média e valor máximo e falhar se o máximo exceder 1.000 ms.
 
 **Rastreabilidade:** NFR-1 · NFR-2
 **Depende de:** T-13
@@ -168,7 +168,7 @@
 
 ### T-16: Cobrir ST-3 — senhas nunca persistidas em texto simples (segurança)
 
-- [ ] Implementar o teste ST-3 verificando que, após criação de usuário, o campo `password_hash` no banco não é igual à senha informada e começa com o identificador `$argon2id$`.
+- [x] Implementar o teste ST-3 verificando que, após criação de usuário, o campo `password_hash` no banco não é igual à senha informada e começa com o identificador `$argon2id$`.
 
 **Rastreabilidade:** NFR-2
 **Depende de:** T-08 · T-13
@@ -182,7 +182,7 @@
 
 ### T-17: Implementar handler de erro HTTP 400 para senhas divergentes no `RegisterUserHandler`
 
-- [ ] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a mensagem "As senhas não coincidem." quando `password` e `passwordConfirmation` forem diferentes. Nenhum registro deve ser criado.
+- [x] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a mensagem "As senhas não coincidem." quando `password` e `passwordConfirmation` forem diferentes. Nenhum registro deve ser criado.
 
 **Rastreabilidade:** REQ-5 · REQ-7
 **Depende de:** T-03
@@ -196,7 +196,7 @@
 
 ### T-18: Implementar handler de erro HTTP 400 para email com formato inválido no `RegisterUserHandler`
 
-- [ ] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a mensagem "Informe um endereço de email válido." quando o email não estiver em formato válido. Nenhum registro deve ser criado.
+- [x] No `RegisterUserHandler`, após a validação pelo schema, retornar HTTP 400 com a mensagem "Informe um endereço de email válido." quando o email não estiver em formato válido. Nenhum registro deve ser criado.
 
 **Rastreabilidade:** REQ-6 · REQ-7
 **Depende de:** T-03
@@ -210,7 +210,7 @@
 
 ### T-19: Cobrir GH-2 — Scenario Outline "Cadastro com dados invalidos no formulario" (E2E)
 
-- [ ] Implementar os step definitions e o teste E2E Gherkin GH-2 cobrindo todas as situações do `Scenario Outline`: email duplicado, senha inválida, senhas divergentes, nome em branco, data de nascimento em branco e email inválido. Para cada situação, verificar a mensagem de erro exibida e a ausência de novo registro no banco.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-2 cobrindo todas as situações do `Scenario Outline`: email duplicado, senha inválida, senhas divergentes, nome em branco, data de nascimento em branco e email inválido. Para cada situação, verificar a mensagem de erro exibida e a ausência de novo registro no banco.
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · Scenario: "Cadastro com dados invalidos no formulario"
 **Depende de:** T-04 · T-07 · T-11 · T-17 · T-18
@@ -224,7 +224,7 @@
 
 ### T-20: Implementar `RegisterUserHandler` — endpoint `POST /api/auth/register`
 
-- [ ] Implementar o Route Handler Next.js em `app/api/auth/register/route.ts`. O handler deve: (1) aplicar o `RateLimiter` antes de processar; (2) validar o payload com o schema; (3) delegar ao `RegisterUserUseCase`; (4) retornar HTTP 200 com `{ message: "Um link de confirmacao foi enviado ao seu email." }` no caminho feliz. Todas as respostas de erro devem seguir a estrutura `{ codigo, mensagem, requestId, timestamp }`.
+- [x] Implementar o Route Handler Next.js em `app/api/auth/register/route.ts`. O handler deve: (1) aplicar o `RateLimiter` antes de processar; (2) validar o payload com o schema; (3) delegar ao `RegisterUserUseCase`; (4) retornar HTTP 200 com `{ message: "Um link de confirmacao foi enviado ao seu email." }` no caminho feliz. Todas as respostas de erro devem seguir a estrutura `{ codigo, mensagem, requestId, timestamp }`.
 
 **Rastreabilidade:** REQ-1 · REQ-8 · REQ-9 · NFR-4
 **Depende de:** T-03 · T-06 · T-37
@@ -234,7 +234,7 @@
 
 ### T-21: Cobrir IT-5 — `RegisterUserHandler POST /api/auth/register` (integração)
 
-- [ ] Implementar o teste de integração IT-5 cobrindo todos os casos: dados válidos (HTTP 200, usuário `pending` e token no banco), campo obrigatório ausente (HTTP 400), email inválido (HTTP 400), senha fora da política (HTTP 400), senhas divergentes (HTTP 400), email duplicado (HTTP 409) e quarta tentativa do mesmo IP em 15 min (HTTP 429). Verificar ausência de registros nos casos de erro.
+- [x] Implementar o teste de integração IT-5 cobrindo todos os casos: dados válidos (HTTP 200, usuário `pending` e token no banco), campo obrigatório ausente (HTTP 400), email inválido (HTTP 400), senha fora da política (HTTP 400), senhas divergentes (HTTP 400), email duplicado (HTTP 409) e quarta tentativa do mesmo IP em 15 min (HTTP 429). Verificar ausência de registros nos casos de erro.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4
 **Depende de:** T-20
@@ -244,7 +244,7 @@
 
 ### T-22: Cobrir GH-1 — Scenario "Cadastro realizado com dados validos" (E2E)
 
-- [ ] Implementar os step definitions e o teste E2E Gherkin GH-1 cobrindo: navegação para `/register`, preenchimento de todos os campos válidos, submissão do formulário, verificação da mensagem de link enviado e verificação da presença do email com link de confirmação na API do Mailhog.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-1 cobrindo: navegação para `/register`, preenchimento de todos os campos válidos, submissão do formulário, verificação da mensagem de link enviado e verificação da presença do email com link de confirmação na API do Mailhog.
 
 **Rastreabilidade:** REQ-1 · REQ-8 · REQ-9 · Scenario: "Cadastro realizado com dados validos"
 **Depende de:** T-20

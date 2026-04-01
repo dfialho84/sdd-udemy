@@ -1,6 +1,6 @@
 // Schemas do banco de dados — adicionados por feature.
 // Cada tabela deve corresponder a uma entidade em src/domain/entities/.
-// Rastreabilidade: T-02 · REQ-1 · REQ-8
+// Rastreabilidade: T-02 · REQ-1 · REQ-8 · T-25 · REQ-9 · NFR-3
 
 import {
   mysqlTable,
@@ -21,4 +21,15 @@ export const users = mysqlTable("users", {
   status: mysqlEnum("status", ["pending", "active"]).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
+});
+
+// Tabela confirmation_tokens — corresponde à entidade ConfirmationToken em src/domain/entities/confirmation-token.ts
+// Rastreabilidade: T-25 · REQ-9 · NFR-3
+export const confirmationTokens = mysqlTable("confirmation_tokens", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  userId: varchar("user_id", { length: 36 }).notNull().references(() => users.id),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
