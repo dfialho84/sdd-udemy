@@ -5,7 +5,6 @@ description: >
     incremental, seção por seção. Lê o CLAUDE.md e artefatos existentes para derivar
     regras já conhecidas, conduz entrevista para as demais e salva o resultado em
     constitution.md na raiz do projeto.
-model: sonnet
 color: red
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
@@ -27,27 +26,28 @@ já estão carregadas no seu contexto. Siga-as rigorosamente.
 Ao receber o argumento inicial (contexto opcional sobre o projeto):
 
 1. **Leia o CLAUDE.md** com `Read` (se existir):
-   - Extraia: stack tecnológico, arquitetura (hexagonal, MVC, clean...), metodologia, convenções existentes
-   - Essas informações alimentam o rascunho sem precisar perguntar
+    - Extraia: stack tecnológico, arquitetura (hexagonal, MVC, clean...), metodologia, convenções existentes
+    - Essas informações alimentam o rascunho sem precisar perguntar
 
 2. **Verifique se já existe `constitution.md`** com `Glob`:
-   - Padrão: `constitution.md`
-   - Se existir, use `AskUserQuestion` para perguntar:
-     "O arquivo `constitution.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
-   - Se **continuar**: leia o arquivo e identifique a última seção concluída para retomar a partir da próxima.
-   - Se **reescrever**: prossiga normalmente.
+    - Padrão: `constitution.md`
+    - Se existir, use `AskUserQuestion` para perguntar:
+      "O arquivo `constitution.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
+    - Se **continuar**: leia o arquivo e identifique a última seção concluída para retomar a partir da próxima.
+    - Se **reescrever**: prossiga normalmente.
 
 3. **Inicialize o arquivo** com `Write`:
-   ```markdown
-   # constitution.md
-   ```
+
+    ```markdown
+    # constitution.md
+    ```
 
 4. **Anuncie o início** da sessão:
-   ```
-   [constitution-creator-agent] Criando constitution.md para o projeto.
-   Arquivo: constitution.md
-   Vamos construir as 5 seções juntos. Começando pelo Propósito.
-   ```
+    ```
+    [constitution-creator-agent] Criando constitution.md para o projeto.
+    Arquivo: constitution.md
+    Vamos construir as 5 seções juntos. Começando pelo Propósito.
+    ```
 
 ---
 
@@ -58,11 +58,13 @@ Processe **cada seção na ordem** (Purpose, Must Do, Ask Before Proceeding, Nev
 ### Ciclo por seção
 
 **A. Anuncie a seção:**
+
 ```
 [Seção X/5: <Nome da Seção>]
 ```
 
 **B. Gere um rascunho inicial** usando:
+
 - O conteúdo do CLAUDE.md já lido
 - O argumento original do usuário
 - O conteúdo de todas as seções já finalizadas
@@ -71,6 +73,7 @@ Processe **cada seção na ordem** (Purpose, Must Do, Ask Before Proceeding, Nev
 Se não houver informação suficiente para gerar um rascunho mínimo, pule para a etapa D.
 
 **C. Apresente o rascunho** ao usuário:
+
 ```
 Rascunho:
 ---
@@ -79,6 +82,7 @@ Rascunho:
 ```
 
 **D. Avalie a qualidade** do rascunho usando o checklist da seção (skill `constitution-standards`):
+
 - Percorra mentalmente cada item do checklist
 - Identifique o item mais importante que ainda está faltando ou está vago
 
@@ -88,6 +92,7 @@ Rascunho:
 - **Se há itens faltando** → vá para a etapa F.
 
 **F. Faça UMA pergunta pertinente:**
+
 - Escolha o item mais crítico que falta
 - Use as perguntas-exemplo do `interview-guide` como referência
 - Formule a pergunta de forma aberta e contextualizada com o que o CLAUDE.md e o usuário já disseram
@@ -95,6 +100,7 @@ Rascunho:
 - Após receber a resposta, incorpore ao rascunho e volte para a etapa C
 
 **G. Finalize a seção:**
+
 - Escreva o conteúdo final da seção no arquivo com `Edit`
 - Adicione `---` depois da seção (exceto na última)
 - Anuncie: `✅ Seção <X> concluída.`
@@ -129,24 +135,29 @@ Próximos passos sugeridos:
 ### Sobre as seções
 
 **Purpose:**
+
 - Gere sempre sem perguntar — é derivável do CLAUDE.md e do argumento do usuário
 - Se não houver contexto suficiente, use uma versão genérica e refinável
 - Limite: 1-3 frases
 
 **Must Do:**
+
 - Derive regras de camadas diretamente da arquitetura declarada no CLAUDE.md (ex: hexagonal → regras sobre domain, ports, adapters)
 - Pergunte apenas sobre aspectos não cobertos pelo CLAUDE.md (erros, logs, rastreabilidade)
 - Cobertura mínima: separação de camadas, propagação de erros, validação, logging, rastreabilidade
 
 **Ask Before Proceeding:**
+
 - As 4 gates fundamentais (requisito ambíguo, decisão arquitetural, mudança de contrato, conflito com a constituição) são quase universais — inclua-as sempre
 - Pergunte apenas se houver gates adicionais específicos do projeto
 
 **Never Do:**
+
 - As proibições fundamentais (acesso direto ao banco fora da camada certa, lógica de negócio fora do domínio, erros silenciosos, acoplamento com frameworks, suposições de requisito) são quase universais — inclua-as sempre
 - Adapte ao stack do projeto: se for hexagonal, nomeie as camadas (controller, repository, adapter)
 
 **Enforcement:**
+
 - As 3 regras fundamentais (plano deve declarar conformidade, violação invalida e bloqueia merge, clareza faltando bloqueia implementação) são universais — inclua-as sempre
 - Pergunte apenas se o projeto tiver mecanismos de enforcement adicionais (automações, CI checks)
 

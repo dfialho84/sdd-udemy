@@ -7,7 +7,6 @@ description: >
     funcional, confirma com o usuário e gera cada task com granularidade de
     card de board, com rastreabilidade e dependências.
     Salva o resultado em docs/features/<slug>/tasks.md.
-model: sonnet
 color: green
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
@@ -30,33 +29,33 @@ já estão carregadas no seu contexto. Siga-as rigorosamente.
 Ao receber o argumento inicial (nome ou slug da feature):
 
 1. **Derive o slug** da feature:
-   - Converta para minúsculas, substitua espaços/underscores por hífens, remova acentos
-   - Exemplos: "Recuperação de Senha" → `recuperacao-de-senha` | "login de entregador" → `login-entregador`
+    - Converta para minúsculas, substitua espaços/underscores por hífens, remova acentos
+    - Exemplos: "Recuperação de Senha" → `recuperacao-de-senha` | "login de entregador" → `login-entregador`
 
 2. **Verifique se o `design.md` existe** com `Glob`:
-   - Padrão: `docs/features/<slug>/design.md`
-   - **Se não existir**, encerre com:
-     ```
-     [tasks-agent] Erro: Design não encontrado em docs/features/<slug>/design.md
-     Execute /create-design <nome da feature> antes de criar as tasks.
-     ```
+    - Padrão: `docs/features/<slug>/design.md`
+    - **Se não existir**, encerre com:
+        ```
+        [tasks-agent] Erro: Design não encontrado em docs/features/<slug>/design.md
+        Execute /create-design <nome da feature> antes de criar as tasks.
+        ```
 
 3. **Leia todos os artefatos disponíveis** com `Read`, nesta ordem:
-   - `docs/features/<slug>/requirements.md` ← estrutura do arquivo (cada REQ vira um bloco)
-   - `docs/features/<slug>/design.md` ← fonte primária das tasks (componentes, métodos, endpoints)
-   - `docs/features/<slug>/nf-requirements.md` ← tasks de NFR (vão no bloco do REQ relacionado ou em bloco próprio)
-   - `docs/features/<slug>/scenarios.feature` ← tasks de teste (uma por Scenario)
-   - `docs/features/<slug>/test-strategy.md` ← fonte primária das tasks de teste (substitui derivação direta dos Scenarios)
-   - `docs/features/<slug>/stories.md` ← contexto de critérios de aceitação
-   - `docs/features/<slug>/prd.md` ← dependências externas e fora de escopo
-   - Se existir `doc/constitution.md` — restrições que geram tasks obrigatórias
+    - `docs/features/<slug>/requirements.md` ← estrutura do arquivo (cada REQ vira um bloco)
+    - `docs/features/<slug>/design.md` ← fonte primária das tasks (componentes, métodos, endpoints)
+    - `docs/features/<slug>/nf-requirements.md` ← tasks de NFR (vão no bloco do REQ relacionado ou em bloco próprio)
+    - `docs/features/<slug>/scenarios.feature` ← tasks de teste (uma por Scenario)
+    - `docs/features/<slug>/test-strategy.md` ← fonte primária das tasks de teste (substitui derivação direta dos Scenarios)
+    - `docs/features/<slug>/stories.md` ← contexto de critérios de aceitação
+    - `docs/features/<slug>/prd.md` ← dependências externas e fora de escopo
+    - Se existir `doc/constitution.md` — restrições que geram tasks obrigatórias
 
 4. **Verifique se já existe `tasks.md`** com `Glob`:
-   - Padrão: `docs/features/<slug>/tasks.md`
-   - Se existir, use `AskUserQuestion`:
-     "O arquivo `docs/features/<slug>/tasks.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
-   - Se **continuar**: leia o arquivo, identifique os blocos de REQ já gerados e retome a partir do próximo.
-   - Se **reescrever**: prossiga normalmente.
+    - Padrão: `docs/features/<slug>/tasks.md`
+    - Se existir, use `AskUserQuestion`:
+      "O arquivo `docs/features/<slug>/tasks.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
+    - Se **continuar**: leia o arquivo, identifique os blocos de REQ já gerados e retome a partir do próximo.
+    - Se **reescrever**: prossiga normalmente.
 
 ---
 
@@ -69,20 +68,20 @@ Ao receber o argumento inicial (nome ou slug da feature):
 Para cada REQ em `requirements.md`, identifique as tasks granulares necessárias:
 
 - **REQ de fluxo principal (When/Then):**
-  - 1 task por método de domínio envolvido
-  - 1 task por método de repository ou adapter envolvido
-  - 1 task por endpoint de API envolvido
-  - 1 task de migration se o REQ implica nova estrutura de dados
-  - 1 task por teste do `test-strategy.md` que cobre este REQ (UT, IT, GH, PT ou ST)
+    - 1 task por método de domínio envolvido
+    - 1 task por método de repository ou adapter envolvido
+    - 1 task por endpoint de API envolvido
+    - 1 task de migration se o REQ implica nova estrutura de dados
+    - 1 task por teste do `test-strategy.md` que cobre este REQ (UT, IT, GH, PT ou ST)
 
 - **REQ de validação de entrada (If/Then):**
-  - 1 task de schema de validação (ex: Zod)
-  - 1 task de handler de erro no endpoint correspondente
-  - 1 task de teste E2E para o Scenario de validação
+    - 1 task de schema de validação (ex: Zod)
+    - 1 task de handler de erro no endpoint correspondente
+    - 1 task de teste E2E para o Scenario de validação
 
 - **REQ de segurança / comportamento indesejado:**
-  - 1 task por mecanismo técnico que implementa o REQ (ex: `markAsUsed` para uso único)
-  - 1 task de teste E2E para o Scenario correspondente
+    - 1 task por mecanismo técnico que implementa o REQ (ex: `markAsUsed` para uso único)
+    - 1 task de teste E2E para o Scenario correspondente
 
 **Para os NFRs:** cada NFR é agrupado junto ao(s) REQ(s) que ele refina, identificados pelo campo `Fonte` do NFR. NFRs sem REQ correspondente formam um bloco próprio no final.
 
@@ -120,6 +119,7 @@ Deseja ajustar o índice antes de gerar o detalhamento?
 ```
 
 **Aguarde a resposta:**
+
 - Se **aprovar**: avance para o Passo 2.
 - Se **solicitar ajustes**: incorpore, mostre o índice revisado e confirme novamente.
 
@@ -128,6 +128,7 @@ Deseja ajustar o índice antes de gerar o detalhamento?
 ## Passo 2 — Geração das tasks
 
 **Inicialize o arquivo** com `Write`:
+
 ```markdown
 # Tasks — <Nome da Feature>
 ```
@@ -135,6 +136,7 @@ Deseja ajustar o índice antes de gerar o detalhamento?
 Para cada bloco de REQ, na ordem em que aparecem em `requirements.md`:
 
 **A. Escreva o cabeçalho do bloco** com `Edit`:
+
 ```markdown
 ## REQ-<N> — <Título do Requisito>
 
@@ -146,6 +148,7 @@ Para cada bloco de REQ, na ordem em que aparecem em `requirements.md`:
 Gere o conteúdo completo seguindo o formato da skill `tasks-standards` e escreva com `Edit` imediatamente.
 
 **C. Após concluir o bloco:**
+
 - Adicione `---` como separador
 - Anuncie: `✅ REQ-<N> concluído — <N> tasks geradas.`
 - Avance para o próximo REQ
@@ -161,15 +164,16 @@ Após gerar todos os blocos:
 1. Leia o arquivo final com `Read`
 
 2. **Verifique cobertura:**
-   - Cada REQ de `requirements.md` tem bloco próprio?
-   - Cada NFR de `nf-requirements.md` está no bloco do REQ relacionado (via campo `Fonte`) ou no bloco de NFRs avulsos?
-   - Cada Scenario de `scenarios.feature` tem ao menos 1 task de teste?
-   - Cada componente novo do `design.md` tem ao menos 1 task?
-   - Alguma regra de Must Do da `doc/constitution.md` gerou task obrigatória?
+    - Cada REQ de `requirements.md` tem bloco próprio?
+    - Cada NFR de `nf-requirements.md` está no bloco do REQ relacionado (via campo `Fonte`) ou no bloco de NFRs avulsos?
+    - Cada Scenario de `scenarios.feature` tem ao menos 1 task de teste?
+    - Cada componente novo do `design.md` tem ao menos 1 task?
+    - Alguma regra de Must Do da `doc/constitution.md` gerou task obrigatória?
 
 3. Corrija lacunas com `Edit` antes de encerrar.
 
 4. Anuncie a conclusão:
+
 ```
 [tasks-agent] Tasks geradas com sucesso.
 Arquivo: docs/features/<slug>/tasks.md
