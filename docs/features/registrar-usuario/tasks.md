@@ -447,7 +447,7 @@
 
 ### T-41: Cobrir IT-2 — `DrizzleUserRepository.activate()` e `delete()` (integração)
 
-- [ ] Implementar o teste de integração IT-2 cobrindo: (a) usuário `pending` tem status atualizado para `active` após `activate`; (b) usuário removido via `delete` não é encontrado por `findById`.
+- [x] Implementar o teste de integração IT-2 cobrindo: (a) usuário `pending` tem status atualizado para `active` após `activate`; (b) usuário removido via `delete` não é encontrado por `findById`.
 
 **Rastreabilidade:** REQ-10 · REQ-12
 **Depende de:** T-37
@@ -457,7 +457,7 @@
 
 ### T-42: Cobrir GH-3 — Scenario "Confirmacao de conta via link valido" (E2E)
 
-- [ ] Implementar os step definitions e o teste E2E Gherkin GH-3 cobrindo: setup de usuário `pending` e token válido no banco, acesso ao link de confirmação, verificação de HTTP 200 com mensagem de ativação e presença de `loginUrl` na resposta.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-3 cobrindo: setup de usuário `pending` e token válido no banco, acesso ao link de confirmação, verificação de HTTP 200 com mensagem de ativação e presença de `loginUrl` na resposta.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · Scenario: "Confirmacao de conta via link valido"
 **Depende de:** T-39
