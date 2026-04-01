@@ -1,10 +1,10 @@
 // DrizzleUserRepository — adapter outbound de persistência
 // Implementação concreta de UserRepository usando Drizzle ORM sobre MySQL.
-// Rastreabilidade: T-08 · REQ-3 · REQ-8
+// Rastreabilidade: T-08 · REQ-3 · REQ-8 · T-37
 
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, confirmationTokens } from "@/lib/db/schema";
 import { User } from "@/domain/entities/user";
 import type { UserRepository, CreateUserInput } from "@/domain/ports/user-repository";
 
@@ -56,10 +56,13 @@ export class DrizzleUserRepository implements UserRepository {
   }
 
   /**
-   * Remove o usuário com o id fornecido.
+   * Remove o usuário com o id fornecido e seus tokens de confirmação associados.
+   * Remove tokens antes do usuário para respeitar a FK confirmation_tokens.user_id -> users.id.
    * Utilizado quando o token de confirmação expira (REQ-12).
    */
   async delete(id: string): Promise<void> {
+    // Remove tokens vinculados primeiro (cascade manual — FK impede deletar o usuário direto)
+    await db.delete(confirmationTokens).where(eq(confirmationTokens.userId, id));
     await db.delete(users).where(eq(users.id, id));
   }
 

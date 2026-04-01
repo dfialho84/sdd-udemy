@@ -471,7 +471,7 @@
 
 ### T-43: Cobrir IT-6 — `ConfirmAccountHandler GET /api/auth/confirm` (integração)
 
-- [ ] Implementar o teste de integração IT-6 cobrindo: (a) token válido — HTTP 200 com `message` e `loginUrl`, status `active` no banco, `used_at` preenchido; (b) token ausente — HTTP 400; (c) token inexistente — HTTP 404; (d) token já utilizado — HTTP 409, status não alterado; (e) token expirado — HTTP 410, cadastro pendente removido.
+- [x] Implementar o teste de integração IT-6 cobrindo: (a) token válido — HTTP 200 com `message` e `loginUrl`, status `active` no banco, `used_at` preenchido; (b) token ausente — HTTP 400; (c) token inexistente — HTTP 404; (d) token já utilizado — HTTP 409, status não alterado; (e) token expirado — HTTP 410, cadastro pendente removido.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15
 **Depende de:** T-39
