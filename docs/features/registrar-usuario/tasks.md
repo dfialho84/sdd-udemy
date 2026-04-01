@@ -268,7 +268,7 @@
 
 ### T-24: Criar entidade `ConfirmationToken` com regras de expiração e reuso
 
-- [ ] Criar a entidade `ConfirmationToken` na camada domain com os campos: id (UUID), user_id, token, expires_at, used_at (nullable), created_at. Implementar os métodos `isExpired()` e `isUsed()` que encapsulam as regras de verificação de expiração e reuso respectivamente.
+- [x] Criar a entidade `ConfirmationToken` na camada domain com os campos: id (UUID), user_id, token, expires_at, used_at (nullable), created_at. Implementar os métodos `isExpired()` e `isUsed()` que encapsulam as regras de verificação de expiração e reuso respectivamente.
 
 **Rastreabilidade:** REQ-9 · REQ-12 · REQ-14 · REQ-15 · NFR-3
 **Depende de:** T-01
