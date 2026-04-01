@@ -358,7 +358,7 @@
 
 ### T-33: Cobrir IT-3 — `DrizzleConfirmationTokenRepository.create()`, `findByToken()` e `markAsUsed()` (integração)
 
-- [ ] Implementar o teste de integração IT-3 cobrindo: (a) token persistido com `expires_at` correto e `used_at = null`; (b) `findByToken` retorna o token ou null para inexistente; (c) `markAsUsed` atualiza `used_at` e a chamada subsequente retorna token com `used_at` preenchido.
+- [x] Implementar o teste de integração IT-3 cobrindo: (a) token persistido com `expires_at` correto e `used_at = null`; (b) `findByToken` retorna o token ou null para inexistente; (c) `markAsUsed` atualiza `used_at` e a chamada subsequente retorna token com `used_at` preenchido.
 
 **Rastreabilidade:** REQ-9 · REQ-14 · REQ-15 · NFR-3
 **Depende de:** T-31
@@ -368,7 +368,7 @@
 
 ### T-34: Cobrir IT-4 — `MailhogEmailAdapter.send()` (integração)
 
-- [ ] Implementar o teste de integração IT-4 cobrindo: (a) email enviado com destinatário, assunto e link de confirmação corretos aparece na API do Mailhog; (b) falha de conexão SMTP lança exceção capturável.
+- [x] Implementar o teste de integração IT-4 cobrindo: (a) email enviado com destinatário, assunto e link de confirmação corretos aparece na API do Mailhog; (b) falha de conexão SMTP lança exceção capturável.
 
 **Rastreabilidade:** REQ-9 · NFR-6
 **Depende de:** T-30

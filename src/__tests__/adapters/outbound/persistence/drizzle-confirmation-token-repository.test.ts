@@ -1,8 +1,7 @@
 // Testes de integração — DrizzleConfirmationTokenRepository
-// IT-3 (parcial): Rastreabilidade: REQ-9 · REQ-14 · REQ-15 · NFR-3 · T-31
+// IT-3 (completo): Rastreabilidade: REQ-9 · REQ-14 · REQ-15 · NFR-3 · T-31 · T-33
 //
-// Cobre os métodos create() e findByToken().
-// O método markAsUsed() é coberto em T-33.
+// Cobre os métodos create(), findByToken() e markAsUsed().
 //
 // Pré-requisito: banco MySQL de teste rodando com migration aplicada.
 // DATABASE_URL deve apontar para o banco de teste.
@@ -46,7 +45,7 @@ function makeTokenInput(
   };
 }
 
-describe("IT-3 (parcial): DrizzleConfirmationTokenRepository — create() e findByToken()", () => {
+describe("IT-3: DrizzleConfirmationTokenRepository — create(), findByToken() e markAsUsed()", () => {
   const repo = new DrizzleConfirmationTokenRepository();
   let testUserId: string;
 
@@ -129,6 +128,57 @@ describe("IT-3 (parcial): DrizzleConfirmationTokenRepository — create() e find
 
       expect(found).not.toBeNull();
       expect(found!.isExpired()).toBe(false);
+    });
+  });
+
+  describe("markAsUsed()", () => {
+    it("atualiza used_at para o instante atual após a chamada (REQ-14 · REQ-15 · NFR-3)", async () => {
+      const input = makeTokenInput(testUserId);
+      await repo.create(input);
+
+      const beforeMark = new Date();
+      await repo.markAsUsed(input.id);
+
+      const found = await repo.findByToken(input.token);
+
+      expect(found).not.toBeNull();
+      expect(found!.usedAt).not.toBeNull();
+      expect(found!.usedAt).toBeInstanceOf(Date);
+
+      // used_at deve ser igual ou posterior ao instante antes da chamada
+      expect(found!.usedAt!.getTime()).toBeGreaterThanOrEqual(beforeMark.getTime() - 1000);
+    });
+
+    it("token marcado como usado tem isUsed() = true na chamada subsequente a findByToken()", async () => {
+      const input = makeTokenInput(testUserId);
+      await repo.create(input);
+
+      // Verifica que antes está sem uso
+      const before = await repo.findByToken(input.token);
+      expect(before!.isUsed()).toBe(false);
+
+      await repo.markAsUsed(input.id);
+
+      const after = await repo.findByToken(input.token);
+      expect(after).not.toBeNull();
+      expect(after!.isUsed()).toBe(true);
+    });
+
+    it("markAsUsed não altera outros campos do token (id, userId, token, expiresAt)", async () => {
+      const input = makeTokenInput(testUserId);
+      await repo.create(input);
+
+      await repo.markAsUsed(input.id);
+
+      const found = await repo.findByToken(input.token);
+
+      expect(found).not.toBeNull();
+      expect(found!.id).toBe(input.id);
+      expect(found!.userId).toBe(testUserId);
+      expect(found!.token).toBe(input.token);
+      // expires_at deve permanecer inalterado — tolerância de 1 segundo para arredondamento MySQL
+      const diffMs = Math.abs(found!.expiresAt.getTime() - input.expiresAt.getTime());
+      expect(diffMs).toBeLessThan(1000);
     });
   });
 });
