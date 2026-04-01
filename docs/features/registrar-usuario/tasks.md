@@ -406,7 +406,7 @@
 
 ### T-37: Implementar `DrizzleUserRepository` — métodos `activate` e `delete`
 
-- [ ] Implementar os métodos `activate` e `delete` na classe `DrizzleUserRepository`. O método `activate` deve atualizar o campo `status` para `active`; o método `delete` deve remover o registro do banco.
+- [x] Implementar os métodos `activate` e `delete` na classe `DrizzleUserRepository`. O método `activate` deve atualizar o campo `status` para `active`; o método `delete` deve remover o registro do banco.
 
 **Rastreabilidade:** REQ-10 · REQ-12
 **Depende de:** T-08
@@ -416,7 +416,7 @@
 
 ### T-38: Implementar `DrizzleConfirmationTokenRepository` — método `markAsUsed`
 
-- [ ] Implementar o método `markAsUsed` na classe `DrizzleConfirmationTokenRepository`. O método deve atualizar o campo `used_at` com o timestamp atual para o token identificado pelo seu valor.
+- [x] Implementar o método `markAsUsed` na classe `DrizzleConfirmationTokenRepository`. O método deve atualizar o campo `used_at` com o timestamp atual para o token identificado pelo seu valor.
 
 **Rastreabilidade:** REQ-10 · REQ-14 · REQ-15 · NFR-3
 **Depende de:** T-31
@@ -437,7 +437,7 @@
 
 ### T-40: Cobrir UT-4 — `ConfirmAccountUseCase.execute()` (unitário)
 
-- [ ] Implementar os testes unitários UT-4 cobrindo: (a) fluxo feliz — `used_at` atualizado, status `active`, log emitido; (b) token não encontrado — erro 404; (c) token já utilizado — erro 409, status não alterado; (d) token expirado — cadastro removido, log emitido, erro 410. Todos os colaboradores devem ser mockados.
+- [x] Implementar os testes unitários UT-4 cobrindo: (a) fluxo feliz — `used_at` atualizado, status `active`, log emitido; (b) token não encontrado — erro 404; (c) token já utilizado — erro 409, status não alterado; (d) token expirado — cadastro removido, log emitido, erro 410. Todos os colaboradores devem ser mockados.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15 · NFR-3 · NFR-7 · Scenario: "Confirmacao de conta via link valido"
 **Depende de:** T-36
