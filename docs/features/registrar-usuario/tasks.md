@@ -378,11 +378,13 @@
 
 ### T-35: Cobrir ST-4 — entropia mínima dos tokens de confirmação (segurança)
 
-- [ ] Implementar o teste ST-4 verificando: (a) token gerado tem 32 caracteres hexadecimais; (b) amostra de 1.000 tokens não contém duplicatas; (c) tokens não seguem padrão previsível (sequencial ou baseado em timestamp).
+- [x] Implementar o teste ST-4 verificando: (a) token gerado tem 32 caracteres hexadecimais; (b) amostra de 1.000 tokens não contém duplicatas; (c) tokens não seguem padrão previsível (sequencial ou baseado em timestamp).
 
 **Rastreabilidade:** NFR-3
 **Depende de:** T-28
 **Concluída quando:** Os três casos de ST-4 passam; nenhum dos 1.000 tokens amostrados é duplicado.
+
+> ✅ Concluída em 2026-04-01: ST-4 implementado no `crypto-token-generator.test.ts` com os 3 cenários passando (ST-4a, ST-4b, ST-4c).
 
 ---
 
@@ -392,11 +394,13 @@
 
 ### T-36: Implementar `ConfirmAccountUseCase`
 
-- [ ] Implementar o `ConfirmAccountUseCase` com o método `execute(token: string)`. O caso de uso deve: (1) buscar o token via `ConfirmationTokenRepository.findByToken` — retornar erro 404 se não encontrado; (2) verificar `isUsed()` — retornar erro 409 e logar se já utilizado (NFR-7); (3) verificar `isExpired()` — remover cadastro pendente via `UserRepository.delete`, logar e retornar erro 410 se expirado (REQ-12); (4) marcar token como usado via `markAsUsed`; (5) ativar conta via `UserRepository.activate`; (6) logar sucesso (NFR-7).
+- [x] Implementar o `ConfirmAccountUseCase` com o método `execute(token: string)`. O caso de uso deve: (1) buscar o token via `ConfirmationTokenRepository.findByToken` — retornar erro 404 se não encontrado; (2) verificar `isUsed()` — retornar erro 409 e logar se já utilizado (NFR-7); (3) verificar `isExpired()` — remover cadastro pendente via `UserRepository.delete`, logar e retornar erro 410 se expirado (REQ-12); (4) marcar token como usado via `markAsUsed`; (5) ativar conta via `UserRepository.activate`; (6) logar sucesso (NFR-7).
 
 **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15 · NFR-3 · NFR-7
 **Depende de:** T-05 · T-24 · T-26
 **Concluída quando:** O `ConfirmAccountUseCase` compila e cobre todos os seis caminhos descritos, com todos os colaboradores injetáveis.
+
+> ✅ Concluída em 2026-04-01: Use case implementado em `confirm-account.use-case.ts` com 4 testes passando (UT-4a, UT-4b, UT-4c, UT-4d).
 
 ---
 
@@ -422,11 +426,12 @@
 
 ### T-39: Implementar `ConfirmAccountHandler` — endpoint `GET /api/auth/confirm`
 
-- [ ] Implementar o Route Handler Next.js em `app/api/auth/confirm/route.ts`. O handler deve: (1) extrair o `token` da query string — retornar HTTP 400 se ausente ou malformado; (2) delegar ao `ConfirmAccountUseCase`; (3) retornar HTTP 200 com `{ message, loginUrl }` no caminho feliz; (4) mapear os erros do caso de uso para HTTP 404, 409 e 410 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
+- [x] Implementar o Route Handler Next.js em `app/api/auth/confirm/route.ts`. O handler deve: (1) extrair o `token` da query string — retornar HTTP 400 se ausente ou malformado; (2) delegar ao `ConfirmAccountUseCase`; (3) retornar HTTP 200 com `{ message, loginUrl }` no caminho feliz; (4) mapear os erros do caso de uso para HTTP 404, 409 e 410 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15
 **Depende de:** T-36
 **Concluída quando:** `GET /api/auth/confirm?token=<válido>` retorna HTTP 200 com mensagem de sucesso e `loginUrl`; os casos de erro retornam os códigos HTTP corretos com estrutura padronizada.
+
 
 ---
 
