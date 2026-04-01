@@ -338,7 +338,7 @@
 
 ### T-31: Implementar `DrizzleConfirmationTokenRepository` — métodos `create` e `findByToken`
 
-- [ ] Implementar os métodos `create` e `findByToken` na classe `DrizzleConfirmationTokenRepository` como adapter outbound concreto de `ConfirmationTokenRepository`. A implementação deve usar Drizzle ORM sobre MySQL e não pode ser importada na camada domain.
+- [x] Implementar os métodos `create` e `findByToken` na classe `DrizzleConfirmationTokenRepository` como adapter outbound concreto de `ConfirmationTokenRepository`. A implementação deve usar Drizzle ORM sobre MySQL e não pode ser importada na camada domain.
 
 **Rastreabilidade:** REQ-9 · NFR-3
 **Depende de:** T-25 · T-26
@@ -348,7 +348,7 @@
 
 ### T-32: Cobrir UT-5 — `CryptoTokenGenerator.generate()` (unitário)
 
-- [ ] Implementar os testes unitários UT-5 cobrindo: (a) token gerado tem 32 caracteres hexadecimais; (b) duas chamadas consecutivas retornam valores distintos.
+- [x] Implementar os testes unitários UT-5 cobrindo: (a) token gerado tem 32 caracteres hexadecimais; (b) duas chamadas consecutivas retornam valores distintos.
 
 **Rastreabilidade:** NFR-3 · Scenario: "Cadastro realizado com dados validos"
 **Depende de:** T-28
