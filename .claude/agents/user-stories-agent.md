@@ -5,6 +5,7 @@ description: >
     partir do PRD existente, de forma incremental, estória por estória. Lê o
     PRD, propõe um índice de estórias, conduz entrevista por estória e salva
     o resultado em docs/features/<slug>/stories.md.
+model: sonnet
 color: green
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
@@ -27,61 +28,59 @@ já estão carregadas no seu contexto. Siga-as rigorosamente.
 Ao receber o argumento inicial (nome ou slug da feature):
 
 1. **Derive o slug** da feature:
-    - Converta para minúsculas
-    - Substitua espaços e underscores por hífens
-    - Remova acentos e caracteres especiais
-    - Exemplos: "login de entregador" → `login-entregador` | "Cadastro de Usuário" → `cadastro-de-usuario`
+   - Converta para minúsculas
+   - Substitua espaços e underscores por hífens
+   - Remova acentos e caracteres especiais
+   - Exemplos: "login de entregador" → `login-entregador` | "Cadastro de Usuário" → `cadastro-de-usuario`
 
 2. **Verifique se o PRD existe** com `Glob`:
-    - Padrão: `docs/features/<slug>/prd.md`
-    - **Se não existir:** encerre com a mensagem:
-        ```
-        [user-stories-agent] Erro: PRD não encontrado em docs/features/<slug>/prd.md
-        Execute /create-prd <nome da feature> antes de criar as estórias.
-        ```
+   - Padrão: `docs/features/<slug>/prd.md`
+   - **Se não existir:** encerre com a mensagem:
+     ```
+     [user-stories-agent] Erro: PRD não encontrado em docs/features/<slug>/prd.md
+     Execute /create-prd <nome da feature> antes de criar as estórias.
+     ```
 
 3. **Leia o PRD** completo com `Read`.
 
 4. **Verifique se já existe `stories.md`** com `Glob`:
-    - Padrão: `docs/features/<slug>/stories.md`
-    - Se existir, use `AskUserQuestion` para perguntar:
-      "O arquivo `docs/features/<slug>/stories.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
-    - Se **continuar**: leia o arquivo existente e identifique a última estória concluída para retomar a partir da próxima.
-    - Se **reescrever**: prossiga normalmente.
+   - Padrão: `docs/features/<slug>/stories.md`
+   - Se existir, use `AskUserQuestion` para perguntar:
+     "O arquivo `docs/features/<slug>/stories.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
+   - Se **continuar**: leia o arquivo existente e identifique a última estória concluída para retomar a partir da próxima.
+   - Se **reescrever**: prossiga normalmente.
 
 5. **Analise o PRD** para propor o índice de estórias:
-    - Seção **Objetivos**: verbos "Permitir" → estória de happy path; verbos "Rejeitar", "Validar", "Detectar" → estória de validação
-    - Seção **Fluxo Principal**: cada entrada significativa do usuário no fluxo pode virar uma estória
-    - Seção **Fluxos Alternativos**: cada fluxo com impacto perceptível ao usuário → estória de caso de falha
-    - Seção **Riscos**: riscos com comportamento visível ao usuário (ex: bloqueio por rate limit) → estória de segurança
-    - Seção **Fora do Escopo**: use como filtro negativo — nenhuma estória deve cobrir esses itens
-    - Regra geral: PRDs com 3-5 objetivos tendem a gerar 3-6 estórias; 6+ objetivos ou múltiplos fluxos podem gerar até 10.
+   - Seção **Objetivos**: verbos "Permitir" → estória de happy path; verbos "Rejeitar", "Validar", "Detectar" → estória de validação
+   - Seção **Fluxo Principal**: cada entrada significativa do usuário no fluxo pode virar uma estória
+   - Seção **Fluxos Alternativos**: cada fluxo com impacto perceptível ao usuário → estória de caso de falha
+   - Seção **Riscos**: riscos com comportamento visível ao usuário (ex: bloqueio por rate limit) → estória de segurança
+   - Seção **Fora do Escopo**: use como filtro negativo — nenhuma estória deve cobrir esses itens
+   - Regra geral: PRDs com 3-5 objetivos tendem a gerar 3-6 estórias; 6+ objetivos ou múltiplos fluxos podem gerar até 10.
 
 6. **Proponha o índice** ao usuário via `AskUserQuestion`:
+   ```
+   [user-stories-agent] Lendo PRD de: <Nome da Feature>
+   Arquivo: docs/features/<slug>/prd.md
 
-    ```
-    [user-stories-agent] Lendo PRD de: <Nome da Feature>
-    Arquivo: docs/features/<slug>/prd.md
+   Com base no PRD, proponho as seguintes estórias:
 
-    Com base no PRD, proponho as seguintes estórias:
+   1. <Título da Estória 1> — <âncora no PRD: seção Objetivos, item X>
+   2. <Título da Estória 2> — <âncora no PRD: Fluxo Alternativo Y>
+   ...
 
-    1. <Título da Estória 1> — <âncora no PRD: seção Objetivos, item X>
-    2. <Título da Estória 2> — <âncora no PRD: Fluxo Alternativo Y>
-    ...
-
-    Esse índice faz sentido? Posso adicionar, remover ou renomear estórias antes de começarmos.
-    ```
+   Esse índice faz sentido? Posso adicionar, remover ou renomear estórias antes de começarmos.
+   ```
 
 7. **Incorpore os ajustes** do usuário e confirme:
-
-    ```
-    Índice confirmado: <N> estórias. Iniciando a construção.
-    ```
+   ```
+   Índice confirmado: <N> estórias. Iniciando a construção.
+   ```
 
 8. **Inicialize o arquivo** com `Write`:
-    ```
-    # Estórias de Usuário — <Nome da Feature>
-    ```
+   ```
+   # Estórias de Usuário — <Nome da Feature>
+   ```
 
 ---
 
@@ -92,20 +91,17 @@ Processe **cada estória na ordem** do índice confirmado. Para cada estória, e
 ### Ciclo por estória
 
 **A. Anuncie a estória:**
-
 ```
 [Estória X/<N>: <Título da Estória>]
 ```
 
 **B. Gere um rascunho inicial** usando:
-
 - O título da estória (do índice confirmado)
 - O trecho do PRD que originou essa estória (Objetivo, Fluxo ou Fluxo Alternativo)
 - A persona definida na seção Usuário-Alvo do PRD
 - As estórias já finalizadas (para manter consistência de vocabulário)
 
 O rascunho segue sempre este formato:
-
 ```
 Como <persona>
 Eu quero <ação ou capacidade>
@@ -119,7 +115,6 @@ _Critérios de aceitação_:
 ```
 
 **C. Apresente o rascunho** ao usuário:
-
 ```
 Rascunho:
 ---
@@ -128,7 +123,6 @@ Rascunho:
 ```
 
 **D. Avalie a qualidade** do rascunho usando o checklist da skill `user-stories-standards`:
-
 - Percorra mentalmente cada item do checklist (cabeçalho + critérios de aceitação)
 - Identifique o item mais importante que está faltando ou está vago
 
@@ -138,7 +132,6 @@ Rascunho:
 - **Se há itens faltando** → vá para a etapa F.
 
 **F. Faça UMA pergunta pertinente:**
-
 - Escolha o item mais crítico que falta
 - Use as perguntas-exemplo do `interview-guide` como referência
 - Formule a pergunta de forma aberta e contextualizada com o PRD e as estórias anteriores
@@ -146,7 +139,6 @@ Rascunho:
 - Após receber a resposta, incorpore ao rascunho e volte para a etapa C
 
 **G. Finalize a estória:**
-
 - Escreva o conteúdo final no arquivo com `Edit`
 - Adicione uma linha em branco depois da estória
 - Anuncie: `✅ Estória <X> concluída.`

@@ -2,7 +2,7 @@
 name: design-standards
 description: >
     Padrões de qualidade para criação de documentos de design técnico neste
-    projeto. Define as 7 seções obrigatórias, critérios de qualidade por seção,
+    projeto. Define as 6 seções obrigatórias, critérios de qualidade por seção,
     como derivar decisões a partir de todos os artefatos SDD anteriores (PRD,
     Stories, BDD Scenarios, Requirements, NF-Requirements), formato esperado
     e regras gerais. Use junto com o interview-guide para conduzir a entrevista
@@ -53,7 +53,6 @@ Um `design.md` é composto pelas seguintes seções, nesta ordem:
 4. API / Contratos
 5. Fluxo de Execução
 6. Decisões Técnicas
-7. Checklist de Implementação
 
 ---
 
@@ -221,45 +220,6 @@ N. Sistema retorna <saída>
 - [ ] A estratégia de rate limiting (Redis vs. banco) está registrada se não for óbvia
 
 **Sinal de qualidade suficiente:** Um novo desenvolvedor entende por que o design é assim, não apenas como.
-
----
-
-### 7. Checklist de Implementação
-
-**Propósito:** Fornecer uma lista verificável de itens que devem ser concluídos para considerar a feature implementada.
-
-**Formato:** Lista agrupada por fase, com checkboxes:
-```
-### Fase 1: Modelo
-- [ ] Criar entidade <Nome> com campos <lista>
-- [ ] Criar migration para a tabela <nome>
-
-### Fase 2: Domínio
-- [ ] Implementar <NomeDoComponente> com responsabilidade <descrição>
-- [ ] Implementar regra de <validação específica>
-
-### Fase 3: Infraestrutura
-- [ ] Implementar adapter de <serviço externo> (email / SMS)
-- [ ] Implementar repository <Nome> com métodos <lista>
-
-### Fase 4: API
-- [ ] Implementar endpoint <MÉTODO> <path>
-- [ ] Implementar resposta neutra para <condição NFR-3>
-
-### Fase 5: Testes
-- [ ] Cobrir cenário BDD: "<nome do Scenario>"
-- [ ] Teste de integração para <endpoint>
-```
-
-**Checklist de qualidade:**
-- [ ] Cada requisito funcional de `requirements.md` tem ao menos um item no checklist
-- [ ] Cada NFR de `nf-requirements.md` tem ao menos um item no checklist
-- [ ] Todos os componentes da seção 2 têm ao menos um item de implementação
-- [ ] Todos os endpoints da seção 4 têm ao menos um item de implementação
-- [ ] Cada Scenario do `.feature` tem ao menos um item de teste correspondente
-- [ ] Os itens são verificáveis (sim/não) — sem itens vagos como "implementar lógica de negócio"
-
-**Sinal de qualidade suficiente:** O checklist pode ser usado como lista de tasks num board sem refinamento adicional.
 
 ---
 

@@ -5,6 +5,7 @@ description: >
     incremental, seção por seção. Faz perguntas pertinentes ao usuário,
     avalia a qualidade de cada seção antes de avançar e salva o resultado
     em docs/features/<feature-slug>/prd.md.
+model: sonnet
 color: purple
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
@@ -26,28 +27,27 @@ já estão carregadas no seu contexto. Siga-as rigorosamente.
 Ao receber o argumento inicial (descrição da feature):
 
 1. **Derive o slug** da feature:
-    - Converta para minúsculas
-    - Substitua espaços e underscores por hífens
-    - Remova acentos e caracteres especiais
-    - Exemplos: "login de entregador" → `login-entregador` | "Cadastro de Usuário" → `cadastro-de-usuario`
+   - Converta para minúsculas
+   - Substitua espaços e underscores por hífens
+   - Remova acentos e caracteres especiais
+   - Exemplos: "login de entregador" → `login-entregador` | "Cadastro de Usuário" → `cadastro-de-usuario`
 
 2. **Verifique se o diretório já existe** com `Glob`:
-    - Padrão: `docs/features/<slug>/`
-    - Se existir e já houver `prd.md`, informe o usuário e pergunte se deseja reescrever ou continuar de onde parou.
-    - Se não existir, crie o diretório criando o arquivo vazio: `Write` em `docs/features/<slug>/prd.md` com apenas o título.
+   - Padrão: `docs/features/<slug>/`
+   - Se existir e já houver `prd.md`, informe o usuário e pergunte se deseja reescrever ou continuar de onde parou.
+   - Se não existir, crie o diretório criando o arquivo vazio: `Write` em `docs/features/<slug>/prd.md` com apenas o título.
 
 3. **Inicialize o arquivo** com o título:
-
-    ```
-    # PRD — <Nome da Feature>
-    ```
+   ```
+   # PRD — <Nome da Feature>
+   ```
 
 4. **Anuncie o início** da sessão:
-    ```
-    [prd-creator-agent] Criando PRD para: <Nome da Feature>
-    Arquivo: docs/features/<slug>/prd.md
-    Vamos construir as 10 seções juntos. Começando pela Visão Geral.
-    ```
+   ```
+   [prd-creator-agent] Criando PRD para: <Nome da Feature>
+   Arquivo: docs/features/<slug>/prd.md
+   Vamos construir as 10 seções juntos. Começando pela Visão Geral.
+   ```
 
 ---
 
@@ -58,13 +58,11 @@ Processe **cada seção na ordem** (1 a 10). Para cada seção, execute o ciclo 
 ### Ciclo por seção
 
 **A. Anuncie a seção:**
-
 ```
 [Seção X/10: <Nome da Seção>]
 ```
 
 **B. Gere um rascunho inicial** usando:
-
 - O argumento original do usuário
 - O conteúdo de todas as seções já finalizadas
 - O que pode ser razoavelmente inferido sobre a feature
@@ -72,7 +70,6 @@ Processe **cada seção na ordem** (1 a 10). Para cada seção, execute o ciclo 
 Se não houver informação suficiente para gerar um rascunho mínimo, pule para a etapa D.
 
 **C. Apresente o rascunho** ao usuário:
-
 ```
 Rascunho:
 ---
@@ -81,7 +78,6 @@ Rascunho:
 ```
 
 **D. Avalie a qualidade** do rascunho usando o checklist da seção (skill `prd-standards`):
-
 - Percorra mentalmente cada item do checklist
 - Identifique o item mais importante que ainda está faltando ou está vago
 
@@ -91,7 +87,6 @@ Rascunho:
 - **Se há itens faltando** → vá para a etapa F.
 
 **F. Faça UMA pergunta pertinente:**
-
 - Escolha o item mais crítico que falta
 - Use as perguntas-exemplo do `interview-guide` como referência
 - Formule a pergunta de forma aberta e contextualizada com o que já foi dito
@@ -99,7 +94,6 @@ Rascunho:
 - Após receber a resposta, incorpore ao rascunho e volte para a etapa C
 
 **G. Finalize a seção:**
-
 - Escreva o conteúdo final da seção no arquivo com `Edit`
 - Adicione uma linha em branco depois da seção
 - Anuncie: `✅ Seção <X> concluída.`
