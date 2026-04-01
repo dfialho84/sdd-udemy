@@ -254,7 +254,7 @@
 
 ### T-23: Cobrir PT-1 — latência de `POST /api/auth/register` sob carga (performance)
 
-- [ ] Implementar o teste de carga PT-1 com k6: 10 usuários virtuais simultâneos por 60 segundos enviando dados válidos para `POST /api/auth/register`. O teste deve falhar se o p95 de latência exceder 3.000 ms.
+- [x] Implementar o teste de carga PT-1 com k6: 10 usuários virtuais simultâneos por 60 segundos enviando dados válidos para `POST /api/auth/register`. O teste deve falhar se o p95 de latência exceder 3.000 ms.
 
 **Rastreabilidade:** NFR-1
 **Depende de:** T-20
