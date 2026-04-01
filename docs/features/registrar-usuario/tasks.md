@@ -278,7 +278,7 @@
 
 ### T-25: Criar migration da tabela `confirmation_tokens`
 
-- [ ] Criar a migration para a tabela `confirmation_tokens` com todos os campos do modelo de dados, incluindo chave estrangeira para `users.id` e os tipos corretos (UUID para id e user_id, VARCHAR para token, TIMESTAMP para expires_at e used_at nullable, TIMESTAMP para created_at).
+- [x] Criar a migration para a tabela `confirmation_tokens` com todos os campos do modelo de dados, incluindo chave estrangeira para `users.id` e os tipos corretos (UUID para id e user_id, VARCHAR para token, TIMESTAMP para expires_at e used_at nullable, TIMESTAMP para created_at).
 
 **Rastreabilidade:** REQ-9 · NFR-3
 **Depende de:** T-02 · T-24
@@ -288,7 +288,7 @@
 
 ### T-26: Implementar port `ConfirmationTokenRepository` (interface)
 
-- [ ] Definir a interface `ConfirmationTokenRepository` na camada domain com os métodos: `create`, `findByToken` e `markAsUsed`. A interface não deve referenciar nenhum tipo de ORM, banco de dados ou framework.
+- [x] Definir a interface `ConfirmationTokenRepository` na camada domain com os métodos: `create`, `findByToken` e `markAsUsed`. A interface não deve referenciar nenhum tipo de ORM, banco de dados ou framework.
 
 **Rastreabilidade:** REQ-9 · REQ-14 · REQ-15 · NFR-3
 **Depende de:** T-24
@@ -298,7 +298,7 @@
 
 ### T-27: Implementar port `TokenGenerator` (interface)
 
-- [ ] Definir a interface `TokenGenerator` na camada domain com o método `generate(): string`. A interface não deve referenciar `crypto` ou qualquer dependência de infraestrutura, permitindo substituição em testes via injeção de dependência (DT-2).
+- [x] Definir a interface `TokenGenerator` na camada domain com o método `generate(): string`. A interface não deve referenciar `crypto` ou qualquer dependência de infraestrutura, permitindo substituição em testes via injeção de dependência (DT-2).
 
 **Rastreabilidade:** REQ-9 · NFR-3
 **Depende de:** —
@@ -308,7 +308,7 @@
 
 ### T-28: Implementar `CryptoTokenGenerator`
 
-- [ ] Implementar a classe `CryptoTokenGenerator` como adapter outbound concreto de `TokenGenerator`, usando `crypto.randomBytes(16)` do Node.js e codificando o resultado em hex, garantindo 32 caracteres hexadecimais (128 bits de entropia).
+- [x] Implementar a classe `CryptoTokenGenerator` como adapter outbound concreto de `TokenGenerator`, usando `crypto.randomBytes(16)` do Node.js e codificando o resultado em hex, garantindo 32 caracteres hexadecimais (128 bits de entropia).
 
 **Rastreabilidade:** REQ-9 · NFR-3
 **Depende de:** T-27
@@ -318,7 +318,7 @@
 
 ### T-29: Implementar port `EmailService` (interface)
 
-- [ ] Definir a interface `EmailService` na camada domain com o método `send(to: string, subject: string, body: string): Promise<void>`. A interface não deve referenciar Mailhog, SMTP ou qualquer dependência de infraestrutura.
+- [x] Definir a interface `EmailService` na camada domain com o método `send(to: string, subject: string, body: string): Promise<void>`. A interface não deve referenciar Mailhog, SMTP ou qualquer dependência de infraestrutura.
 
 **Rastreabilidade:** REQ-9 · NFR-6
 **Depende de:** —
@@ -328,7 +328,7 @@
 
 ### T-30: Implementar `MailhogEmailAdapter`
 
-- [ ] Implementar a classe `MailhogEmailAdapter` como adapter outbound concreto de `EmailService`, conectando ao Mailhog via SMTP para ambiente de desenvolvimento. O adapter deve incluir o template do email de confirmação com o link contendo o token e lançar exceção em caso de falha de conexão SMTP.
+- [x] Implementar a classe `MailhogEmailAdapter` como adapter outbound concreto de `EmailService`, conectando ao Mailhog via SMTP para ambiente de desenvolvimento. O adapter deve incluir o template do email de confirmação com o link contendo o token e lançar exceção em caso de falha de conexão SMTP.
 
 **Rastreabilidade:** REQ-9 · NFR-6
 **Depende de:** T-29
