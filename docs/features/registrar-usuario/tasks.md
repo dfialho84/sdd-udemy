@@ -517,7 +517,7 @@ _(Coberto pelas tasks T-39, T-43, T-44 e T-45 que implementam e testam o retorno
 
 ### T-46: Cobrir UT-2 — `ConfirmationToken.isUsed()` (unitário)
 
-- [ ] Implementar os testes unitários UT-2 cobrindo: (a) token com `used_at = null` retorna `false`; (b) token com `used_at` preenchido retorna `true`.
+- [x] Implementar os testes unitários UT-2 cobrindo: (a) token com `used_at = null` retorna `false`; (b) token com `used_at` preenchido retorna `true`.
 
 **Rastreabilidade:** REQ-14 · REQ-15 · Scenario: "Confirmacao de cadastro com link ja utilizado"
 **Depende de:** T-24
@@ -527,7 +527,7 @@ _(Coberto pelas tasks T-39, T-43, T-44 e T-45 que implementam e testam o retorno
 
 ### T-47: Cobrir GH-5 — Scenario "Confirmacao de cadastro com link ja utilizado" (E2E)
 
-- [ ] Implementar os step definitions e o teste E2E Gherkin GH-5 cobrindo: inserção de usuário `active` e token com `used_at` preenchido no banco, segunda tentativa de acesso ao mesmo link, verificação de HTTP 409 com mensagem de link já utilizado e verificação de que o status do usuário permanece `active`.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-5 cobrindo: inserção de usuário `active` e token com `used_at` preenchido no banco, segunda tentativa de acesso ao mesmo link, verificação de HTTP 409 com mensagem de link já utilizado e verificação de que o status do usuário permanece `active`.
 
 **Rastreabilidade:** REQ-14 · REQ-15 · Scenario: "Confirmacao de cadastro com link ja utilizado"
 **Depende de:** T-39
@@ -537,7 +537,7 @@ _(Coberto pelas tasks T-39, T-43, T-44 e T-45 que implementam e testam o retorno
 
 ### T-48: Cobrir ST-2 — prevenção de reuso de token de confirmação (segurança)
 
-- [ ] Implementar o teste ST-2 verificando: (a) primeiro uso do token retorna HTTP 200 e `used_at` é preenchido no banco; (b) segundo uso do mesmo token retorna HTTP 409, status da conta não é alterado e nenhum dado sensível é exposto na resposta.
+- [x] Implementar o teste ST-2 verificando: (a) primeiro uso do token retorna HTTP 200 e `used_at` é preenchido no banco; (b) segundo uso do mesmo token retorna HTTP 409, status da conta não é alterado e nenhum dado sensível é exposto na resposta.
 
 **Rastreabilidade:** NFR-3 · REQ-14 · REQ-15
 **Depende de:** T-39
@@ -557,7 +557,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-49: Implementar `RateLimiter`
 
-- [ ] Implementar o middleware `RateLimiter` com contadores por IP em memória (Map com TTL manual), janela de 15 minutos e limite de 3 tentativas. Ao exceder o limite, retornar HTTP 429 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`. Baseado na decisão técnica DT-3 (sem Redis).
+- [x] Implementar o middleware `RateLimiter` com contadores por IP em memória (Map com TTL manual), janela de 15 minutos e limite de 3 tentativas. Ao exceder o limite, retornar HTTP 429 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`. Baseado na decisão técnica DT-3 (sem Redis).
 
 **Rastreabilidade:** NFR-4
 **Depende de:** —
@@ -567,7 +567,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-50: Cobrir UT-7 — `RateLimiter.check()` (unitário)
 
-- [ ] Implementar os testes unitários UT-7 cobrindo: (a) primeira, segunda e terceira tentativas do mesmo IP são permitidas; (b) quarta tentativa do mesmo IP dentro de 15 minutos é bloqueada; (c) tentativa após expiração da janela de 15 minutos é permitida (contador resetado); (d) IPs distintos não compartilham contadores. Usar mock de `Date.now()` para controlar a janela.
+- [x] Implementar os testes unitários UT-7 cobrindo: (a) primeira, segunda e terceira tentativas do mesmo IP são permitidas; (b) quarta tentativa do mesmo IP dentro de 15 minutos é bloqueada; (c) tentativa após expiração da janela de 15 minutos é permitida (contador resetado); (d) IPs distintos não compartilham contadores. Usar mock de `Date.now()` para controlar a janela.
 
 **Rastreabilidade:** NFR-4
 **Depende de:** T-49
@@ -577,7 +577,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-51: Cobrir ST-1 — rate limiting como controle de segurança (segurança)
 
-- [ ] Implementar o teste ST-1 verificando: (a) três primeiras tentativas do mesmo IP são processadas normalmente; (b) quarta tentativa do mesmo IP dentro de 15 min retorna HTTP 429 com estrutura padronizada e nenhum processamento adicional é realizado; (c) tentativa de IP diferente não é bloqueada.
+- [x] Implementar o teste ST-1 verificando: (a) três primeiras tentativas do mesmo IP são processadas normalmente; (b) quarta tentativa do mesmo IP dentro de 15 min retorna HTTP 429 com estrutura padronizada e nenhum processamento adicional é realizado; (c) tentativa de IP diferente não é bloqueada.
 
 **Rastreabilidade:** NFR-4
 **Depende de:** T-49
@@ -589,7 +589,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-52: Implementar log estruturado JSON no `RegisterUserUseCase`
 
-- [ ] No `RegisterUserUseCase`, emitir log estruturado JSON para: (a) cada tentativa de criação de cadastro com os campos `timestamp`, `requestId`, `email` parcialmente mascarado no formato `j***@example.com`, `tipoEvento`; (b) cada falha de envio de email com os campos adicionais `motivoFalha`.
+- [x] No `RegisterUserUseCase`, emitir log estruturado JSON para: (a) cada tentativa de criação de cadastro com os campos `timestamp`, `requestId`, `email` parcialmente mascarado no formato `j***@example.com`, `tipoEvento`; (b) cada falha de envio de email com os campos adicionais `motivoFalha`.
 
 **Rastreabilidade:** NFR-6 · REQ-8 · REQ-9
 **Depende de:** T-06
@@ -601,7 +601,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-53: Implementar log estruturado JSON no `ConfirmAccountUseCase`
 
-- [ ] No `ConfirmAccountUseCase`, emitir log estruturado JSON para cada evento de confirmação — bem-sucedido, link expirado e link já utilizado — incluindo os campos: `timestamp`, `resultado`, `tokenId` (identificador do token, não o valor) e `requestId`.
+- [x] No `ConfirmAccountUseCase`, emitir log estruturado JSON para cada evento de confirmação — bem-sucedido, link expirado e link já utilizado — incluindo os campos: `timestamp`, `resultado`, `tokenId` (identificador do token, não o valor) e `requestId`.
 
 **Rastreabilidade:** NFR-7 · REQ-10 · REQ-12 · REQ-14
 **Depende de:** T-36
@@ -611,7 +611,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-54: Verificar emissão de logs estruturados JSON nos eventos críticos (integração)
 
-- [ ] Implementar a verificação de logs como parte dos testes IT-5 e IT-6: confirmar que logs JSON são emitidos nos eventos de criação de cadastro, falha de email e confirmação de conta (bem-sucedida, expirada e já utilizada), com os campos exigidos por NFR-6 e NFR-7.
+- [x] Implementar a verificação de logs como parte dos testes IT-5 e IT-6: confirmar que logs JSON são emitidos nos eventos de criação de cadastro, falha de email e confirmação de conta (bem-sucedida, expirada e já utilizada), com os campos exigidos por NFR-6 e NFR-7.
 
 **Rastreabilidade:** NFR-6 · NFR-7
 **Depende de:** T-52 · T-53
@@ -623,7 +623,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-55: Configurar serviço de observabilidade no Docker Compose para o fluxo de cadastro
 
-- [ ] Adicionar ao `docker-compose.yml` os serviços necessários para observabilidade do fluxo de cadastro: Prometheus (métricas), Grafana Loki (logs) e Grafana (dashboards), fixando versões estáveis de cada imagem (sem `latest`). Comentar cada serviço adicionado conforme exigido pelo CLAUDE.md. A disponibilidade de 99,9% será monitorada via Prometheus/Grafana — este NFR não gera teste automatizado.
+- [x] Adicionar ao `docker-compose.yml` os serviços necessários para observabilidade do fluxo de cadastro: Prometheus (métricas), Grafana Loki (logs) e Grafana (dashboards), fixando versões estáveis de cada imagem (sem `latest`). Comentar cada serviço adicionado conforme exigido pelo CLAUDE.md. A disponibilidade de 99,9% será monitorada via Prometheus/Grafana — este NFR não gera teste automatizado.
 
 **Rastreabilidade:** NFR-5
 **Depende de:** —
