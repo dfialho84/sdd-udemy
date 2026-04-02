@@ -685,7 +685,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-56: Inicializar o SDK OpenTelemetry no Next.js
 
-- [ ] Criar `src/instrumentation.ts` exportando a função `register()` que inicializa o `NodeSDK` (importando de `src/lib/observability/register.ts`). Habilitar `experimental.instrumentationHook: true` no `next.config.ts`. Garantir que o SDK só sobe no runtime `nodejs` (guard `process.env.NEXT_RUNTIME === 'nodejs'`).
+- [x] Criar `src/instrumentation.ts` exportando a função `register()` que inicializa o `NodeSDK` (importando de `src/lib/observability/register.ts`). Habilitar `experimental.instrumentationHook: true` no `next.config.ts`. Garantir que o SDK só sobe no runtime `nodejs` (guard `process.env.NEXT_RUNTIME === 'nodejs'`).
 
 **Rastreabilidade:** NFR-8
 **Depende de:** T-55
@@ -695,7 +695,7 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-57: Conectar Pino ao Loki via transport
 
-- [ ] Instalar `pino-loki` e configurar como transport no `src/lib/observability/logger.ts` quando `NODE_ENV !== 'development'`, apontando para `LOKI_URL` (default `http://localhost:3100`). Adicionar `LOKI_URL=http://localhost:3100` ao `.env.example`. O transport deve incluir o label `{ job: "kanban-app" }`.
+- [x] Instalar `pino-loki` e configurar como transport no `src/lib/observability/logger.ts` quando `NODE_ENV !== 'development'`, apontando para `LOKI_URL` (default `http://localhost:3100`). Adicionar `LOKI_URL=http://localhost:3100` ao `.env.example`. O transport deve incluir o label `{ job: "kanban-app" }`.
 
 **Rastreabilidade:** NFR-8
 **Depende de:** T-56

@@ -3,23 +3,30 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
 
-const traceExporter = new OTLPTraceExporter({
-  url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "http://localhost:4318"}/v1/traces`,
-});
+/**
+ * Inicializa o SDK OpenTelemetry com trace exporter (OTLP/HTTP → Jaeger)
+ * e metrics exporter (Prometheus). Deve ser chamado exclusivamente via
+ * src/instrumentation.ts com o guard NEXT_RUNTIME === 'nodejs'.
+ */
+export function registerOtel(): void {
+  const traceExporter = new OTLPTraceExporter({
+    url: `${process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "http://localhost:4318"}/v1/traces`,
+  });
 
-const metricsExporter = new PrometheusExporter({
-  port: Number(process.env.PROMETHEUS_PORT ?? 9464),
-});
+  const metricsExporter = new PrometheusExporter({
+    port: Number(process.env.PROMETHEUS_PORT ?? 9464),
+  });
 
-const sdk = new NodeSDK({
-  serviceName: process.env.OTEL_SERVICE_NAME ?? "kanban-app",
-  traceExporter,
-  metricReader: metricsExporter,
-  instrumentations: [getNodeAutoInstrumentations()],
-});
+  const sdk = new NodeSDK({
+    serviceName: process.env.OTEL_SERVICE_NAME ?? "kanban-app",
+    traceExporter,
+    metricReader: metricsExporter,
+    instrumentations: [getNodeAutoInstrumentations()],
+  });
 
-sdk.start();
+  sdk.start();
 
-process.on("SIGTERM", () => {
-  sdk.shutdown().finally(() => process.exit(0));
-});
+  process.on("SIGTERM", () => {
+    sdk.shutdown().finally(() => process.exit(0));
+  });
+}
