@@ -1,19 +1,10 @@
 "use client";
 
 // Pagina de cadastro de usuario — /register
-// Adapter de transporte inbound (UI): formulario que chama POST /api/auth/register.
+// Adapter de transporte inbound (UI): formulario que envia multipart/form-data para POST /api/auth/register.
 // Rastreabilidade: T-22 · REQ-1 · REQ-2 · REQ-4 · REQ-5 · REQ-6 · GH-1 · GH-2
 
-import { useState, FormEvent } from "react";
-
-interface FormState {
-  name: string;
-  email: string;
-  password: string;
-  passwordConfirmation: string;
-  birthDate: string;
-  avatarUrl: string;
-}
+import { useState, FormEvent, useRef } from "react";
 
 interface ApiError {
   codigo: number;
@@ -23,23 +14,16 @@ interface ApiError {
 }
 
 export default function RegisterPage() {
-  const [form, setForm] = useState<FormState>({
-    name: "",
-    email: "",
-    password: "",
-    passwordConfirmation: "",
-    birthDate: "",
-    avatarUrl: "",
-  });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const avatarRef = useRef<HTMLInputElement>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,21 +32,23 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const payload: Record<string, string> = {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        passwordConfirmation: form.passwordConfirmation,
-        birthDate: form.birthDate,
-      };
-      if (form.avatarUrl) {
-        payload.avatarUrl = form.avatarUrl;
+      // Monta o FormData para envio como multipart/form-data (REQ-1 · DT-6)
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("passwordConfirmation", passwordConfirmation);
+      formData.append("birthDate", birthDate);
+
+      const avatarFile = avatarRef.current?.files?.[0];
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
       }
 
+      // Não define Content-Type — o browser define automaticamente com boundary correto
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (res.ok) {
@@ -124,8 +110,8 @@ export default function RegisterPage() {
               id="name"
               name="name"
               type="text"
-              value={form.name}
-              onChange={handleChange}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-testid="input-name"
             />
@@ -139,8 +125,8 @@ export default function RegisterPage() {
               id="email"
               name="email"
               type="email"
-              value={form.email}
-              onChange={handleChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-testid="input-email"
             />
@@ -154,8 +140,8 @@ export default function RegisterPage() {
               id="password"
               name="password"
               type="password"
-              value={form.password}
-              onChange={handleChange}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-testid="input-password"
             />
@@ -169,8 +155,8 @@ export default function RegisterPage() {
               id="passwordConfirmation"
               name="passwordConfirmation"
               type="password"
-              value={form.passwordConfirmation}
-              onChange={handleChange}
+              value={passwordConfirmation}
+              onChange={(e) => setPasswordConfirmation(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-testid="input-password-confirmation"
             />
@@ -184,25 +170,25 @@ export default function RegisterPage() {
               id="birthDate"
               name="birthDate"
               type="date"
-              value={form.birthDate}
-              onChange={handleChange}
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               data-testid="input-birth-date"
             />
           </div>
 
           <div>
-            <label htmlFor="avatarUrl" className="mb-1 block text-sm font-medium">
-              Foto de perfil (URL — opcional)
+            <label htmlFor="avatar" className="mb-1 block text-sm font-medium">
+              Foto de perfil (opcional — JPEG, PNG ou WebP, máx. 2 MB)
             </label>
             <input
-              id="avatarUrl"
-              name="avatarUrl"
-              type="url"
-              value={form.avatarUrl}
-              onChange={handleChange}
+              id="avatar"
+              name="avatar"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              ref={avatarRef}
               className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              data-testid="input-avatar-url"
+              data-testid="input-avatar"
             />
           </div>
 

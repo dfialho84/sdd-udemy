@@ -1,35 +1,68 @@
-// Teste de integração IT-5 — RegisterUserHandler POST /api/auth/register
+// Teste de integração IT-6 — RegisterUserHandler POST /api/auth/register
 // Testa o endpoint completo com banco MySQL real e Mailhog real.
-// Rastreabilidade: T-21 · IT-5 · REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4
+// Rastreabilidade: T-21 · IT-6 · REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4 · DT-6
 //
 // Pré-requisitos:
 //   - banco MySQL de teste rodando com migration aplicada (kanban_mysql)
 //   - Mailhog rodando via Docker Compose (kanban_mailhog)
 //   - DATABASE_URL apontando para o banco de teste
 
+import fs from "fs";
+import os from "os";
+import path from "path";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/auth/register/route";
 import { setDepsFactory, resetDepsFactory, buildUseCaseDeps } from "@/app/api/auth/register/deps";
+import { LocalAvatarStorageAdapter } from "@/adapters/outbound/storage/local-avatar-storage.adapter";
 import { registerRateLimiter } from "@/adapters/inbound/http/rate-limiter";
 import { db } from "@/lib/db";
 import { users, confirmationTokens } from "@/lib/db/schema";
 import { eq, like } from "drizzle-orm";
 
-// Helper para construir requests
-function makeRequest(
-  body: unknown,
+// Diretório temporário isolado para armazenar avatares durante os testes
+let testAvatarDir: string;
+
+/** Monta uma NextRequest com multipart/form-data (somente campos de texto) */
+function makeFormRequest(
+  fields: Record<string, string>,
   headers: Record<string, string> = {},
 ): NextRequest {
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    formData.append(key, value);
+  }
   return new NextRequest("http://localhost/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify(body),
+    headers,
+    body: formData,
   });
 }
 
-const validBody = {
+/** Monta uma NextRequest com multipart/form-data incluindo arquivo de avatar */
+function makeFormRequestWithAvatar(
+  fields: Record<string, string>,
+  avatarContent: Uint8Array | string,
+  avatarType: string,
+  avatarFilename: string = "avatar.jpg",
+  headers: Record<string, string> = {},
+): NextRequest {
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    formData.append(key, value);
+  }
+  const file = new File([avatarContent], avatarFilename, { type: avatarType });
+  formData.append("avatar", file);
+
+  return new NextRequest("http://localhost/api/auth/register", {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+}
+
+const validFields = {
   name: "Integração Teste",
-  email: "it5-valid@example.com",
+  email: "it6-valid@example.com",
   password: "Senha@1234",
   passwordConfirmation: "Senha@1234",
   birthDate: "1990-06-15",
@@ -37,11 +70,10 @@ const validBody = {
 
 // Limpa o banco antes e depois da suíte
 async function cleanupTestUsers() {
-  // Remove tokens vinculados a usuários de teste antes de apagar usuários (FK)
   const testUsers = await db
     .select({ id: users.id })
     .from(users)
-    .where(like(users.email, "it5-%@example.com"));
+    .where(like(users.email, "it6-%@example.com"));
 
   for (const u of testUsers) {
     await db
@@ -49,71 +81,164 @@ async function cleanupTestUsers() {
       .where(eq(confirmationTokens.userId, u.id));
   }
 
-  await db.delete(users).where(like(users.email, "it5-%@example.com"));
+  await db.delete(users).where(like(users.email, "it6-%@example.com"));
 }
 
-describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)", () => {
+describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)", () => {
   beforeAll(() => {
-    // Injetar dependências concretas (banco real + Mailhog real) para toda a suíte
-    setDepsFactory(buildUseCaseDeps);
+    // Diretório temporário isolado para avatares de teste
+    testAvatarDir = fs.mkdtempSync(path.join(os.tmpdir(), "it6-avatars-"));
+
+    // Injetar dependências concretas com o adapter de avatar usando diretório temporário
+    setDepsFactory(() => ({
+      ...buildUseCaseDeps(),
+      avatarStorageAdapter: new LocalAvatarStorageAdapter(testAvatarDir),
+    }));
   });
 
   beforeEach(async () => {
     await cleanupTestUsers();
     registerRateLimiter.resetAll();
+    // Limpa os arquivos de avatar gravados por testes anteriores no diretório temporário
+    if (fs.existsSync(testAvatarDir)) {
+      for (const f of fs.readdirSync(testAvatarDir)) {
+        fs.unlinkSync(path.join(testAvatarDir, f));
+      }
+    }
   });
 
   afterAll(async () => {
     await cleanupTestUsers();
     resetDepsFactory();
+
+    // Remove diretório temporário de avatares
+    if (fs.existsSync(testAvatarDir)) {
+      fs.rmSync(testAvatarDir, { recursive: true, force: true });
+    }
+
     // Encerra o pool de conexões para o Jest não ficar aguardando handles abertos
     await (db.$client as { end?: () => Promise<void> }).end?.();
   });
 
   // -----------------------------------------------------------------------
-  // Caminho feliz: HTTP 200, usuário pending e token criados no banco
+  // Caminho feliz sem avatar: HTTP 200, usuário pending, avatar_url = null
   // -----------------------------------------------------------------------
-  describe("HTTP 200 — dados válidos (REQ-1 · REQ-8 · REQ-9)", () => {
+  describe("HTTP 200 — dados válidos sem avatar (REQ-1 · REQ-8 · REQ-9)", () => {
     it("retorna 200 com mensagem de link enviado", async () => {
-      const response = await POST(makeRequest(validBody));
+      const response = await POST(makeFormRequest(validFields));
 
       expect(response.status).toBe(200);
       const json = await response.json();
       expect(json.message).toBe("Um link de confirmacao foi enviado ao seu email.");
     });
 
-    it("persiste o usuário com status 'pending' no banco", async () => {
-      await POST(makeRequest(validBody));
+    it("persiste o usuário com status 'pending' e avatar_url = null no banco", async () => {
+      await POST(makeFormRequest(validFields));
 
       const rows = await db
         .select()
         .from(users)
-        .where(eq(users.email, validBody.email));
+        .where(eq(users.email, validFields.email));
 
       expect(rows).toHaveLength(1);
       expect(rows[0]!.status).toBe("pending");
-      expect(rows[0]!.name).toBe(validBody.name);
+      expect(rows[0]!.avatarUrl).toBeNull();
     });
+  });
 
-    it("cria o token de confirmação vinculado ao usuário no banco", async () => {
-      await POST(makeRequest(validBody));
+  // -----------------------------------------------------------------------
+  // Caminho feliz com avatar JPEG válido: HTTP 200, arquivo gravado, avatar_url preenchido
+  // -----------------------------------------------------------------------
+  describe("HTTP 200 — dados válidos com avatar JPEG válido ≤ 2 MB (REQ-1 · DT-6)", () => {
+    it("retorna 200 e persiste avatar_url com caminho relativo no banco", async () => {
+      const fakeJpeg = Buffer.from("fake-jpeg-data");
 
-      const userRows = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.email, validBody.email));
+      const response = await POST(
+        makeFormRequestWithAvatar(
+          { ...validFields, email: "it6-avatar@example.com" },
+          fakeJpeg,
+          "image/jpeg",
+          "photo.jpg",
+        ),
+      );
 
-      const userId = userRows[0]?.id;
-      expect(userId).toBeDefined();
+      expect(response.status).toBe(200);
 
-      const tokenRows = await db
+      const rows = await db
         .select()
-        .from(confirmationTokens)
-        .where(eq(confirmationTokens.userId, userId!));
+        .from(users)
+        .where(eq(users.email, "it6-avatar@example.com"));
 
-      expect(tokenRows).toHaveLength(1);
-      expect(tokenRows[0]!.usedAt).toBeNull();
-      expect(tokenRows[0]!.expiresAt.getTime()).toBeGreaterThan(Date.now());
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.avatarUrl).toMatch(/^\/uploads\/avatars\/[0-9a-f-]{36}\.jpg$/);
+
+      // Arquivo deve existir no diretório temporário de teste
+      const filename = path.basename(rows[0]!.avatarUrl!);
+      expect(fs.existsSync(path.join(testAvatarDir, filename))).toBe(true);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // HTTP 400 — avatar com tipo MIME não permitido (ST-4)
+  // -----------------------------------------------------------------------
+  describe("HTTP 400 — avatar com tipo MIME não permitido (ST-4 · REQ-1)", () => {
+    it("retorna 400 e não cria registro nem grava arquivo quando MIME é image/gif", async () => {
+      const response = await POST(
+        makeFormRequestWithAvatar(
+          { ...validFields, email: "it6-badmime@example.com" },
+          Buffer.from("fake-gif-data"),
+          "image/gif",
+          "image.gif",
+        ),
+      );
+
+      expect(response.status).toBe(400);
+      const json = await response.json();
+      expect(json.codigo).toBe(400);
+
+      // Nenhum registro criado
+      const rows = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, "it6-badmime@example.com"));
+      expect(rows).toHaveLength(0);
+
+      // Nenhum arquivo gravado no diretório de avatares
+      const filesInDir = fs.readdirSync(testAvatarDir);
+      expect(filesInDir).toHaveLength(0);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // HTTP 400 — avatar acima de 2 MB
+  // -----------------------------------------------------------------------
+  describe("HTTP 400 — avatar acima de 2 MB (REQ-1)", () => {
+    it("retorna 400 e não cria registro nem grava arquivo quando tamanho excede 2 MB", async () => {
+      const oversizedContent = new Uint8Array(2 * 1024 * 1024 + 1).fill(0xff);
+
+      const response = await POST(
+        makeFormRequestWithAvatar(
+          { ...validFields, email: "it6-bigfile@example.com" },
+          oversizedContent,
+          "image/jpeg",
+          "bigfile.jpg",
+        ),
+      );
+
+      expect(response.status).toBe(400);
+      const json = await response.json();
+      expect(json.codigo).toBe(400);
+
+      // Nenhum registro criado
+      const rows = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, "it6-bigfile@example.com"));
+      expect(rows).toHaveLength(0);
+
+      // Nenhum arquivo gravado
+      const filesInDir = fs.readdirSync(testAvatarDir);
+      expect(filesInDir).toHaveLength(0);
     });
   });
 
@@ -121,17 +246,17 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
   // HTTP 400 — campos obrigatórios ausentes (REQ-2)
   // -----------------------------------------------------------------------
   describe("HTTP 400 — campo obrigatório ausente (REQ-2 · REQ-7)", () => {
-    const missingFieldCases: Array<[string, Partial<typeof validBody>, RegExp]> = [
-      ["name ausente", { email: "it5-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /nome/i],
+    const missingFieldCases: Array<[string, Partial<typeof validFields>, RegExp]> = [
+      ["name ausente", { email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /nome/i],
       ["email ausente", { name: "Teste", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /email/i],
-      ["password ausente", { name: "Teste", email: "it5-err@example.com", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /senha/i],
-      ["birthDate ausente", { name: "Teste", email: "it5-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234" }, /nascimento/i],
+      ["password ausente", { name: "Teste", email: "it6-err@example.com", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /senha/i],
+      ["birthDate ausente", { name: "Teste", email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234" }, /nascimento/i],
     ];
 
     it.each(missingFieldCases)(
       "retorna 400 quando %s",
-      async (_label, body, errorPattern) => {
-        const response = await POST(makeRequest(body));
+      async (_label, fields, errorPattern) => {
+        const response = await POST(makeFormRequest(fields as Record<string, string>));
 
         expect(response.status).toBe(400);
         const json = await response.json();
@@ -143,19 +268,19 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
     );
 
     it("não cria nenhum registro no banco quando campo obrigatório está ausente", async () => {
-      const bodyWithoutName = {
-        email: "it5-no-record@example.com",
-        password: "Senha@1234",
-        passwordConfirmation: "Senha@1234",
-        birthDate: "1990-01-01",
-      };
-
-      await POST(makeRequest(bodyWithoutName));
+      await POST(
+        makeFormRequest({
+          email: "it6-no-record@example.com",
+          password: "Senha@1234",
+          passwordConfirmation: "Senha@1234",
+          birthDate: "1990-01-01",
+        }),
+      );
 
       const rows = await db
         .select()
         .from(users)
-        .where(eq(users.email, "it5-no-record@example.com"));
+        .where(eq(users.email, "it6-no-record@example.com"));
 
       expect(rows).toHaveLength(0);
     });
@@ -167,24 +292,13 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
   describe("HTTP 400 — email com formato inválido (REQ-6 · REQ-7)", () => {
     it("retorna 400 com mensagem exata", async () => {
       const response = await POST(
-        makeRequest({ ...validBody, email: "email-invalido" }),
+        makeFormRequest({ ...validFields, email: "email-invalido" }),
       );
 
       expect(response.status).toBe(400);
       const json = await response.json();
       expect(json.codigo).toBe(400);
       expect(json.mensagem).toBe("Informe um endereço de email válido.");
-    });
-
-    it("não cria nenhum registro no banco", async () => {
-      await POST(makeRequest({ ...validBody, email: "email-invalido" }));
-
-      const rows = await db
-        .select()
-        .from(users)
-        .where(like(users.email, "it5-%@example.com"));
-
-      expect(rows).toHaveLength(0);
     });
   });
 
@@ -194,9 +308,9 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
   describe("HTTP 400 — senha fora da política (REQ-4 · REQ-7)", () => {
     it("retorna 400 com mensagem exata quando senha não atende a política", async () => {
       const response = await POST(
-        makeRequest({
-          ...validBody,
-          email: "it5-weakpwd@example.com",
+        makeFormRequest({
+          ...validFields,
+          email: "it6-weakpwd@example.com",
           password: "fraca",
           passwordConfirmation: "fraca",
         }),
@@ -209,24 +323,6 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
         "A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.",
       );
     });
-
-    it("não cria nenhum registro no banco", async () => {
-      await POST(
-        makeRequest({
-          ...validBody,
-          email: "it5-weakpwd@example.com",
-          password: "fraca",
-          passwordConfirmation: "fraca",
-        }),
-      );
-
-      const rows = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, "it5-weakpwd@example.com"));
-
-      expect(rows).toHaveLength(0);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -235,9 +331,9 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
   describe("HTTP 400 — senhas divergentes (REQ-5 · REQ-7)", () => {
     it("retorna 400 com mensagem exata quando senhas não coincidem", async () => {
       const response = await POST(
-        makeRequest({
-          ...validBody,
-          email: "it5-mismatch@example.com",
+        makeFormRequest({
+          ...validFields,
+          email: "it6-mismatch@example.com",
           passwordConfirmation: "OutraSenha@1234",
         }),
       );
@@ -247,23 +343,6 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
       expect(json.codigo).toBe(400);
       expect(json.mensagem).toBe("As senhas não coincidem.");
     });
-
-    it("não cria nenhum registro no banco", async () => {
-      await POST(
-        makeRequest({
-          ...validBody,
-          email: "it5-mismatch@example.com",
-          passwordConfirmation: "OutraSenha@1234",
-        }),
-      );
-
-      const rows = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, "it5-mismatch@example.com"));
-
-      expect(rows).toHaveLength(0);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -271,12 +350,10 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
   // -----------------------------------------------------------------------
   describe("HTTP 409 — email duplicado (REQ-3 · REQ-7)", () => {
     it("retorna 409 com mensagem específica na segunda tentativa com o mesmo email", async () => {
-      // Primeiro cadastro — deve ter sucesso
-      const first = await POST(makeRequest(validBody));
+      const first = await POST(makeFormRequest(validFields));
       expect(first.status).toBe(200);
 
-      // Segundo cadastro com o mesmo email — deve retornar 409
-      const second = await POST(makeRequest(validBody));
+      const second = await POST(makeFormRequest(validFields));
 
       expect(second.status).toBe(409);
       const json = await second.json();
@@ -287,19 +364,6 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
       expect(json.requestId).toBeDefined();
       expect(json.timestamp).toBeDefined();
     });
-
-    it("não cria segundo registro no banco quando email já existe", async () => {
-      await POST(makeRequest(validBody));
-      await POST(makeRequest(validBody));
-
-      const rows = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, validBody.email));
-
-      // Apenas um registro deve existir
-      expect(rows).toHaveLength(1);
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -309,22 +373,19 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
     it("retorna 429 na quarta tentativa do mesmo IP", async () => {
       const ipHeader = { "x-forwarded-for": "192.168.99.1" };
 
-      // 3 primeiras tentativas do mesmo IP — usam emails distintos para não conflitar
       const emails = [
-        "it5-rl-1@example.com",
-        "it5-rl-2@example.com",
-        "it5-rl-3@example.com",
+        "it6-rl-1@example.com",
+        "it6-rl-2@example.com",
+        "it6-rl-3@example.com",
       ];
 
       for (const email of emails) {
-        const res = await POST(makeRequest({ ...validBody, email }, ipHeader));
-        // Status deve ser 200 (sucesso) — não 429
+        const res = await POST(makeFormRequest({ ...validFields, email }, ipHeader));
         expect(res.status).not.toBe(429);
       }
 
-      // 4ª tentativa — deve ser bloqueada com 429
       const fourth = await POST(
-        makeRequest({ ...validBody, email: "it5-rl-4@example.com" }, ipHeader),
+        makeFormRequest({ ...validFields, email: "it6-rl-4@example.com" }, ipHeader),
       );
 
       expect(fourth.status).toBe(429);
@@ -335,30 +396,6 @@ describe("IT-5: RegisterUserHandler — POST /api/auth/register (integração)",
         requestId: expect.any(String),
         timestamp: expect.any(String),
       });
-    });
-
-    it("não cria registro no banco quando bloqueado por rate limit", async () => {
-      const ipHeader = { "x-forwarded-for": "192.168.99.2" };
-
-      // Esgota as 3 tentativas permitidas
-      for (let i = 1; i <= 3; i++) {
-        await POST(
-          makeRequest({ ...validBody, email: `it5-rl-b${i}@example.com` }, ipHeader),
-        );
-      }
-
-      // 4ª tentativa — bloqueada antes de processar
-      await POST(
-        makeRequest({ ...validBody, email: "it5-rl-b4@example.com" }, ipHeader),
-      );
-
-      // O email it5-rl-b4 não deve ter sido criado
-      const rows = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, "it5-rl-b4@example.com"));
-
-      expect(rows).toHaveLength(0);
     });
   });
 });

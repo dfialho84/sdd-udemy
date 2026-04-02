@@ -18,7 +18,9 @@ describe("registerUserSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("deve aceitar payload com avatarUrl opcional presente", () => {
+    it("deve ignorar campos extras não reconhecidos (ex: avatarUrl como string — avatar agora é file no formData)", () => {
+      // O schema valida apenas campos textuais do multipart/form-data.
+      // Campos extras como avatarUrl são ignorados sem causar erro.
       const result = registerUserSchema.safeParse({
         ...validInput,
         avatarUrl: "https://example.com/avatar.png",
@@ -26,12 +28,9 @@ describe("registerUserSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("deve aceitar payload sem avatarUrl (campo opcional)", () => {
+    it("deve aceitar payload sem campo avatar (campo avatar é optional e processado no handler, não no schema)", () => {
       const result = registerUserSchema.safeParse(validInput);
       expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.avatarUrl).toBeUndefined();
-      }
     });
   });
 

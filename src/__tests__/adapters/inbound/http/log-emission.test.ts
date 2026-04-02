@@ -19,6 +19,7 @@ import { GET } from "@/app/api/auth/confirm/route";
 import {
   setDepsFactory as setRegisterDeps,
   resetDepsFactory as resetRegisterDeps,
+  type RegisterHandlerDeps,
 } from "@/app/api/auth/register/deps";
 import {
   setDepsFactory as setConfirmDeps,
@@ -33,7 +34,7 @@ import { DrizzleConfirmationTokenRepository } from "@/adapters/outbound/persiste
 import { Argon2PasswordHasher } from "@/adapters/outbound/persistence/argon2-password-hasher";
 import { CryptoTokenGenerator } from "@/adapters/outbound/persistence/crypto-token-generator";
 import { MailhogEmailAdapter } from "@/adapters/outbound/email/mailhog-email-adapter";
-import type { RegisterUserUseCaseDeps } from "@/application/use-cases/register-user.use-case";
+import { LocalAvatarStorageAdapter } from "@/adapters/outbound/storage/local-avatar-storage.adapter";
 import type { ConfirmAccountUseCaseDeps } from "@/application/use-cases/confirm-account.use-case";
 
 // Logger mock que captura todas as chamadas para verificacao
@@ -65,13 +66,14 @@ function createMockLogger(): {
 const mockLogger = createMockLogger();
 
 // Fabrica de dependencias de registro com logger mock
-function buildRegisterDepsWithMockLogger(): RegisterUserUseCaseDeps {
+function buildRegisterDepsWithMockLogger(): RegisterHandlerDeps {
   return {
     userRepository: new DrizzleUserRepository(),
     confirmationTokenRepository: new DrizzleConfirmationTokenRepository(),
     passwordHasher: new Argon2PasswordHasher(),
     tokenGenerator: new CryptoTokenGenerator(),
     emailService: new MailhogEmailAdapter(),
+    avatarStorageAdapter: new LocalAvatarStorageAdapter(),
     appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3000",
     logger: mockLogger,
   };
@@ -87,12 +89,15 @@ function buildConfirmDepsWithMockLogger(): ConfirmAccountUseCaseDeps {
   };
 }
 
-// Helper para requests POST
-function makeRegisterRequest(body: unknown): NextRequest {
+// Helper para requests POST com multipart/form-data
+function makeRegisterRequest(fields: Record<string, string>): NextRequest {
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    formData.append(key, value);
+  }
   return new NextRequest("http://localhost/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: formData,
   });
 }
 
@@ -165,7 +170,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
       password: "Senha@1234",
       passwordConfirmation: "Senha@1234",
       birthDate: "1990-01-01",
-    }));
+    } as Record<string, string>));
 
     // Localiza o log de criacao de cadastro
     const createLog = mockLogger.calls.find(
@@ -199,7 +204,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
   // -----------------------------------------------------------------------
   it("NFR-6b: emite log JSON com motivoFalha quando falha o envio de email", async () => {
     // Injeta email adapter que sempre falha para simular falha de SMTP
-    const failingEmailDeps: RegisterUserUseCaseDeps = {
+    const failingEmailDeps: RegisterHandlerDeps = {
       ...buildRegisterDepsWithMockLogger(),
       emailService: {
         send: async () => {
@@ -215,7 +220,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
       password: "Senha@1234",
       passwordConfirmation: "Senha@1234",
       birthDate: "1990-01-01",
-    }));
+    } as Record<string, string>));
 
     // Restaura deps com mock logger para proximos testes
     setRegisterDeps(buildRegisterDepsWithMockLogger);

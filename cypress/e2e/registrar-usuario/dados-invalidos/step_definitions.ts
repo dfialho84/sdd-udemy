@@ -15,25 +15,50 @@ const baseValidData = {
   birthDate: "1990-06-15",
 };
 
+/**
+ * Envia um cadastro via multipart/form-data usando fetch do browser (cy.window).
+ * Necessário porque cy.request não suporta FormData nativo.
+ */
+function registerViaFormData(
+  fields: Record<string, string>,
+  ipOverride?: string,
+): Cypress.Chainable {
+  return cy.window().then((win) => {
+    const formData = new win.FormData();
+    for (const [key, value] of Object.entries(fields)) {
+      formData.append(key, value);
+    }
+
+    const headers: Record<string, string> = {};
+    if (ipOverride) {
+      headers["X-Forwarded-For"] = ipOverride;
+    }
+
+    return win
+      .fetch("/api/auth/register", {
+        method: "POST",
+        headers,
+        body: formData,
+      })
+      .then((res: Response) => res.json() as Promise<unknown>);
+  });
+}
+
 // Pré-cadastra um usuario com o email existente antes dos testes que precisam dele
 // Usa IP único via X-Forwarded-For para evitar bloqueio pelo rate limiter
 Before({ tags: "@email-duplicado" }, () => {
   const setupIp = `10.2.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-  cy.request({
-    method: "POST",
-    url: "/api/auth/register",
-    headers: {
-      "X-Forwarded-For": setupIp,
-    },
-    body: {
+  cy.visit("/register"); // visita a página primeiro para ter o contexto do browser
+  registerViaFormData(
+    {
       name: "Usuario Existente",
       email: existingEmail,
       password: "Senha@1234",
       passwordConfirmation: "Senha@1234",
       birthDate: "1985-01-01",
     },
-    failOnStatusCode: false,
-  });
+    setupIp,
+  );
 });
 
 // Mapa de situacoes invalidas para os dados de formulario correspondentes
@@ -121,23 +146,18 @@ Then("nenhum cadastro e criado", () => {
   // Para outros casos, a ausencia de success-message e suficiente
   if (currentSituacao === "email ja associado a uma conta existente") {
     const verifyIp = `10.2.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-    cy.request({
-      method: "POST",
-      url: "/api/auth/register",
-      headers: {
-        "X-Forwarded-For": verifyIp,
-      },
-      body: {
+    registerViaFormData(
+      {
         name: "Tentativa Duplicada",
         email: existingEmail,
         password: "Senha@1234",
         passwordConfirmation: "Senha@1234",
         birthDate: "1990-01-01",
       },
-      failOnStatusCode: false,
-    }).then((response) => {
+      verifyIp,
+    ).then((json: { codigo?: number }) => {
       // Confirma que o email ainda retorna 409 (apenas um cadastro existe)
-      expect(response.status).to.eq(409);
+      expect(json.codigo).to.eq(409);
     });
   }
 });

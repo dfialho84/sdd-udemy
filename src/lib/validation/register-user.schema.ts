@@ -1,4 +1,6 @@
 // Schema de validação para POST /api/auth/register
+// Valida apenas os campos textuais recebidos via multipart/form-data.
+// O campo `avatar` (File) é validado diretamente no RegisterUserHandler antes deste schema.
 // Rastreabilidade: T-03 · REQ-1 · REQ-2 · REQ-4 · REQ-5 · REQ-6
 
 import { z } from "zod";
@@ -35,10 +37,6 @@ export const registerUserSchema = z
         /^\d{4}-\d{2}-\d{2}$/,
         "O campo data de nascimento deve estar no formato YYYY-MM-DD.",
       ),
-    avatarUrl: z
-      .string()
-      .url("Informe uma URL válida para a foto de perfil.")
-      .optional(),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     message: "As senhas não coincidem.",

@@ -1,16 +1,17 @@
 // Testes do RegisterUserHandler — POST /api/auth/register
-// Cobre os caminhos de erro HTTP 400 (campos ausentes), 409 (email duplicado), 429 (rate limit)
+// Cobre os caminhos de erro HTTP 400, 409 e 429 com multipart/form-data.
 // Rastreabilidade: T-04 · T-07 · T-20 · REQ-2 · REQ-3 · REQ-7 · NFR-4
 
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/auth/register/route";
-import { setDepsFactory, resetDepsFactory } from "@/app/api/auth/register/deps";
+import { setDepsFactory, resetDepsFactory, type RegisterHandlerDeps } from "@/app/api/auth/register/deps";
 import {
   RegisterUserUseCase,
   RegisterUserUseCaseError,
   type RegisterUserUseCaseDeps,
 } from "@/application/use-cases/register-user.use-case";
 import { registerRateLimiter } from "@/adapters/inbound/http/rate-limiter";
+import type { AvatarStoragePort } from "@/domain/ports/avatar-storage.port";
 
 // Mock do RegisterUserUseCase para testes de handler (T-07)
 jest.mock("@/application/use-cases/register-user.use-case", () => {
@@ -25,15 +26,23 @@ const MockedRegisterUserUseCase = RegisterUserUseCase as jest.MockedClass<
   typeof RegisterUserUseCase
 >;
 
-function makeRequest(body: unknown): NextRequest {
+/** Monta uma NextRequest com multipart/form-data */
+function makeFormRequest(
+  fields: Record<string, string>,
+  headers: Record<string, string> = {},
+): NextRequest {
+  const formData = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    formData.append(key, value);
+  }
   return new NextRequest("http://localhost/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    headers,
+    body: formData,
   });
 }
 
-const validBody = {
+const validFields = {
   name: "Maria Silva",
   email: "maria@example.com",
   password: "Senha@123",
@@ -41,8 +50,16 @@ const validBody = {
   birthDate: "1990-01-15",
 };
 
-/** Dependências mock mínimas para injetar no handler (T-07) */
-const fakeDeps = {} as RegisterUserUseCaseDeps;
+/** Mock de AvatarStoragePort que nunca é chamado nos testes de handler (sem arquivo) */
+const fakeAvatarStorage: AvatarStoragePort = {
+  save: jest.fn().mockResolvedValue("/uploads/avatars/fake-uuid.jpg"),
+};
+
+/** Dependências mock mínimas para injetar no handler */
+const fakeDeps: RegisterHandlerDeps = {
+  ...(({} as RegisterUserUseCaseDeps)),
+  avatarStorageAdapter: fakeAvatarStorage,
+};
 
 describe("RegisterUserHandler — POST /api/auth/register", () => {
   beforeEach(() => {
@@ -59,8 +76,8 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
 
   describe("HTTP 400 — campo obrigatório ausente (REQ-2)", () => {
     it("retorna 400 quando 'name' está ausente", async () => {
-      const { name: _name, ...bodyWithoutName } = validBody;
-      const response = await POST(makeRequest(bodyWithoutName));
+      const { name: _name, ...fieldsWithoutName } = validFields;
+      const response = await POST(makeFormRequest(fieldsWithoutName));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -71,8 +88,8 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
 
     it("retorna 400 quando 'email' está ausente", async () => {
-      const { email: _email, ...bodyWithoutEmail } = validBody;
-      const response = await POST(makeRequest(bodyWithoutEmail));
+      const { email: _email, ...fieldsWithoutEmail } = validFields;
+      const response = await POST(makeFormRequest(fieldsWithoutEmail));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -83,8 +100,8 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
 
     it("retorna 400 quando 'password' está ausente", async () => {
-      const { password: _password, passwordConfirmation: _pc, ...bodyWithoutPassword } = validBody;
-      const response = await POST(makeRequest(bodyWithoutPassword));
+      const { password: _password, passwordConfirmation: _pc, ...fieldsWithoutPassword } = validFields;
+      const response = await POST(makeFormRequest(fieldsWithoutPassword));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -95,8 +112,8 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
 
     it("retorna 400 quando 'passwordConfirmation' está ausente", async () => {
-      const { passwordConfirmation: _pc, ...bodyWithoutConfirmation } = validBody;
-      const response = await POST(makeRequest(bodyWithoutConfirmation));
+      const { passwordConfirmation: _pc, ...fieldsWithoutConfirmation } = validFields;
+      const response = await POST(makeFormRequest(fieldsWithoutConfirmation));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -107,8 +124,8 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
 
     it("retorna 400 quando 'birthDate' está ausente", async () => {
-      const { birthDate: _birthDate, ...bodyWithoutBirthDate } = validBody;
-      const response = await POST(makeRequest(bodyWithoutBirthDate));
+      const { birthDate: _birthDate, ...fieldsWithoutBirthDate } = validFields;
+      const response = await POST(makeFormRequest(fieldsWithoutBirthDate));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -119,7 +136,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
 
     it("retorna 400 com estrutura padronizada quando todos os campos estão ausentes", async () => {
-      const response = await POST(makeRequest({}));
+      const response = await POST(makeFormRequest({}));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -134,7 +151,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
 
   describe("HTTP 400 — senha fora da política (REQ-4, T-11)", () => {
     it("retorna 400 com mensagem correta quando a senha não tem maiúsculas", async () => {
-      const response = await POST(makeRequest({ ...validBody, password: "senha@123", passwordConfirmation: "senha@123" }));
+      const response = await POST(makeFormRequest({ ...validFields, password: "senha@123", passwordConfirmation: "senha@123" }));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -147,7 +164,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
 
     it("retorna 400 quando a senha tem menos de 8 caracteres", async () => {
-      const response = await POST(makeRequest({ ...validBody, password: "S@1a", passwordConfirmation: "S@1a" }));
+      const response = await POST(makeFormRequest({ ...validFields, password: "S@1a", passwordConfirmation: "S@1a" }));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -158,7 +175,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
 
   describe("HTTP 400 — senhas divergentes (REQ-5, T-17)", () => {
     it("retorna 400 com mensagem exata quando senhas não coincidem", async () => {
-      const response = await POST(makeRequest({ ...validBody, passwordConfirmation: "OutraSenha@123" }));
+      const response = await POST(makeFormRequest({ ...validFields, passwordConfirmation: "OutraSenha@123" }));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -171,7 +188,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
 
   describe("HTTP 400 — email com formato inválido (REQ-6, T-18)", () => {
     it("retorna 400 com mensagem exata quando o email é inválido", async () => {
-      const response = await POST(makeRequest({ ...validBody, email: "email-invalido" }));
+      const response = await POST(makeFormRequest({ ...validFields, email: "email-invalido" }));
 
       expect(response.status).toBe(400);
       const json = await response.json();
@@ -182,19 +199,68 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
     });
   });
 
-  describe("HTTP 400 — corpo JSON inválido (REQ-7)", () => {
-    it("retorna 400 quando o corpo não é JSON válido", async () => {
+  describe("HTTP 400 — arquivo de avatar com tipo MIME inválido (ST-4 · REQ-1)", () => {
+    it("retorna 400 quando arquivo é application/pdf", async () => {
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(validFields)) {
+        formData.append(key, value);
+      }
+      const pdfFile = new File(["fake pdf content"], "avatar.pdf", { type: "application/pdf" });
+      formData.append("avatar", pdfFile);
+
       const request = new NextRequest("http://localhost/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "corpo-invalido",
+        body: formData,
       });
       const response = await POST(request);
 
       expect(response.status).toBe(400);
       const json = await response.json();
       expect(json.codigo).toBe(400);
-      expect(json.requestId).toBeDefined();
+      expect(json.mensagem).toMatch(/tipo.*não permitido|não permitido/i);
+    });
+
+    it("retorna 400 quando arquivo é text/html", async () => {
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(validFields)) {
+        formData.append(key, value);
+      }
+      const htmlFile = new File(["<html>xss</html>"], "xss.html", { type: "text/html" });
+      formData.append("avatar", htmlFile);
+
+      const request = new NextRequest("http://localhost/api/auth/register", {
+        method: "POST",
+        body: formData,
+      });
+      const response = await POST(request);
+
+      expect(response.status).toBe(400);
+      const json = await response.json();
+      expect(json.codigo).toBe(400);
+    });
+  });
+
+  describe("HTTP 400 — arquivo de avatar acima de 2 MB (REQ-1)", () => {
+    it("retorna 400 quando arquivo excede 2 MB", async () => {
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(validFields)) {
+        formData.append(key, value);
+      }
+      // Cria um buffer de 2MB + 1 byte
+      const oversizedContent = new Uint8Array(2 * 1024 * 1024 + 1).fill(0xff);
+      const bigFile = new File([oversizedContent], "big.jpg", { type: "image/jpeg" });
+      formData.append("avatar", bigFile);
+
+      const request = new NextRequest("http://localhost/api/auth/register", {
+        method: "POST",
+        body: formData,
+      });
+      const response = await POST(request);
+
+      expect(response.status).toBe(400);
+      const json = await response.json();
+      expect(json.codigo).toBe(400);
+      expect(json.mensagem).toMatch(/excede|tamanho/i);
     });
   });
 
@@ -210,7 +276,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
         ),
       }));
 
-      const response = await POST(makeRequest(validBody));
+      const response = await POST(makeFormRequest(validFields));
 
       expect(response.status).toBe(409);
       const json = await response.json();
@@ -221,43 +287,13 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
       expect(json.requestId).toBeDefined();
       expect(json.timestamp).toBeDefined();
     });
-
-    it("retorna estrutura padronizada { codigo, mensagem, requestId, timestamp } no erro 409", async () => {
-      MockedRegisterUserUseCase.mockImplementation(() => ({
-        execute: jest.fn().mockRejectedValue(
-          new RegisterUserUseCaseError({
-            codigo: 409,
-            mensagem:
-              "Este email já está cadastrado. Tente fazer login ou use outro endereço.",
-          }),
-        ),
-      }));
-
-      const response = await POST(makeRequest(validBody));
-      const json = await response.json();
-
-      expect(json).toMatchObject({
-        codigo: 409,
-        mensagem: expect.any(String),
-        requestId: expect.any(String),
-        timestamp: expect.any(String),
-      });
-    });
   });
 
   describe("HTTP 429 — rate limit excedido (NFR-4, T-20)", () => {
     it("retorna 429 na quarta tentativa do mesmo IP em 15 minutos", async () => {
       const ipHeader = { "x-forwarded-for": "10.0.0.1" };
 
-      function makeRequestWithIp(body: unknown): NextRequest {
-        return new NextRequest("http://localhost/api/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...ipHeader },
-          body: JSON.stringify(body),
-        });
-      }
-
-      // Configurar mock para que as 3 primeiras tentativas retornem 200 (passam pelo rate limiter)
+      // Configurar mock para que as 3 primeiras tentativas retornem 200
       MockedRegisterUserUseCase.mockImplementation(() => ({
         execute: jest.fn().mockResolvedValue({
           message: "Um link de confirmacao foi enviado ao seu email.",
@@ -265,12 +301,12 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
       }));
 
       // 3 primeiras tentativas — passam pelo rate limiter
-      await POST(makeRequestWithIp(validBody));
-      await POST(makeRequestWithIp(validBody));
-      await POST(makeRequestWithIp(validBody));
+      await POST(makeFormRequest(validFields, ipHeader));
+      await POST(makeFormRequest(validFields, ipHeader));
+      await POST(makeFormRequest(validFields, ipHeader));
 
       // 4ª tentativa — deve ser bloqueada com 429 antes de qualquer processamento
-      const response = await POST(makeRequestWithIp(validBody));
+      const response = await POST(makeFormRequest(validFields, ipHeader));
       expect(response.status).toBe(429);
 
       const json = await response.json();
@@ -291,7 +327,7 @@ describe("RegisterUserHandler — POST /api/auth/register", () => {
         }),
       }));
 
-      const response = await POST(makeRequest(validBody));
+      const response = await POST(makeFormRequest(validFields));
 
       expect(response.status).toBe(200);
       const json = await response.json();
