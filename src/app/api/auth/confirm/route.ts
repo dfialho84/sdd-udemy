@@ -5,20 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { ConfirmAccountUseCase, ConfirmAccountUseCaseError } from "@/application/use-cases/confirm-account.use-case";
 import { getDeps } from "./deps";
 
-/** Estrutura de erro padronizada (constitution.md, regra 5) */
-interface ApiErrorBody {
-  codigo: number;
-  mensagem: string;
-  requestId: string;
-  timestamp: string;
-  /** Presente apenas no erro 410 para indicar URL de novo cadastro (REQ-13) */
-  registerUrl?: string;
-}
 
 async function handleConfirm(request: NextRequest): Promise<NextResponse> {
-  const requestId = crypto.randomUUID();
-  const timestamp = new Date().toISOString();
-
   // Obter dependências injetadas (ou padrão)
   const deps = getDeps();
 
@@ -38,32 +26,30 @@ async function handleConfirm(request: NextRequest): Promise<NextResponse> {
     }
 
     // Delegar ao caso de uso (REQ-10 a REQ-15)
-    const result = await useCase.execute(tokenValue.trim());
+    await useCase.execute(tokenValue.trim());
 
-    // Retornar HTTP 200 com mensagem e URLs (T-39)
-    return NextResponse.json({
-      message: result.message,
-      loginUrl: result.loginUrl,
-      registerUrl: result.registerUrl,
-    });
+    // Redirecionar para página HTML de sucesso
+    const url = request.nextUrl.clone();
+    url.pathname = "/confirm";
+    url.search = "?status=success";
+    return NextResponse.redirect(url);
   } catch (error) {
-    const mappedError: ApiErrorBody = error instanceof ConfirmAccountUseCaseError
-      ? {
-          codigo: error.codigo,
-          mensagem: error.message,
-          requestId,
-          timestamp,
-          // Inclui registerUrl apenas no erro 410 (link expirado) — REQ-13
-          ...(error.registerUrl ? { registerUrl: error.registerUrl } : {}),
-        }
-      : {
-          codigo: 500,
-          mensagem: "Erro interno do servidor.",
-          requestId,
-          timestamp,
-        };
+    const url = request.nextUrl.clone();
+    url.pathname = "/confirm";
 
-    return NextResponse.json(mappedError, { status: mappedError.codigo });
+    if (error instanceof ConfirmAccountUseCaseError) {
+      if (error.codigo === 410) {
+        url.search = "?error=expired";
+      } else if (error.codigo === 409) {
+        url.search = "?error=already_confirmed";
+      } else {
+        url.search = "?error=invalid";
+      }
+    } else {
+      url.search = "?error=invalid";
+    }
+
+    return NextResponse.redirect(url);
   }
 }
 

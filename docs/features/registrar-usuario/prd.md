@@ -20,7 +20,7 @@ Qualquer visitante da plataforma que ainda nao possui uma conta. Nao ha restrico
 2. Validar os dados informados antes do envio: email unico, senha com minimo de 8 caracteres contendo letras maiusculas, minusculas, numeros e caracteres especiais, e confirmacao de senha identica.
 3. Criar o cadastro com status pendente apos o preenchimento valido do formulario.
 4. Enviar email com link unico e expiravel para o endereco informado, para que o usuario confirme sua identidade.
-5. Ativar a conta ao clicar no link de confirmacao valido, exibindo mensagem de sucesso e link de acesso ao sistema.
+5. Ativar a conta ao clicar no link de confirmacao valido, redirecionando o navegador para a pagina HTML /confirm com mensagem de sucesso e link de acesso ao sistema.
 6. Rejeitar o link de confirmacao expirado e remover o cadastro pendente associado.
 
 ## Criterios de Sucesso
@@ -31,7 +31,7 @@ Qualquer visitante da plataforma que ainda nao possui uma conta. Nao ha restrico
 | Email de confirmacao recebido apos o cadastro | Email entregue em ate 60 segundos apos o envio do formulario |
 | Link de confirmacao expira corretamente | Link torna-se invalido apos 24 horas da criacao do cadastro |
 | Cadastro pendente removido apos expiracao do link | 100% dos cadastros com link expirado sao deletados automaticamente |
-| Conta ativada apos clique no link valido | Mensagem de sucesso exibida e link para acesso ao sistema apresentado imediatamente |
+| Conta ativada apos clique no link valido | Navegador redirecionado para /confirm com mensagem de sucesso e link para acesso ao sistema apresentado imediatamente |
 | Dados invalidos rejeitados antes do envio | 100% das tentativas com email duplicado ou senha fora do padrao exibem erro especifico sem criar cadastro |
 
 ## Fora do Escopo
@@ -54,7 +54,7 @@ Visitante abre a pagina de cadastro (/register)
 → Visitante abre o email e clica no link de confirmacao
 → Sistema valida o link (existe e nao expirou)
 → Sistema ativa a conta (status "ativo")
-→ Usuario ve mensagem de sucesso e link para acessar o sistema
+→ Sistema redireciona o navegador para a pagina HTML /confirm exibindo mensagem de sucesso e link para acessar o sistema
 ```
 
 ## Fluxo Alternativo
@@ -63,8 +63,8 @@ Visitante abre a pagina de cadastro (/register)
 Visitante clica no link de confirmacao apos 24 horas da criacao do cadastro
 → Sistema verifica o link e identifica que esta expirado
 → Sistema deleta o cadastro pendente associado ao link
-→ Visitante ve mensagem informando que o link expirou e que deve realizar o cadastro novamente
-→ Visitante e redirecionado para a pagina de cadastro (/register)
+→ Sistema redireciona o navegador para a pagina HTML /confirm exibindo mensagem de erro informando que o link expirou e que o visitante deve realizar o cadastro novamente
+→ Pagina /confirm apresenta link para a pagina de cadastro (/register)
 ```
 
 ## Dependencias

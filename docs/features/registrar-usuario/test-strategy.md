@@ -191,11 +191,11 @@
 - **O que testa:** Extração do token da query string, validação e ativação da conta com dependências reais
 - **Dependências reais usadas:** banco MySQL de teste
 - **Casos cobertos:**
-  - Token válido: HTTP 200 com mensagem de sucesso e `loginUrl`; status do usuário alterado para `active`; `used_at` preenchido no token
-  - Token ausente na query string: HTTP 400
-  - Token inexistente no banco: HTTP 404
-  - Token já utilizado: HTTP 409; status da conta não alterado
-  - Token expirado: HTTP 410; cadastro pendente removido do banco
+  - Token válido: HTTP 302 Redirect para `/confirm?status=success`; status do usuário alterado para `active`; `used_at` preenchido no token
+  - Token ausente na query string: HTTP 302 Redirect para `/confirm?error=invalid_token`
+  - Token inexistente no banco: HTTP 302 Redirect para `/confirm?error=not_found`
+  - Token já utilizado: HTTP 302 Redirect para `/confirm?error=already_confirmed`; status da conta não alterado
+  - Token expirado: HTTP 302 Redirect para `/confirm?error=expired`; cadastro pendente removido do banco
 - **Setup necessário:** usuário `pending` e token pré-inseridos no banco; `expires_at` manipulado para simular expiração
 - **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15
 
@@ -237,9 +237,9 @@
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
   - `Given que o visitante possui um cadastro com status "pendente" e recebeu o link de confirmacao por email` → inserir usuário `pending` e token válido no banco; extrair o link de confirmação
-  - `When o visitante clica no link de confirmacao dentro do prazo de 24 horas` → acessar `GET /api/auth/confirm?token=<valor>`
-  - `Then o sistema exibe uma mensagem de sucesso informando que a conta foi ativada` → verificar HTTP 200 com mensagem de ativação
-  - `And um link para acessar o sistema e apresentado ao visitante` → verificar presença de `loginUrl` na resposta
+  - `When o visitante clica no link de confirmacao dentro do prazo de 24 horas` → navegar para `GET /api/auth/confirm?token=<valor>` no Cypress
+  - `Then o visitante ve a pagina de confirmacao "/confirm" com mensagem de sucesso informando que a conta foi ativada` → verificar que a URL atual é `/confirm` (ou contém `status=success`) e que a mensagem de sucesso está visível no HTML
+  - `And um link para acessar o sistema e apresentado ao visitante na pagina "/confirm"` → verificar presença de link de acesso ao sistema na página `/confirm`
 - **Steps reutilizáveis de outros Scenarios:** setup de usuário `pending` e token — base reutilizável para GH-4 e GH-5 com variações no estado do token
 - **Estado inicial necessário:** usuário `pending` e token com `expires_at` futuro inseridos no banco de teste
 - **Rastreabilidade:** REQ-10 · REQ-11
@@ -251,10 +251,10 @@
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
   - `Given que um visitante possui um cadastro com status "pendente" e cujo link de confirmacao foi gerado ha mais de 24 horas` → inserir usuário `pending` e token com `expires_at = now - 25h`
-  - `When o visitante acessa o link de confirmacao expirado` → acessar `GET /api/auth/confirm?token=<valor expirado>`
-  - `Then o sistema exibe mensagem informando que o link expirou e que o cadastro deve ser realizado novamente` → verificar HTTP 410 com mensagem de link expirado
+  - `When o visitante acessa o link de confirmacao expirado` → navegar para `GET /api/auth/confirm?token=<valor expirado>` no Cypress
+  - `Then o visitante ve a pagina de confirmacao "/confirm" com mensagem informando que o link expirou e que o cadastro deve ser realizado novamente` → verificar que a URL atual é `/confirm` (ou contém `error=expired`) e que a mensagem de expiração está visível no HTML
   - `And o cadastro pendente associado ao link e removido automaticamente` → consultar banco de teste e verificar ausência do usuário
-  - `And o visitante e redirecionado para a pagina de cadastro` → verificar presença de `registerUrl` na resposta apontando para `/register`
+  - `And a pagina "/confirm" apresenta um link para a pagina de cadastro` → verificar presença de link apontando para `/register` na página `/confirm`
 - **Steps reutilizáveis de outros Scenarios:** setup de usuário `pending` reutilizável de GH-3 com `expires_at` ajustado para o passado
 - **Estado inicial necessário:** usuário `pending` e token com `expires_at = now - 25h` inseridos diretamente no banco de teste
 - **Rastreabilidade:** REQ-12 · REQ-13
@@ -266,8 +266,8 @@
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
   - `Given que o visitante possui uma conta ativada apos clicar no link de confirmacao` → inserir usuário `active` e token com `used_at` preenchido no banco de teste
-  - `When o visitante tenta acessar o mesmo link de confirmacao novamente` → acessar `GET /api/auth/confirm?token=<valor já utilizado>`
-  - `Then o sistema exibe mensagem informando que o link de confirmacao ja foi utilizado` → verificar HTTP 409 com mensagem de link já utilizado
+  - `When o visitante tenta acessar o mesmo link de confirmacao novamente` → navegar para `GET /api/auth/confirm?token=<valor já utilizado>` no Cypress
+  - `Then o visitante ve a pagina de confirmacao "/confirm" com mensagem informando que o link de confirmacao ja foi utilizado` → verificar que a URL atual é `/confirm` (ou contém `error=already_confirmed`) e que a mensagem de link já utilizado está visível no HTML
   - `And o sistema nao altera o status da conta` → consultar banco de teste e verificar que o status do usuário permanece `active`
 - **Steps reutilizáveis de outros Scenarios:** nenhum — estado inicial específico (conta `active`, token com `used_at` preenchido)
 - **Estado inicial necessário:** usuário `active` e token com `used_at` preenchido inseridos diretamente no banco de teste
@@ -316,8 +316,8 @@
 - **O que verifica:** Token de confirmação é invalidado imediatamente após o primeiro uso bem-sucedido e rejeitado em tentativas subsequentes
 - **Vetor de ataque simulado:** replay de token — atacante que obtém o link de confirmação tenta reutilizá-lo após a vítima já ter ativado a conta
 - **Casos cobertos:**
-  - Primeiro uso do token: HTTP 200; `used_at` preenchido no banco
-  - Segundo uso do mesmo token: HTTP 409; status da conta não alterado; nenhum dado sensível exposto na resposta
+  - Primeiro uso do token: HTTP 302 Redirect para `/confirm?status=success`; `used_at` preenchido no banco
+  - Segundo uso do mesmo token: HTTP 302 Redirect para `/confirm?error=already_confirmed`; status da conta não alterado; nenhum dado sensível exposto na resposta
 - **Rastreabilidade:** NFR-3 · REQ-14 · REQ-15 · Risco "Token de confirmação previsível ou reutilizável" (PRD)
 
 ---

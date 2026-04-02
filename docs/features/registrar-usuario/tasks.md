@@ -476,11 +476,11 @@
 
 ### T-39: Implementar `ConfirmAccountHandler` — endpoint `GET /api/auth/confirm`
 
-- [x] Implementar o Route Handler Next.js em `app/api/auth/confirm/route.ts`. O handler deve: (1) extrair o `token` da query string — retornar HTTP 400 se ausente ou malformado; (2) delegar ao `ConfirmAccountUseCase`; (3) retornar HTTP 200 com `{ message, loginUrl }` no caminho feliz; (4) mapear os erros do caso de uso para HTTP 404, 409 e 410 com a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
+- [x] Implementar o Route Handler Next.js em `app/api/auth/confirm/route.ts`. O handler deve: (1) extrair o `token` da query string — redirecionar para `/confirm?error=invalid_token` se ausente ou malformado; (2) delegar ao `ConfirmAccountUseCase`; (3) retornar HTTP 302 Redirect para `/confirm?status=success` no caminho feliz; (4) mapear os erros do caso de uso para HTTP 302 Redirect: não encontrado → `/confirm?error=not_found`, já utilizado → `/confirm?error=already_confirmed`, expirado → `/confirm?error=expired`.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15
 **Depende de:** T-36
-**Concluída quando:** `GET /api/auth/confirm?token=<válido>` retorna HTTP 200 com mensagem de sucesso e `loginUrl`; os casos de erro retornam os códigos HTTP corretos com estrutura padronizada.
+**Concluída quando:** `GET /api/auth/confirm?token=<válido>` retorna HTTP 302 Redirect para `/confirm?status=success`; os casos de erro retornam HTTP 302 com os parâmetros `error` corretos.
 
 
 ---
@@ -507,7 +507,7 @@
 
 ### T-42: Cobrir GH-3 — Scenario "Confirmacao de conta via link valido" (E2E)
 
-- [x] Implementar os step definitions e o teste E2E Gherkin GH-3 cobrindo: setup de usuário `pending` e token válido no banco, acesso ao link de confirmação, verificação de HTTP 200 com mensagem de ativação e presença de `loginUrl` na resposta.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-3 cobrindo: setup de usuário `pending` e token válido no banco, acesso ao link de confirmação, verificação de redirect HTTP 302 para `/confirm?status=success`, navegação para a página `/confirm` e verificação da mensagem de ativação e do link de acesso ao sistema.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · Scenario: "Confirmacao de conta via link valido"
 **Depende de:** T-39
@@ -519,13 +519,13 @@
 
 > Quando o visitante acessa um link de confirmação válido, o sistema deve exibir uma mensagem informando que a conta foi ativada com sucesso e apresentar um link para acessar o sistema.
 
-### T-43: Cobrir IT-6 — `ConfirmAccountHandler GET /api/auth/confirm` (integração)
+### T-43: Cobrir IT-7 — `ConfirmAccountHandler GET /api/auth/confirm` (integração)
 
-- [x] Implementar o teste de integração IT-6 cobrindo: (a) token válido — HTTP 200 com `message` e `loginUrl`, status `active` no banco, `used_at` preenchido; (b) token ausente — HTTP 400; (c) token inexistente — HTTP 404; (d) token já utilizado — HTTP 409, status não alterado; (e) token expirado — HTTP 410, cadastro pendente removido.
+- [x] Implementar o teste de integração IT-7 cobrindo: (a) token válido — HTTP 302 Redirect para `/confirm?status=success`, status `active` no banco, `used_at` preenchido; (b) token ausente — HTTP 302 Redirect para `/confirm?error=invalid_token`; (c) token inexistente — HTTP 302 Redirect para `/confirm?error=not_found`; (d) token já utilizado — HTTP 302 Redirect para `/confirm?error=already_confirmed`, status não alterado; (e) token expirado — HTTP 302 Redirect para `/confirm?error=expired`, cadastro pendente removido.
 
 **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15
 **Depende de:** T-39
-**Concluída quando:** Todos os cinco casos de IT-6 passam contra banco MySQL de teste.
+**Concluída quando:** Todos os cinco casos de IT-7 passam contra banco MySQL de teste; todos os redirects apontam para `/confirm` com os parâmetros corretos.
 
 ---
 
@@ -587,7 +587,7 @@ _(Coberto pelas tasks T-39, T-43, T-44 e T-45 que implementam e testam o retorno
 
 ### T-48: Cobrir ST-2 — prevenção de reuso de token de confirmação (segurança)
 
-- [x] Implementar o teste ST-2 verificando: (a) primeiro uso do token retorna HTTP 200 e `used_at` é preenchido no banco; (b) segundo uso do mesmo token retorna HTTP 409, status da conta não é alterado e nenhum dado sensível é exposto na resposta.
+- [x] Implementar o teste ST-2 verificando: (a) primeiro uso do token retorna HTTP 302 Redirect para `/confirm?status=success` e `used_at` é preenchido no banco; (b) segundo uso do mesmo token retorna HTTP 302 Redirect para `/confirm?error=already_confirmed`, status da conta não é alterado e nenhum dado sensível é exposto na resposta.
 
 **Rastreabilidade:** NFR-3 · REQ-14 · REQ-15
 **Depende de:** T-39
@@ -678,3 +678,15 @@ _(REQ-15 é coberto pelas mesmas tasks de REQ-14: T-36, T-38, T-40, T-43, T-46, 
 **Rastreabilidade:** NFR-5
 **Depende de:** —
 **Concluída quando:** O `docker-compose.yml` inclui os três serviços com versões fixas e comentários; o ambiente sobe sem erros e os serviços de observabilidade estão acessíveis localmente.
+
+---
+
+## REQ-11 (complemento) — Página HTML de confirmação
+
+### T-61: Criar página `/confirm` (`src/app/confirm/page.tsx`)
+
+- [x] Implementar a página React Server Component em `src/app/confirm/page.tsx` que lê os `searchParams` (`status` e `error`) e renderiza HTML de sucesso ou erro no navegador. Quando `status=success`: exibir mensagem de conta ativada com sucesso e link para acessar o sistema. Quando `error=expired`: exibir mensagem de link expirado e link para `/register`. Quando `error=already_confirmed`: exibir mensagem de link já utilizado. Quando `error=not_found` ou `error=invalid_token`: exibir mensagem de link inválido. A página não deve conter lógica de negócio — apenas apresentação baseada nos query params.
+
+**Rastreabilidade:** REQ-11 · REQ-13 · REQ-14
+**Depende de:** T-39
+**Concluída quando:** A página `/confirm` renderiza HTML correto para cada combinação de `status`/`error`; o link de login aparece no caso de sucesso; o link para `/register` aparece no caso de expiração.

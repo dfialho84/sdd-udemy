@@ -84,8 +84,14 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com tr�
 ### ConfirmAccountHandler (adapter inbound)
 
 - **Camada:** infrastructure (transport)
-- **Responsabilidade:** Route Handler Next.js (`GET /api/auth/confirm`) que extrai o token da query string e delega ao `ConfirmAccountUseCase`.
+- **Responsabilidade:** Route Handler Next.js (`GET /api/auth/confirm`) que extrai o token da query string, delega ao `ConfirmAccountUseCase` e retorna HTTP 302 Redirect para `/confirm?status=success` no caminho feliz ou `/confirm?error=<tipo>` nos casos de erro.
 - **Depende de:** `ConfirmAccountUseCase`
+
+### ConfirmPage (adapter de apresentação) — _novo_
+
+- **Camada:** infrastructure (transport / UI)
+- **Responsabilidade:** Página React Server Component em `src/app/confirm/page.tsx` que lê os `searchParams` (`status` e `error`) e renderiza HTML de sucesso ou erro no navegador. Não contém lógica de negócio — apenas apresentação do resultado da confirmação.
+- **Depende de:** —
 
 ### DrizzleUserRepository (adapter outbound) — _novo_
 
@@ -203,22 +209,16 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com tr�
   | Parametro | Tipo | Descricao |
   |-----------|------|-----------|
   | token | string | Valor do token de confirmacao extraido do link enviado por email |
-- **Response 200:**
-    ```json
-    {
-        "message": "Sua conta foi ativada com sucesso.",
-        "loginUrl": "/login"
-    }
-    ```
-- **Erros:**
-  | Codigo | Condicao |
-  |--------|----------|
-  | 400 | Token ausente ou malformado |
-  | 410 | Token expirado — cadastro pendente removido automaticamente (REQ-12, REQ-13) |
-  | 409 | Token ja utilizado — conta nao e alterada (REQ-14, REQ-15) |
-  | 404 | Token nao encontrado |
+- **Response (caminho feliz):** `302 Redirect → /confirm?status=success`
+- **Respostas de erro (todos como redirect):**
+  | Codigo | Destino do Redirect | Condicao |
+  |--------|---------------------|----------|
+  | 302 | `/confirm?error=invalid_token` | Token ausente ou malformado |
+  | 302 | `/confirm?error=expired` | Token expirado — cadastro pendente removido automaticamente (REQ-12, REQ-13) |
+  | 302 | `/confirm?error=already_confirmed` | Token ja utilizado — conta nao e alterada (REQ-14, REQ-15) |
+  | 302 | `/confirm?error=not_found` | Token nao encontrado |
 
-    Todas as respostas de erro seguem a estrutura padronizada: `{ codigo, mensagem, requestId, timestamp }`.
+    Todos os erros resultam em redirect 302 para `/confirm` com o parâmetro `error` indicando o tipo de falha. A página `/confirm` é responsável por renderizar a mensagem adequada ao visitante.
 
 ---
 
@@ -254,18 +254,18 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com tr�
 2. `ConfirmAccountHandler` extrai o valor do token da query string. Se ausente ou malformado, retorna HTTP 400.
 3. `ConfirmAccountHandler` delega ao `ConfirmAccountUseCase` com o valor do token.
 4. `ConfirmAccountUseCase` consulta `ConfirmationTokenRepository.findByToken`. Se nao encontrado, retorna HTTP 404.
-5. `ConfirmAccountUseCase` verifica se `used_at` e nao nulo. Se ja utilizado, registra log JSON com timestamp, resultado, tokenId e requestId (NFR-7) e retorna erro HTTP 409 com a mensagem de link ja utilizado. A conta nao e alterada (REQ-14, REQ-15).
-6. `ConfirmAccountUseCase` verifica se `expires_at < agora`. Se expirado: remove o cadastro pendente via `UserRepository.delete` (REQ-12), registra log JSON (NFR-7) e retorna erro HTTP 410 com a mensagem de link expirado e instrucao para recadastro (REQ-13).
+5. `ConfirmAccountUseCase` verifica se `used_at` e nao nulo. Se ja utilizado, registra log JSON com timestamp, resultado, tokenId e requestId (NFR-7) e retorna sinal para redirect `/confirm?error=already_confirmed`. A conta nao e alterada (REQ-14, REQ-15).
+6. `ConfirmAccountUseCase` verifica se `expires_at < agora`. Se expirado: remove o cadastro pendente via `UserRepository.delete` (REQ-12), registra log JSON (NFR-7) e retorna sinal para redirect `/confirm?error=expired` com instrucao para recadastro em `/register` (REQ-13).
 7. `ConfirmAccountUseCase` atualiza `ConfirmationToken.used_at = agora` via `ConfirmationTokenRepository.markAsUsed` — invalidacao imediata apos o primeiro uso (NFR-3, REQ-14).
 8. `ConfirmAccountUseCase` atualiza o status do usuario para `active` via `UserRepository.activate` (REQ-10).
 9. `ConfirmAccountUseCase` registra log JSON com timestamp, resultado=`sucesso`, tokenId e requestId (NFR-7).
-10. `ConfirmAccountHandler` retorna HTTP 200 com a mensagem de conta ativada e o link de acesso ao sistema (REQ-11).
+10. `ConfirmAccountHandler` retorna HTTP 302 Redirect para `/confirm?status=success` (REQ-11). A página `/confirm` renderiza a mensagem de sucesso e o link para acessar o sistema.
 
 **Fluxos alternativos:**
 
-- Se o token nao existir no banco: retorna HTTP 404.
-- Se o token ja tiver sido utilizado (`used_at` nao nulo): retorna HTTP 409 sem alterar nenhum dado (REQ-14, REQ-15).
-- Se o token estiver expirado (`expires_at < agora`): remove o cadastro pendente, loga o evento e retorna HTTP 410 (REQ-12, REQ-13).
+- Se o token nao existir no banco: retorna HTTP 302 Redirect para `/confirm?error=not_found`.
+- Se o token ja tiver sido utilizado (`used_at` nao nulo): retorna HTTP 302 Redirect para `/confirm?error=already_confirmed` sem alterar nenhum dado (REQ-14, REQ-15).
+- Se o token estiver expirado (`expires_at < agora`): remove o cadastro pendente, loga o evento e retorna HTTP 302 Redirect para `/confirm?error=expired` (REQ-12, REQ-13).
 
 ---
 

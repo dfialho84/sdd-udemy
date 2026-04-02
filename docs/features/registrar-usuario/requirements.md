@@ -46,7 +46,7 @@
 
 > Fonte: Cenário BDD "Confirmação de conta via link válido" / PRD — Fluxo Principal, passos 7 e 8 / PRD — Objetivos, item 5
 
-**REQ-11**: Quando o visitante acessa um link de confirmação válido, o sistema deve exibir uma mensagem informando que a conta foi ativada com sucesso e apresentar um link para acessar o sistema.
+**REQ-11**: Quando o visitante acessa um link de confirmação válido, o sistema deve redirecionar o navegador para `/confirm` e exibir uma mensagem informando que a conta foi ativada com sucesso e apresentar um link para acessar o sistema.
 
 > Fonte: Cenário BDD "Confirmação de conta via link válido" — Then/And / PRD — Objetivos, item 5 / PRD — Fluxo Principal, passo 10
 
@@ -54,11 +54,11 @@
 
 > Fonte: Cenário BDD "Confirmação de cadastro com link expirado" — Then "o cadastro pendente é removido automaticamente" / PRD — Fluxo Alternativo / PRD — Objetivos, item 6
 
-**REQ-13**: Se um link de confirmação estiver expirado, o sistema deve exibir ao visitante uma mensagem informando que o link expirou e apresentar um link para que o visitante solicite um novo email de confirmação.
+**REQ-13**: Se um link de confirmação estiver expirado, o sistema deve redirecionar o navegador para `/confirm` exibindo ao visitante uma mensagem informando que o link expirou e apresentar um link para que o visitante realize um novo cadastro em `/register`.
 
 > Fonte: Cenário BDD "Confirmação de cadastro com link expirado" — Then/And / PRD — Fluxo Alternativo
 
-**REQ-14**: Se um link de confirmação já tiver sido utilizado anteriormente, o sistema deve rejeitar a solicitação e exibir ao visitante uma mensagem informando que o link de confirmação já foi utilizado.
+**REQ-14**: Se um link de confirmação já tiver sido utilizado anteriormente, o sistema deve rejeitar a solicitação e redirecionar o navegador para `/confirm` exibindo ao visitante uma mensagem informando que o link de confirmação já foi utilizado.
 
 > Fonte: Cenário BDD "Confirmação de cadastro com link já utilizado" — Then / PRD — Riscos
 

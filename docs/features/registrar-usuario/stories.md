@@ -35,7 +35,7 @@ Para que minha conta seja ativada e eu possa acessar o sistema
 _Critérios de aceitação_:
 
 - O sistema deve ativar a conta do visitante ao receber um clique em um link de confirmação válido e não expirado
-- O sistema deve exibir mensagem de sucesso e um link para acessar o sistema após a ativação da conta
+- O sistema deve redirecionar o navegador para a página HTML `/confirm` exibindo mensagem de sucesso e um link para acessar o sistema após a ativação da conta
 - O sistema deve invalidar o link de confirmação imediatamente após o primeiro uso bem-sucedido, impedindo reativações duplicadas
 
 ## Estoria 4 – Caso de falha: link de confirmação expirado

@@ -25,18 +25,18 @@ Feature: Registrar Usuario
   Scenario: Confirmacao de conta via link valido
     Given que o visitante possui um cadastro com status "pendente" e recebeu o link de confirmacao por email
     When o visitante clica no link de confirmacao dentro do prazo de 24 horas
-    Then o sistema exibe uma mensagem de sucesso informando que a conta foi ativada
-    And um link para acessar o sistema e apresentado ao visitante
+    Then o visitante ve a pagina de confirmacao "/confirm" com mensagem de sucesso informando que a conta foi ativada
+    And um link para acessar o sistema e apresentado ao visitante na pagina "/confirm"
 
   Scenario: Confirmacao de cadastro com link expirado
     Given que um visitante possui um cadastro com status "pendente" e cujo link de confirmacao foi gerado ha mais de 24 horas
     When o visitante acessa o link de confirmacao expirado
-    Then o sistema exibe mensagem informando que o link expirou e que o cadastro deve ser realizado novamente
+    Then o visitante ve a pagina de confirmacao "/confirm" com mensagem informando que o link expirou e que o cadastro deve ser realizado novamente
     And o cadastro pendente associado ao link e removido automaticamente
-    And o visitante e redirecionado para a pagina de cadastro
+    And a pagina "/confirm" apresenta um link para a pagina de cadastro
 
   Scenario: Confirmacao de cadastro com link ja utilizado
     Given que o visitante possui uma conta ativada apos clicar no link de confirmacao
     When o visitante tenta acessar o mesmo link de confirmacao novamente
-    Then o sistema exibe mensagem informando que o link de confirmacao ja foi utilizado
+    Then o visitante ve a pagina de confirmacao "/confirm" com mensagem informando que o link de confirmacao ja foi utilizado
     And o sistema nao altera o status da conta
