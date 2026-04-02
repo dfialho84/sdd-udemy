@@ -26,11 +26,61 @@
 
 ### T-03: Implementar schema de validação de entrada do `POST /api/auth/register`
 
-- [x] Criar o schema Zod (ou equivalente) que valida todos os campos do payload de registro: presença dos obrigatórios (name, email, password, passwordConfirmation, birthDate), formato de email, política de senha (mínimo 8 caracteres com maiúsculas, minúsculas, números e caracteres especiais), coincidência entre password e passwordConfirmation, e avatar_url como opcional.
+- [x] Criar o schema Zod (ou equivalente) que valida todos os campos textuais do payload de registro recebido via `multipart/form-data`: presença dos obrigatórios (name, email, password, passwordConfirmation, birthDate), formato de email, política de senha (mínimo 8 caracteres com maiúsculas, minúsculas, números e caracteres especiais) e coincidência entre password e passwordConfirmation. O campo `avatar` é um arquivo opcional — a validação de tipo MIME (`image/jpeg`, `image/png` ou `image/webp`) e tamanho máximo de 2 MB é responsabilidade do `RegisterUserHandler` antes da execução deste schema.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · REQ-4 · REQ-5 · REQ-6
 **Depende de:** —
-**Concluída quando:** O schema valida corretamente todos os casos válidos e rejeita cada caso inválido com a mensagem de erro correspondente ao requisito.
+**Concluída quando:** O schema valida corretamente todos os casos válidos e rejeita cada caso inválido com a mensagem de erro correspondente ao requisito; a ausência do campo `avatar` é aceita sem erro.
+
+---
+
+### T-56: Implementar port `AvatarStoragePort` (interface)
+
+- [ ] Definir a interface `AvatarStoragePort` na camada domain/ports com o método `save(buffer: Buffer, mimeType: string): Promise<string>`. A interface não deve referenciar o filesystem, nenhum serviço de cloud storage nem qualquer dependência de infraestrutura; apenas o contrato de entrada (bytes e tipo) e retorno (caminho relativo como string).
+
+**Rastreabilidade:** REQ-1 · DT-6
+**Depende de:** —
+**Concluída quando:** A interface `AvatarStoragePort` existe na camada domain/ports, compila sem erros e o `RegisterUserHandler` pode referenciá-la via injeção de dependência sem importar nenhum módulo de infraestrutura.
+
+---
+
+### T-57: Implementar `LocalAvatarStorageAdapter`
+
+- [ ] Implementar a classe `LocalAvatarStorageAdapter` como adapter outbound concreto de `AvatarStoragePort`. O adapter deve derivar a extensão do arquivo a partir do `mimeType` (jpeg → `.jpg`, png → `.png`, webp → `.webp`), gerar um UUID único por chamada como nome do arquivo, criar o diretório `public/uploads/avatars/` caso não exista e gravar o buffer nesse caminho. Deve retornar o caminho relativo no formato `/uploads/avatars/<uuid>.<ext>` e propagar qualquer exceção de escrita ao chamador.
+
+**Rastreabilidade:** REQ-1 · DT-6
+**Depende de:** T-56
+**Concluída quando:** `LocalAvatarStorageAdapter.save()` grava o arquivo em `public/uploads/avatars/<uuid>.<ext>` e retorna o caminho relativo correto; duas chamadas consecutivas produzem nomes de arquivo distintos.
+
+---
+
+### T-58: Cobrir UT-7 — `LocalAvatarStorageAdapter.save()` com filesystem mockado (unitário)
+
+- [ ] Implementar os testes unitários UT-7 cobrindo: (a) buffer JPEG gravado com extensão `.jpg` e caminho relativo `/uploads/avatars/<uuid>.jpg`; (b) PNG com extensão `.png`; (c) WebP com extensão `.webp`; (d) duas chamadas consecutivas geram nomes de arquivo distintos; (e) falha de escrita no filesystem propaga exceção ao chamador. Usar mock do módulo `fs` do Node.js para evitar gravação em disco.
+
+**Rastreabilidade:** REQ-1 · DT-6
+**Depende de:** T-57
+**Concluída quando:** Os cinco casos de UT-7 passam sem gravar nenhum arquivo em disco real; o mock de `fs` captura as chamadas de escrita.
+
+---
+
+### T-59: Cobrir IT-5 — `LocalAvatarStorageAdapter.save()` com filesystem real (integração)
+
+- [ ] Implementar o teste de integração IT-5 cobrindo: (a) buffer JPEG gravado em disco; arquivo existe no caminho retornado; caminho tem formato `/uploads/avatars/<uuid>.jpg`; (b) PNG e WebP com extensões derivadas corretamente; (c) diretório de destino criado automaticamente se não existir. Usar diretório temporário de teste isolado para evitar poluição de `public/`; limpar os arquivos gravados após cada caso.
+
+**Rastreabilidade:** REQ-1 · DT-6
+**Depende de:** T-57
+**Concluída quando:** Os três casos de IT-5 passam com gravação real em disco; nenhum arquivo de teste permanece no diretório após a execução.
+
+---
+
+### T-60: Cobrir ST-4 — rejeição de upload com tipo MIME não permitido (segurança)
+
+- [ ] Implementar o teste ST-4 verificando que o `RegisterUserHandler` rejeita arquivos de avatar com tipo MIME não permitido, retornando HTTP 400 sem persistir nenhum dado e sem gravar nenhum arquivo em disco. Cobrir: (a) upload com `Content-Type: application/pdf` — HTTP 400, nenhum arquivo gravado, nenhum registro criado; (b) upload com `Content-Type: text/html` — HTTP 400, mesmos critérios; (c) upload com tipo permitido e tamanho acima de 2 MB — HTTP 400, mesmos critérios; (d) upload com tipo permitido e tamanho abaixo de 2 MB — HTTP 200, arquivo gravado com extensão derivada do mimeType.
+
+**Rastreabilidade:** REQ-1 · DT-6 · ST-4
+**Depende de:** T-20
+**Concluída quando:** Os quatro casos de ST-4 passam; nenhum arquivo é gravado em disco nos casos de rejeição; a resposta HTTP 400 segue a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
 
 ---
 
@@ -224,21 +274,21 @@
 
 ### T-20: Implementar `RegisterUserHandler` — endpoint `POST /api/auth/register`
 
-- [x] Implementar o Route Handler Next.js em `app/api/auth/register/route.ts`. O handler deve: (1) aplicar o `RateLimiter` antes de processar; (2) validar o payload com o schema; (3) delegar ao `RegisterUserUseCase`; (4) retornar HTTP 200 com `{ message: "Um link de confirmacao foi enviado ao seu email." }` no caminho feliz. Todas as respostas de erro devem seguir a estrutura `{ codigo, mensagem, requestId, timestamp }`.
+- [x] Implementar o Route Handler Next.js em `app/api/auth/register/route.ts`. O handler deve: (1) aplicar o `RateLimiter` antes de processar; (2) ler o corpo como `multipart/form-data`; (3) se arquivo de avatar presente, validar tipo MIME (`image/jpeg`, `image/png` ou `image/webp`) e tamanho máximo de 2 MB — retornar HTTP 400 se inválido; (4) invocar `LocalAvatarStorageAdapter.save()` para obter o caminho relativo, retornando HTTP 500 em caso de falha de armazenamento; (5) validar os campos textuais com o schema; (6) delegar ao `RegisterUserUseCase` com os dados validados incluindo `avatarUrl` (caminho relativo ou `null`); (7) retornar HTTP 200 com `{ message: "Um link de confirmacao foi enviado ao seu email." }` no caminho feliz. Todas as respostas de erro devem seguir a estrutura `{ codigo, mensagem, requestId, timestamp }`.
 
 **Rastreabilidade:** REQ-1 · REQ-8 · REQ-9 · NFR-4
-**Depende de:** T-03 · T-06 · T-37
-**Concluída quando:** `POST /api/auth/register` com dados válidos retorna HTTP 200 com a mensagem correta; o usuário é persistido com status `pending` no banco.
+**Depende de:** T-03 · T-06 · T-37 · T-56 · T-57
+**Concluída quando:** `POST /api/auth/register` com dados válidos retorna HTTP 200 com a mensagem correta; o usuário é persistido com status `pending` no banco; upload de avatar válido grava o arquivo em `public/uploads/avatars/` e preenche `avatar_url`; arquivo com tipo MIME inválido ou acima de 2 MB retorna HTTP 400 sem criar nenhum registro nem gravar nenhum arquivo.
 
 ---
 
-### T-21: Cobrir IT-5 — `RegisterUserHandler POST /api/auth/register` (integração)
+### T-21: Cobrir IT-6 — `RegisterUserHandler POST /api/auth/register` (integração)
 
-- [x] Implementar o teste de integração IT-5 cobrindo todos os casos: dados válidos (HTTP 200, usuário `pending` e token no banco), campo obrigatório ausente (HTTP 400), email inválido (HTTP 400), senha fora da política (HTTP 400), senhas divergentes (HTTP 400), email duplicado (HTTP 409) e quarta tentativa do mesmo IP em 15 min (HTTP 429). Verificar ausência de registros nos casos de erro.
+- [x] Implementar o teste de integração IT-6 cobrindo todos os casos: dados válidos sem avatar (HTTP 200, usuário `pending` com `avatar_url = null` no banco), dados válidos com avatar JPEG válido até 2 MB (HTTP 200, `avatar_url` preenchido com caminho relativo, arquivo gravado em `public/uploads/avatars/`), avatar com tipo MIME não permitido como `image/gif` (HTTP 400, nenhum registro criado, nenhum arquivo gravado), avatar acima de 2 MB (HTTP 400, nenhum registro criado, nenhum arquivo gravado), campo obrigatório ausente (HTTP 400), email inválido (HTTP 400), senha fora da política (HTTP 400), senhas divergentes (HTTP 400), email duplicado (HTTP 409) e quarta tentativa do mesmo IP em 15 min (HTTP 429). Limpar arquivos de avatar gravados após os testes.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4
 **Depende de:** T-20
-**Concluída quando:** Todos os casos de IT-5 passam contra banco MySQL de teste e Mailhog disponível.
+**Concluída quando:** Todos os casos de IT-6 passam contra banco MySQL de teste, Mailhog disponível e diretório `public/uploads/avatars/` com permissão de escrita; nenhum arquivo de avatar permanece no diretório após os testes.
 
 ---
 
