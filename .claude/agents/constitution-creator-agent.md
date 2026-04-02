@@ -5,7 +5,7 @@ description: >
     incremental, seção por seção. Lê o CLAUDE.md e artefatos existentes para derivar
     regras já conhecidas, conduz entrevista para as demais e salva o resultado em
     constitution.md na raiz do projeto.
-model: sonnet
+model: haiku
 color: red
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:

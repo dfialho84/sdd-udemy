@@ -6,7 +6,7 @@ description: >
     de forma incremental, requisito por requisito. Lê os quatro artefatos, propõe
     um índice de RNFs por categoria, conduz entrevista por RNF e salva o resultado
     em docs/features/<slug>/nf-requirements.md.
-model: sonnet
+model: haiku
 color: purple
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:

@@ -2,14 +2,22 @@
 
 ## Como identificar quais testes rodar
 
-1. Leia o campo `Rastreabilidade` da task atual (ex: `REQ-1 · NFR-2 · UT-1 · IT-3`)
-2. Os IDs com prefixo UT/IT/GH/PT/ST apontam diretamente para blocos no `test-strategy.md`
-3. Leia cada bloco para saber exatamente o que o teste verifica e como executá-lo
-4. Execute apenas esses — não a suíte completa
+1. Leia o campo `Rastreabilidade` da task atual — os IDs UT/IT/GH/PT/ST são o índice
+2. Use `grep` para extrair apenas os blocos relevantes do `test-strategy.md` — não carregue o arquivo inteiro:
+   ```bash
+   grep -A 15 "### UT-1:" docs/features/<slug>/test-strategy.md
+   grep -A 15 "### IT-3:" docs/features/<slug>/test-strategy.md
+   ```
+3. Para componentes no `design.md`, extraia apenas a seção do componente:
+   ```bash
+   grep -A 20 "### NomeDoComponente" docs/features/<slug>/design.md
+   ```
+4. Para Scenarios no `.feature`, extraia apenas o cenário relevante:
+   ```bash
+   grep -A 15 'Scenario: "Nome do Scenario"' docs/features/<slug>/scenarios.feature
+   ```
 
-Se a `Rastreabilidade` lista apenas REQs/NFRs sem IDs de teste (ex: `REQ-1 · NFR-2`):
-- Vá ao `test-strategy.md` e localize todos os testes cujo campo `Rastreabilidade` menciona esses REQs/NFRs
-- Execute esses testes
+**Regra:** se você está carregando um arquivo inteiro para usar 10 linhas, use grep.
 
 ---
 

@@ -7,7 +7,7 @@ description: >
     decisões já tomadas, entrevista o usuário para o que falta, e salva
     o resultado em docs/design-system/ (colors.md, typography.md,
     spacing.md, components.md, themes.md).
-model: sonnet
+model: haiku
 color: purple
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:

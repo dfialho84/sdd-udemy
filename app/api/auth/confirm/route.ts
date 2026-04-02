@@ -11,6 +11,8 @@ interface ApiErrorBody {
   mensagem: string;
   requestId: string;
   timestamp: string;
+  /** Presente apenas no erro 410 para indicar URL de novo cadastro (REQ-13) */
+  registerUrl?: string;
 }
 
 async function handleConfirm(request: NextRequest): Promise<NextResponse> {
@@ -51,6 +53,8 @@ async function handleConfirm(request: NextRequest): Promise<NextResponse> {
           mensagem: error.message,
           requestId,
           timestamp,
+          // Inclui registerUrl apenas no erro 410 (link expirado) — REQ-13
+          ...(error.registerUrl ? { registerUrl: error.registerUrl } : {}),
         }
       : {
           codigo: 500,

@@ -5,7 +5,7 @@ description: >
     incremental, seção por seção. Faz perguntas pertinentes ao usuário,
     avalia a qualidade de cada seção antes de avançar e salva o resultado
     em docs/features/<feature-slug>/prd.md.
-model: sonnet
+model: haiku
 color: purple
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:

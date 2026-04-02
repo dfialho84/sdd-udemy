@@ -14,15 +14,20 @@ export interface ConfirmAccountOutput {
 export interface DomainError {
   codigo: number;
   mensagem: string;
+  /** URL opcional — presente no erro 410 para indicar ao visitante onde se recadastrar (REQ-13) */
+  registerUrl?: string;
 }
 
 export class ConfirmAccountUseCaseError extends Error {
   readonly codigo: number;
+  /** Presente quando codigo === 410: URL para novo cadastro (REQ-13) */
+  readonly registerUrl?: string;
 
-  constructor({ codigo, mensagem }: DomainError) {
+  constructor({ codigo, mensagem, registerUrl }: DomainError) {
     super(mensagem);
     this.name = "ConfirmAccountUseCaseError";
     this.codigo = codigo;
+    this.registerUrl = registerUrl;
   }
 }
 
@@ -102,6 +107,7 @@ export class ConfirmAccountUseCase {
       throw new ConfirmAccountUseCaseError({
         codigo: 410,
         mensagem: "Este link de confirmação expirou. Por favor, solicite um novo.",
+        registerUrl: `${appBaseUrl}/register`,
       });
     }
 

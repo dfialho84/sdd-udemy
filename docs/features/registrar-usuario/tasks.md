@@ -485,7 +485,7 @@
 
 ### T-44: Cobrir UT-1 — `ConfirmationToken.isExpired()` (unitário)
 
-- [ ] Implementar os testes unitários UT-1 cobrindo: (a) token com `expires_at` no futuro retorna `false`; (b) token com `expires_at` no passado retorna `true`; (c) token com `expires_at` exatamente igual ao instante atual retorna `true`.
+- [x] Implementar os testes unitários UT-1 cobrindo: (a) token com `expires_at` no futuro retorna `false`; (b) token com `expires_at` no passado retorna `true`; (c) token com `expires_at` exatamente igual ao instante atual retorna `true`.
 
 **Rastreabilidade:** REQ-12 · REQ-13 · Scenario: "Confirmacao de cadastro com link expirado"
 **Depende de:** T-24
@@ -495,7 +495,7 @@
 
 ### T-45: Cobrir GH-4 — Scenario "Confirmacao de cadastro com link expirado" (E2E)
 
-- [ ] Implementar os step definitions e o teste E2E Gherkin GH-4 cobrindo: inserção de usuário `pending` e token com `expires_at = now - 25h` no banco, acesso ao link expirado, verificação de HTTP 410 com mensagem de link expirado, verificação da ausência do cadastro no banco e presença de `registerUrl` na resposta apontando para `/register`.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-4 cobrindo: inserção de usuário `pending` e token com `expires_at = now - 25h` no banco, acesso ao link expirado, verificação de HTTP 410 com mensagem de link expirado, verificação da ausência do cadastro no banco e presença de `registerUrl` na resposta apontando para `/register`.
 
 **Rastreabilidade:** REQ-12 · REQ-13 · Scenario: "Confirmacao de cadastro com link expirado"
 **Depende de:** T-39

@@ -1,35 +1,8 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(git checkout:*)",
-      "Bash(npm --version)",
-      "Bash(docker --version)",
-      "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs",
-      "Read(//tmp/**)",
-      "Bash(npx create-next-app@latest sdd-next --typescript --tailwind --eslint --app --src-dir --no-turbopack --import-alias \"@/*\" --yes)",
-      "Bash(find /home/diego/projetos/claude/sdd-udemy -not -path */.git/* -type d)",
-      "Bash(npm audit:*)",
-      "Bash(npm show:*)",
-      "Bash(npx shadcn@latest init --defaults)",
-      "Bash(npm run:*)",
-      "Bash(npm test:*)",
-      "Bash(npx jest:*)",
-      "Bash(npx tsc:*)",
-      "Bash(node -e \":*)",
-      "Bash(node -e \"const z = require\\(''zod''\\); console.log\\(z.ZodError ? ''v3-compat'' : ''v4''\\); const pkg = require\\(''/home/diego/projetos/claude/sdd-udemy/node_modules/zod/package.json''\\); console.log\\(''version:'', pkg.version\\);\")",
-      "Bash(find /home/diego/projetos/claude/sdd-udemy/node_modules -name *.d.ts -path */chai/*)",
-      "Read(//dev/**)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''peerDependencies'''', {}\\), indent=2\\)\\)\")",
-      "Bash(node -e \"const { z } = require\\(''zod''\\); const schema = z.object\\({ name: z.string\\(\\) }\\); const result = schema.safeParse\\({}\\); if \\(!result.success\\) { console.log\\(JSON.stringify\\(Object.keys\\(result.error\\), null, 2\\)\\); console.log\\(typeof result.error.issues\\); }\")"
-    ]
-  },
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest"
-      ]
+      "args": ["@playwright/mcp@latest"]
     }
   }
 }

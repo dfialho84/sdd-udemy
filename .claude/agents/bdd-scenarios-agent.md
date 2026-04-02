@@ -6,7 +6,7 @@ description: >
     cenário por cenário. Lê o PRD e as stories, propõe um índice de cenários,
     conduz entrevista por cenário e salva o resultado em
     docs/features/<slug>/scenarios.feature.
-model: sonnet
+model: haiku
 color: cyan
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:

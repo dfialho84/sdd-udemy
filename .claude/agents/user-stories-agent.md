@@ -5,7 +5,7 @@ description: >
     partir do PRD existente, de forma incremental, estória por estória. Lê o
     PRD, propõe um índice de estórias, conduz entrevista por estória e salva
     o resultado em docs/features/<slug>/stories.md.
-model: sonnet
+model: haiku
 color: green
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
