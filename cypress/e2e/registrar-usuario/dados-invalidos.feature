@@ -5,14 +5,18 @@ Feature: Registrar Usuario — Dados Invalidos
 
   Scenario Outline: Cadastro com dados invalidos no formulario
     Given o visitante esta na pagina de cadastro
-    When o visitante preenche o formulario com <situacao>
+    When o visitante preenche o formulario com "<situacao>"
     And o visitante submete o formulario
     Then o sistema exibe a mensagem "<mensagem_de_erro>"
     And nenhum cadastro e criado
 
+    @email-duplicado
     Examples:
       | situacao                                          | mensagem_de_erro                                                                                                            |
       | email ja associado a uma conta existente          | Este email já está cadastrado. Tente fazer login ou use outro endereço.                                                     |
+
+    Examples:
+      | situacao                                          | mensagem_de_erro                                                                                                            |
       | senha sem caractere especial                      | A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais.                  |
       | confirmacao de senha diferente da senha informada | As senhas não coincidem.                                                                                                    |
       | nome em branco                                    | O campo nome completo é obrigatório.                                                                                        |

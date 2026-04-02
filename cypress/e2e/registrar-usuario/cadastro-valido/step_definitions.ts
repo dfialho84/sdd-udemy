@@ -7,6 +7,11 @@ import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 const testEmail = `gh1-${Date.now()}@example.com`;
 
 Given("que o visitante esta na pagina de cadastro", () => {
+  // Intercepta o POST de registro e injeta IP único para evitar rate limiting entre execuções
+  const uniqueIp = `10.1.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  cy.intercept("POST", "/api/auth/register", (req) => {
+    req.headers["x-forwarded-for"] = uniqueIp;
+  });
   cy.visit("/register");
   cy.get('[data-testid="register-form"]').should("be.visible");
 });

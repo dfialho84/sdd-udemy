@@ -16,10 +16,15 @@ const baseValidData = {
 };
 
 // Pré-cadastra um usuario com o email existente antes dos testes que precisam dele
+// Usa IP único via X-Forwarded-For para evitar bloqueio pelo rate limiter
 Before({ tags: "@email-duplicado" }, () => {
+  const setupIp = `10.2.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   cy.request({
     method: "POST",
     url: "/api/auth/register",
+    headers: {
+      "X-Forwarded-For": setupIp,
+    },
     body: {
       name: "Usuario Existente",
       email: existingEmail,
@@ -62,6 +67,11 @@ let currentFormData: ReturnType<typeof getFormDataForSituacao>;
 let currentSituacao: string;
 
 Given("o visitante esta na pagina de cadastro", () => {
+  // Intercepta o POST de registro e injeta IP único por exemplo para evitar rate limiting
+  const uniqueIp = `10.2.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+  cy.intercept("POST", "/api/auth/register", (req) => {
+    req.headers["x-forwarded-for"] = uniqueIp;
+  });
   cy.visit("/register");
   cy.get('[data-testid="register-form"]').should("be.visible");
 });
@@ -110,9 +120,13 @@ Then("nenhum cadastro e criado", () => {
   // Para o caso de email duplicado, verifica via API que nao houve criacao adicional
   // Para outros casos, a ausencia de success-message e suficiente
   if (currentSituacao === "email ja associado a uma conta existente") {
+    const verifyIp = `10.2.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
     cy.request({
       method: "POST",
       url: "/api/auth/register",
+      headers: {
+        "X-Forwarded-For": verifyIp,
+      },
       body: {
         name: "Tentativa Duplicada",
         email: existingEmail,
