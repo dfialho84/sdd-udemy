@@ -29,11 +29,12 @@
 
 - **O que testa:** Orquestração do fluxo de registro com todas as suas ramificações
 - **Casos cobertos:**
-  - Caminho feliz: email inédito → hash de senha gerado → usuário criado com status `pending` → token gerado e persistido → email enviado → log emitido
+  - Caminho feliz com avatar: email inédito, `avatarUrl` preenchido com caminho relativo → hash de senha gerado → usuário criado com status `pending` e `avatarUrl` persistido → token gerado e persistido → email enviado → log emitido
+  - Caminho feliz sem avatar: `avatarUrl = null` → usuário criado com `avatar_url = null` no banco
   - Email já cadastrado: `UserRepository.findByEmail` retorna usuário existente → erro com código 409 → nenhum registro criado
   - Falha no envio de email: `EmailService.send` lança exceção → falha logada em JSON → conta permanece `pending`, token permanece válido
 - **Mocks necessários:** `UserRepository`, `PasswordHasher`, `TokenGenerator`, `EmailService`, `ConfirmationTokenRepository`
-- **Rastreabilidade:** REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-2 · NFR-6
+- **Rastreabilidade:** REQ-1 · REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-2 · NFR-6
 
 ---
 
@@ -72,7 +73,21 @@
 
 ---
 
-### UT-7: RateLimiter — check()
+### UT-7: LocalAvatarStorageAdapter — save()
+
+- **O que testa:** Salvamento de arquivo de avatar no filesystem local e retorno do caminho relativo
+- **Casos cobertos:**
+  - Caminho feliz: buffer válido com mimeType `image/jpeg` é salvo em `public/uploads/avatars/<uuid>.jpg`; retorna caminho relativo `/uploads/avatars/<uuid>.jpg`
+  - Caminho feliz com `image/png`: extensão derivada corretamente como `.png`
+  - Caminho feliz com `image/webp`: extensão derivada corretamente como `.webp`
+  - Dois saves consecutivos geram nomes de arquivo distintos (UUID único por chamada)
+  - Falha de escrita no filesystem (ex: permissão negada): exceção propagada ao chamador
+- **Mocks necessários:** módulo `fs` do Node.js (para testar falha de escrita sem gravar em disco real)
+- **Rastreabilidade:** REQ-1 · DT-6
+
+---
+
+### UT-8: RateLimiter — check()
 
 - **O que testa:** Contagem de tentativas por IP e bloqueio após 3 tentativas em janela de 15 minutos
 - **Casos cobertos:**
@@ -92,10 +107,11 @@
 - **O que testa:** Persistência de um novo usuário e recuperação por email no banco de teste
 - **Dependências reais usadas:** banco MySQL de teste
 - **Casos cobertos:**
-  - Caminho feliz: usuário criado com todos os campos; `findByEmail` retorna o registro com os valores corretos
+  - Caminho feliz com avatar: usuário criado com `avatar_url = '/uploads/avatars/<uuid>.webp'`; `findByEmail` retorna o registro com o caminho relativo correto no campo `avatar_url`
+  - Caminho feliz sem avatar: usuário criado com `avatar_url = null`; `findByEmail` retorna `avatar_url` como `null`
   - Email duplicado: segunda chamada `create` com o mesmo email lança erro de constraint UNIQUE
 - **Setup necessário:** banco de teste limpo; migration aplicada
-- **Rastreabilidade:** REQ-3 · REQ-8
+- **Rastreabilidade:** REQ-1 · REQ-3 · REQ-8
 
 ---
 
@@ -136,24 +152,41 @@
 
 ---
 
-### IT-5: RegisterUserHandler — POST /api/auth/register
+### IT-5: LocalAvatarStorageAdapter — save() com filesystem real
 
-- **O que testa:** Validação de entrada no adapter HTTP e propagação correta para o caso de uso com dependências reais
-- **Dependências reais usadas:** banco MySQL de teste, Mailhog
+- **O que testa:** Gravação efetiva do arquivo no diretório `public/uploads/avatars/` e retorno do caminho relativo correto
+- **Dependências reais usadas:** filesystem local (diretório temporário de teste)
 - **Casos cobertos:**
-  - Dados válidos: HTTP 200 com mensagem de link enviado; usuário `pending` e token criados no banco
+  - Caminho feliz: buffer JPEG gravado em disco; arquivo existe no caminho retornado; caminho tem formato `/uploads/avatars/<uuid>.jpg`
+  - Gravação de PNG e WebP: extensão derivada corretamente para cada mimeType
+  - Diretório de destino criado automaticamente se não existir
+  - Cleanup: arquivo removido após o teste para não poluir o diretório `public/`
+- **Setup necessário:** diretório temporário de teste isolado; permissão de escrita garantida
+- **Rastreabilidade:** REQ-1 · DT-6
+
+---
+
+### IT-6: RegisterUserHandler — POST /api/auth/register
+
+- **O que testa:** Validação de entrada no adapter HTTP e propagação correta para o caso de uso com dependências reais; inclui validação de upload de arquivo de avatar
+- **Dependências reais usadas:** banco MySQL de teste, Mailhog, filesystem local
+- **Casos cobertos:**
+  - Dados válidos sem avatar: HTTP 200 com mensagem de link enviado; usuário `pending` criado com `avatar_url = null`
+  - Dados válidos com avatar JPEG válido (≤ 2 MB): HTTP 200; usuário `pending` criado com `avatar_url` preenchido com caminho relativo; arquivo gravado em `public/uploads/avatars/`
+  - Avatar com tipo MIME não permitido (ex: `image/gif`): HTTP 400; nenhum registro criado; nenhum arquivo gravado
+  - Avatar com tamanho acima de 2 MB: HTTP 400; nenhum registro criado; nenhum arquivo gravado
   - Campo obrigatório ausente (nome, email, data de nascimento): HTTP 400 com mensagem específica; nenhum registro criado
   - Email com formato inválido: HTTP 400; nenhum registro criado
   - Senha fora da política: HTTP 400; nenhum registro criado
   - Senhas divergentes: HTTP 400; nenhum registro criado
   - Email já cadastrado: HTTP 409 com mensagem específica; nenhum registro criado
   - Quarta tentativa do mesmo IP em 15 min: HTTP 429; nenhum registro criado
-- **Setup necessário:** banco de teste limpo; Mailhog disponível; `RateLimiter` resetado entre casos
+- **Setup necessário:** banco de teste limpo; Mailhog disponível; `RateLimiter` resetado entre casos; diretório `public/uploads/avatars/` com permissão de escrita; cleanup dos arquivos de avatar após os testes
 - **Rastreabilidade:** REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4
 
 ---
 
-### IT-6: ConfirmAccountHandler — GET /api/auth/confirm
+### IT-7: ConfirmAccountHandler — GET /api/auth/confirm
 
 - **O que testa:** Extração do token da query string, validação e ativação da conta com dependências reais
 - **Dependências reais usadas:** banco MySQL de teste
@@ -174,12 +207,12 @@
 
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
-  - `Given que o visitante esta na pagina de cadastro` → navegar para `/register` e verificar que o formulário está visível
-  - `When o visitante preenche todos os campos obrigatorios com dados validos e envia o formulario` → preencher nome, email, senha válida, confirmação, data de nascimento e submeter
+  - `Given que o visitante esta na pagina de cadastro` → navegar para `/register` e verificar que o formulário está visível (incluindo o campo de upload de avatar)
+  - `When o visitante preenche todos os campos obrigatorios com dados validos e envia o formulario` → preencher nome, email, senha válida, confirmação, data de nascimento via `multipart/form-data`; o campo avatar é opcional — o step pode omiti-lo ou incluir um arquivo de imagem válido; submeter o formulário
   - `Then o visitante ve uma tela informando que um link de confirmacao foi enviado ao seu email` → verificar exibição da mensagem de link enviado
   - `And o sistema envia um email de confirmacao ao endereco informado` → consultar API do Mailhog e verificar presença do email com o link de confirmação
 - **Steps reutilizáveis de outros Scenarios:** `Given que o visitante esta na pagina de cadastro` — reutilizado em GH-2
-- **Estado inicial necessário:** banco de teste limpo; Mailhog disponível
+- **Estado inicial necessário:** banco de teste limpo; Mailhog disponível; diretório `public/uploads/avatars/` com permissão de escrita (caso o step inclua upload de avatar)
 - **Rastreabilidade:** REQ-1 · REQ-8 · REQ-9
 
 ---
@@ -300,7 +333,20 @@
 
 ---
 
-### ST-4: Entropia mínima dos tokens de confirmação
+### ST-4: Rejeição de upload de arquivo com tipo MIME não permitido
+
+- **O que verifica:** O sistema rejeita arquivos de avatar cujo tipo MIME não seja `image/jpeg`, `image/png` ou `image/webp`, retornando HTTP 400 sem persistir nenhum dado
+- **Vetor de ataque simulado:** upload de arquivo malicioso (ex: script PHP, executável ELF, HTML com XSS) com extensão `.jpg` falsificada — o sistema não deve confiar apenas na extensão; deve validar o tipo MIME declarado pelo cliente
+- **Casos cobertos:**
+  - Upload com `Content-Type: application/pdf`: HTTP 400; nenhum arquivo gravado em disco; nenhum registro criado
+  - Upload com `Content-Type: text/html`: HTTP 400; nenhum arquivo gravado; nenhum registro criado
+  - Upload com tamanho > 2 MB (qualquer tipo): HTTP 400; nenhum arquivo gravado; nenhum registro criado
+  - Upload com tipo permitido e tamanho ≤ 2 MB: HTTP 200; arquivo gravado com extensão derivada do mimeType
+- **Rastreabilidade:** REQ-1 · DT-6 · Risco "proteção dos dados dos usuários" (PRD)
+
+---
+
+### ST-5: Entropia mínima dos tokens de confirmação
 
 - **O que verifica:** Tokens gerados têm pelo menos 128 bits de entropia, tornando inviável a adivinhação por força bruta
 - **Vetor de ataque simulado:** enumeração de tokens — atacante tenta adivinhar o token de confirmação de uma vítima por força bruta ou geração de valores de baixa entropia
@@ -316,28 +362,28 @@
 
 | Requisito | Unitário | Integração | E2E Gherkin | Performance | Segurança |
 |-----------|----------|------------|-------------|-------------|-----------|
-| REQ-1     | —        | IT-5       | GH-1        | —           | —         |
-| REQ-2     | —        | IT-5       | GH-2        | —           | —         |
-| REQ-3     | UT-3     | IT-1, IT-5 | GH-2        | —           | —         |
-| REQ-4     | —        | IT-5       | GH-2        | —           | —         |
-| REQ-5     | —        | IT-5       | GH-2        | —           | —         |
-| REQ-6     | —        | IT-5       | GH-2        | —           | —         |
-| REQ-7     | UT-3     | IT-5       | GH-2        | —           | —         |
-| REQ-8     | UT-3     | IT-1, IT-5 | GH-1        | —           | —         |
-| REQ-9     | UT-3     | IT-3, IT-4, IT-5 | GH-1  | —           | —         |
-| REQ-10    | UT-4     | IT-2, IT-6 | GH-3        | —           | —         |
-| REQ-11    | UT-4     | IT-6       | GH-3        | —           | —         |
-| REQ-12    | UT-1, UT-4 | IT-2, IT-6 | GH-4      | —           | —         |
-| REQ-13    | UT-1, UT-4 | IT-6     | GH-4        | —           | —         |
-| REQ-14    | UT-2, UT-4 | IT-3, IT-6 | GH-5      | —           | ST-2      |
-| REQ-15    | UT-2, UT-4 | IT-3, IT-6 | GH-5      | —           | ST-2      |
+| REQ-1     | UT-3, UT-7 | IT-1, IT-5, IT-6 | GH-1     | —           | ST-4      |
+| REQ-2     | —        | IT-6       | GH-2        | —           | —         |
+| REQ-3     | UT-3     | IT-1, IT-6 | GH-2        | —           | —         |
+| REQ-4     | —        | IT-6       | GH-2        | —           | —         |
+| REQ-5     | —        | IT-6       | GH-2        | —           | —         |
+| REQ-6     | —        | IT-6       | GH-2        | —           | —         |
+| REQ-7     | UT-3     | IT-6       | GH-2        | —           | —         |
+| REQ-8     | UT-3     | IT-1, IT-6 | GH-1        | —           | —         |
+| REQ-9     | UT-3     | IT-3, IT-4, IT-6 | GH-1  | —           | —         |
+| REQ-10    | UT-4     | IT-2, IT-7 | GH-3        | —           | —         |
+| REQ-11    | UT-4     | IT-7       | GH-3        | —           | —         |
+| REQ-12    | UT-1, UT-4 | IT-2, IT-7 | GH-4      | —           | —         |
+| REQ-13    | UT-1, UT-4 | IT-7     | GH-4        | —           | —         |
+| REQ-14    | UT-2, UT-4 | IT-3, IT-7 | GH-5      | —           | ST-2      |
+| REQ-15    | UT-2, UT-4 | IT-3, IT-7 | GH-5      | —           | ST-2      |
 | NFR-1     | —        | —          | —           | PT-1, PT-2  | —         |
 | NFR-2     | UT-6     | —          | —           | PT-2        | ST-3      |
-| NFR-3     | UT-4, UT-5 | IT-3     | —           | —           | ST-2, ST-4 |
-| NFR-4     | UT-7     | IT-5       | —           | —           | ST-1      |
+| NFR-3     | UT-4, UT-5 | IT-3     | —           | —           | ST-2, ST-5 |
+| NFR-4     | UT-8     | IT-6       | —           | —           | ST-1      |
 | NFR-5     | —        | —          | —           | —           | —         |
 | NFR-6     | UT-3     | IT-4       | —           | —           | —         |
-| NFR-7     | UT-4     | IT-6       | —           | —           | —         |
+| NFR-7     | UT-4     | IT-7       | —           | —           | —         |
 
 > **NFR-5** (disponibilidade 99,9% ao mês): não gera teste automatizado — é SLA de infraestrutura
 > monitorado via Prometheus e Grafana, fora do escopo da test suite da feature.
