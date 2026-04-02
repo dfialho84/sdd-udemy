@@ -35,3 +35,7 @@
 **NFR-7**: O sistema deve registrar em log estruturado no formato JSON cada evento do fluxo de confirmação de email — confirmação bem-sucedida, link expirado e link já utilizado — incluindo os campos: timestamp, resultado, tokenId (identificador do token, não o valor) e requestId.
 
 > Fonte: PRD — Riscos / REQ-10 (confirmação de email) / REQ-12 (link expirado) / REQ-14 (link já utilizado)
+
+**NFR-8**: Os logs estruturados emitidos pelo sistema nos eventos de NFR-6 e NFR-7 devem ser entregues ao Grafana Loki e permanecer consultáveis por no mínimo 7 dias, de forma que qualquer evento seja recuperável por `requestId` ou `tipoEvento` via Grafana Explore.
+
+> Fonte: NFR-6 / NFR-7 / constitution.md regra 6 ("via stack de observabilidade (OpenTelemetry/Loki)")
