@@ -28,11 +28,11 @@ async function handleConfirm(request: NextRequest): Promise<NextResponse> {
     // Delegar ao caso de uso (REQ-10 a REQ-15)
     await useCase.execute(tokenValue.trim());
 
-    // Redirecionar para página HTML de sucesso
+    // Redirecionar para página HTML de sucesso (HTTP 302 — T-39)
     const url = request.nextUrl.clone();
     url.pathname = "/confirm";
     url.search = "?status=success";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, { status: 302 });
   } catch (error) {
     const url = request.nextUrl.clone();
     url.pathname = "/confirm";
@@ -42,14 +42,17 @@ async function handleConfirm(request: NextRequest): Promise<NextResponse> {
         url.search = "?error=expired";
       } else if (error.codigo === 409) {
         url.search = "?error=already_confirmed";
+      } else if (error.codigo === 404) {
+        url.search = "?error=not_found";
       } else {
-        url.search = "?error=invalid";
+        // 400 (token ausente/malformado) e outros → invalid_token
+        url.search = "?error=invalid_token";
       }
     } else {
-      url.search = "?error=invalid";
+      url.search = "?error=invalid_token";
     }
 
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(url, { status: 302 });
   }
 }
 

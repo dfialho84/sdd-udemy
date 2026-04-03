@@ -96,9 +96,9 @@ describe("ST-2: Prevenção de reuso de token de confirmação (segurança)", ()
   });
 
   // -----------------------------------------------------------------------
-  // ST-2a — Primeiro uso do token: HTTP 200, used_at preenchido (NFR-3 · REQ-10)
+  // ST-2a — Primeiro uso do token: HTTP 302 → /confirm?status=success, used_at preenchido
   // -----------------------------------------------------------------------
-  it("ST-2a: primeiro uso do token retorna HTTP 200 e preenche used_at no banco", async () => {
+  it("ST-2a: primeiro uso do token retorna HTTP 302 Redirect para /confirm?status=success e preenche used_at no banco", async () => {
     const userId = crypto.randomUUID();
     const tokenId = crypto.randomUUID();
     const tokenValue = "st2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -108,8 +108,11 @@ describe("ST-2: Prevenção de reuso de token de confirmação (segurança)", ()
 
     const response = await GET(makeRequest(tokenValue));
 
-    // Verifica HTTP 200
-    expect(response.status).toBe(200);
+    // Verifica HTTP 302 Redirect para /confirm?status=success
+    expect(response.status).toBe(302);
+    const location = response.headers.get("location");
+    expect(location).toContain("/confirm");
+    expect(location).toContain("status=success");
 
     // Verifica que used_at foi preenchido no banco (token invalidado)
     const tokenRows = await db
@@ -121,9 +124,10 @@ describe("ST-2: Prevenção de reuso de token de confirmação (segurança)", ()
   });
 
   // -----------------------------------------------------------------------
-  // ST-2b — Segundo uso (replay): HTTP 409, status nao alterado, sem dados sensiveis (REQ-14 · REQ-15 · NFR-3)
+  // ST-2b — Segundo uso (replay): HTTP 302 → /confirm?error=already_confirmed
+  //          status não alterado, nenhum dado sensível exposto
   // -----------------------------------------------------------------------
-  it("ST-2b: segundo uso do mesmo token retorna HTTP 409 e nao altera status da conta", async () => {
+  it("ST-2b: segundo uso do mesmo token retorna HTTP 302 para /confirm?error=already_confirmed e nao altera status da conta", async () => {
     const userId = crypto.randomUUID();
     const tokenId = crypto.randomUUID();
     const tokenValue = "st2bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".slice(0, 32);
@@ -133,29 +137,24 @@ describe("ST-2: Prevenção de reuso de token de confirmação (segurança)", ()
 
     // Primeiro uso — ativa a conta
     const firstResponse = await GET(makeRequest(tokenValue));
-    expect(firstResponse.status).toBe(200);
+    expect(firstResponse.status).toBe(302);
+    const firstLocation = firstResponse.headers.get("location");
+    expect(firstLocation).toContain("status=success");
 
     // Segundo uso — replay do atacante
     const replayResponse = await GET(makeRequest(tokenValue));
 
-    // Verifica HTTP 409
-    expect(replayResponse.status).toBe(409);
+    // Verifica HTTP 302 para /confirm?error=already_confirmed
+    expect(replayResponse.status).toBe(302);
+    const replayLocation = replayResponse.headers.get("location");
+    expect(replayLocation).toContain("/confirm");
+    expect(replayLocation).toContain("error=already_confirmed");
 
-    const json = await replayResponse.json();
-
-    // Verifica estrutura padronizada de erro (constitution.md, regra 5)
-    expect(json.codigo).toBe(409);
-    expect(json.mensagem).toBeDefined();
-    expect(typeof json.mensagem).toBe("string");
-    expect(json.requestId).toBeDefined();
-    expect(json.timestamp).toBeDefined();
-
-    // Verifica que nenhum dado sensivel e exposto na resposta de replay
-    // (sem password_hash, sem token value, sem campos de conta)
-    expect(json).not.toHaveProperty("passwordHash");
-    expect(json).not.toHaveProperty("password_hash");
-    expect(json).not.toHaveProperty("token");
-    expect(json).not.toHaveProperty("loginUrl");
+    // Verifica que nenhum dado sensivel e exposto no redirect
+    // (o Location header nao deve conter dados de conta ou token)
+    expect(replayLocation).not.toContain("passwordHash");
+    expect(replayLocation).not.toContain("password_hash");
+    expect(replayLocation).not.toContain("loginUrl");
 
     // Verifica que o status da conta permanece "active" (nao foi alterado pelo replay)
     const userRows = await db
