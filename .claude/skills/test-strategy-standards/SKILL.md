@@ -35,13 +35,13 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 
 ## Os 5 tipos de teste e suas fontes
 
-| Tipo | Fonte primária | O que testa |
-|------|---------------|-------------|
-| Unitário | `design.md` → métodos de domínio | Regras de negócio isoladas, sem dependências externas |
-| Integração | `design.md` → repositories e adapters | Componente + dependências reais (banco, Redis, serviço externo) |
-| E2E Gherkin | `scenarios.feature` | Fluxo completo da API via step definitions executáveis |
-| Performance | `nf-requirements.md` → NFRs mensuráveis | Métricas de latência, throughput, tempo de operação |
-| Segurança | `nf-requirements.md` → NFRs de segurança + `prd.md` → Riscos | Rate limiting, timing attacks, enumeração, reuso de tokens |
+| Tipo        | Fonte primária                                               | O que testa                                                     |
+| ----------- | ------------------------------------------------------------ | --------------------------------------------------------------- |
+| Unitário    | `design.md` → métodos de domínio                             | Regras de negócio isoladas, sem dependências externas           |
+| Integração  | `design.md` → repositories e adapters                        | Componente + dependências reais (banco, Redis, serviço externo) |
+| E2E Gherkin | `scenarios.feature`                                          | Fluxo completo da API via step definitions executáveis          |
+| Performance | `nf-requirements.md` → NFRs mensuráveis                      | Métricas de latência, throughput, tempo de operação             |
+| Segurança   | `nf-requirements.md` → NFRs de segurança + `prd.md` → Riscos | Rate limiting, timing attacks, enumeração, reuso de tokens      |
 
 ---
 
@@ -51,31 +51,38 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 # Estratégia de Testes — <Nome da Feature>
 
 ## 1. Testes Unitários
+
 ...
 
 ---
 
 ## 2. Testes de Integração
+
 ...
 
 ---
 
 ## 3. Testes E2E Gherkin
+
 ...
 
 ---
 
 ## 4. Testes de Performance
+
 ...
+Testes E2E Gherkin
 
 ---
 
 ## 5. Testes de Segurança
+
 ...
 
 ---
 
 ## Resumo de Cobertura
+
 ...
 ```
 
@@ -88,19 +95,21 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 **Propósito:** Verificar regras de negócio em isolamento total — sem banco, HTTP ou serviço externo.
 
 **Formato:**
+
 ```markdown
 ### UT-<N>: <NomeDoComponente>.<método>()
 
 - **O que testa:** <comportamento esperado>
 - **Casos cobertos:**
-  - Caminho feliz: <descrição>
-  - <Condição de erro 1>: <comportamento esperado>
-  - <Condição de borda>: <comportamento esperado>
+    - Caminho feliz: <descrição>
+    - <Condição de erro 1>: <comportamento esperado>
+    - <Condição de borda>: <comportamento esperado>
 - **Mocks necessários:** <lista ou "nenhum — domínio puro">
 - **Rastreabilidade:** <REQ-N> · <NFR-N>
 ```
 
 **Checklist de qualidade:**
+
 - [ ] Um UT por método de domínio identificado no `design.md`
 - [ ] Cada UT cobre ao menos: caminho feliz + cada condição de erro do método
 - [ ] Nenhum UT depende de banco, HTTP ou serviço externo
@@ -114,19 +123,21 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 **Propósito:** Verificar que componentes de infraestrutura funcionam corretamente com suas dependências reais.
 
 **Formato:**
+
 ```markdown
 ### IT-<N>: <NomeDoComponente> — <método ou comportamento>
 
 - **O que testa:** <comportamento com dependência real>
 - **Dependências reais usadas:** <banco de teste | Redis de teste | serviço externo mockado>
 - **Casos cobertos:**
-  - <Caso 1>: <comportamento esperado>
-  - <Caso 2>: <comportamento esperado>
+    - <Caso 1>: <comportamento esperado>
+    - <Caso 2>: <comportamento esperado>
 - **Setup necessário:** <estado inicial do banco/Redis para o teste>
 - **Rastreabilidade:** <REQ-N> · <NFR-N>
 ```
 
 **Checklist de qualidade:**
+
 - [ ] Um IT por repository (cobrindo seus métodos principais)
 - [ ] Um IT por adapter de serviço externo
 - [ ] Cada IT especifica quais dependências são reais e quais são mockadas
@@ -139,22 +150,71 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 
 **Propósito:** Executar os cenários BDD como testes automatizados end-to-end via step definitions.
 
+## Regras Normativas para Derivação de Tasks
+
+As regras abaixo devem ser seguidas pelo `tasks-agent` ao gerar `tasks.md`.
+
+### Regra 1 — Rastreabilidade obrigatória
+
+Todo Scenario definido em `scenarios.feature` deve resultar em pelo menos
+um teste automatizado especificado neste documento.
+
+Nenhum Scenario pode existir sem um GH correspondente.
+
+### Regra 2 — Derivação obrigatória de tasks
+
+Cada item GH-\* definido nesta estratégia deve gerar ao menos uma task
+de implementação no `tasks.md`.
+
+Essa task deve:
+
+- implementar as step definitions necessárias
+- executar o Scenario como teste automatizado
+- validar os resultados definidos nos steps `Then`
+
+### Regra 3 — Independência de ferramenta
+
+O `test-strategy.md` não define ferramentas específicas.
+
+A escolha da ferramenta de execução (framework de testes, runner,
+biblioteca BDD, etc.) deve ser decidida pelo projeto ou pela arquitetura
+definida no `design.md`.
+
+Este documento especifica apenas:
+
+- comportamento testado
+- rastreabilidade
+- requisitos de execução do teste
+
+### Regra 4 — Cobertura mínima
+
+Cobertura mínima obrigatória:
+
+- 100% dos Scenarios devem possuir um GH correspondente
+- Cada GH deve ser automatizável
+- O `tasks-agent` deve gerar tasks suficientes para implementar
+  todos os GH definidos neste documento
+
 **Formato:**
+
 ```markdown
 ### GH-<N>: Scenario "<nome exato do Scenario>"
 
 - **Arquivo:** `docs/features/<slug>/scenarios.feature`
 - **Step definitions necessários:**
-  - `Given <texto exato do step>` → <o que o step deve fazer>
-  - `When <texto exato do step>` → <o que o step deve fazer>
-  - `Then <texto exato do step>` → <o que o step deve verificar>
+    - `Given <texto exato do step>` → <o que o step deve fazer>
+    - `When <texto exato do step>` → <o que o step deve fazer>
+    - `Then <texto exato do step>` → <o que o step deve verificar>
 - **Steps reutilizáveis de outros Scenarios:** <lista ou "nenhum">
 - **Estado inicial necessário:** <dados no banco, mocks ativos>
 - **Rastreabilidade:** <REQ-N> · <NFR-N>
 ```
 
 **Checklist de qualidade:**
+
 - [ ] Um GH por Scenario do arquivo `.feature` — sem exceções
+- [ ] Cada GH é explicitamente automatizável
+- [ ] Cada GH deverá gerar ao menos uma task de implementação no tasks.md
 - [ ] Cada step definition está descrito com sua implementação esperada
 - [ ] Steps reutilizáveis entre Scenarios estão identificados (evitar duplicação)
 - [ ] Estado inicial necessário para cada cenário está descrito
@@ -167,6 +227,7 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 **Propósito:** Verificar que os NFRs mensuráveis de performance são atendidos.
 
 **Formato:**
+
 ```markdown
 ### PT-<N>: <Título descritivo>
 
@@ -178,6 +239,7 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 ```
 
 **Checklist de qualidade:**
+
 - [ ] Um PT por NFR com critério mensurável
 - [ ] Threshold derivado diretamente do NFR (não inventado)
 - [ ] Método de medição é executável em CI
@@ -190,18 +252,20 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 **Propósito:** Verificar que os mecanismos de segurança funcionam conforme especificado nos NFRs e riscos do PRD.
 
 **Formato:**
+
 ```markdown
 ### ST-<N>: <Título descritivo do ataque ou vulnerabilidade>
 
 - **O que verifica:** <comportamento de segurança esperado>
 - **Vetor de ataque simulado:** <ex: enumeração de contas, brute force, replay de token>
 - **Casos cobertos:**
-  - <Caso 1>: <comportamento esperado do sistema>
-  - <Caso 2>: <comportamento esperado do sistema>
+    - <Caso 1>: <comportamento esperado do sistema>
+    - <Caso 2>: <comportamento esperado do sistema>
 - **Rastreabilidade:** <NFR-N> · <Risco do PRD>
 ```
 
 **Checklist de qualidade:**
+
 - [ ] Um ST por NFR de segurança
 - [ ] Um ST por risco do PRD que tem mitigação técnica verificável
 - [ ] Cada ST descreve o vetor de ataque simulado (não apenas "testar segurança")
@@ -214,11 +278,12 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 **Propósito:** Tabela cruzando cada REQ e NFR com os testes que os cobrem.
 
 **Formato:**
+
 ```markdown
 ## Resumo de Cobertura
 
 | Requisito | Unitário | Integração | E2E Gherkin | Performance | Segurança |
-|-----------|----------|------------|-------------|-------------|-----------|
+| --------- | -------- | ---------- | ----------- | ----------- | --------- |
 | REQ-1     | UT-1     | IT-1, IT-2 | GH-1        | PT-1        | —         |
 | REQ-2     | UT-2     | IT-3       | GH-4        | —           | —         |
 | NFR-1     | —        | —          | —           | PT-1        | —         |
@@ -226,6 +291,7 @@ O `tasks-agent` lê o `test-strategy.md` para gerar as tasks de teste.
 ```
 
 **Checklist de qualidade:**
+
 - [ ] Cada REQ tem ao menos 1 teste E2E Gherkin E ao menos 1 teste unitário ou de integração
 - [ ] Cada NFR mensurável tem ao menos 1 teste de performance
 - [ ] Cada NFR de segurança tem ao menos 1 teste de segurança
