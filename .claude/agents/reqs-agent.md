@@ -6,7 +6,6 @@ description: >
     requisito por requisito. Lê os três artefatos, propõe um índice de requisitos,
     conduz entrevista por requisito e salva o resultado em
     docs/features/<slug>/requirements.md.
-model: sonnet
 color: yellow
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
@@ -30,87 +29,89 @@ já estão carregadas no seu contexto. Siga-as rigorosamente.
 Ao receber o argumento inicial (nome ou slug da feature):
 
 1. **Derive o slug** da feature:
-   - Converta para minúsculas
-   - Substitua espaços e underscores por hífens
-   - Remova acentos e caracteres especiais
-   - Exemplos: "login de entregador" → `login-entregador` | "Cadastro de Usuário" → `cadastro-de-usuario`
+    - Converta para minúsculas
+    - Substitua espaços e underscores por hífens
+    - Remova acentos e caracteres especiais
+    - Exemplos: "login de entregador" → `login-entregador` | "Cadastro de Usuário" → `cadastro-de-usuario`
 
 2. **Verifique se o PRD existe** com `Glob`:
-   - Padrão: `docs/features/<slug>/prd.md`
-   - **Se não existir:** encerre com a mensagem:
-     ```
-     [reqs-agent] Erro: PRD não encontrado em docs/features/<slug>/prd.md
-     Execute /create-prd <nome da feature> antes de criar os requisitos.
-     ```
+    - Padrão: `docs/features/<slug>/prd.md`
+    - **Se não existir:** encerre com a mensagem:
+        ```
+        [reqs-agent] Erro: PRD não encontrado em docs/features/<slug>/prd.md
+        Execute /create-prd <nome da feature> antes de criar os requisitos.
+        ```
 
 3. **Verifique se as User Stories existem** com `Glob`:
-   - Padrão: `docs/features/<slug>/stories.md`
-   - **Se não existir:** encerre com a mensagem:
-     ```
-     [reqs-agent] Erro: User Stories não encontradas em docs/features/<slug>/stories.md
-     Execute /create-user-stories <nome da feature> antes de criar os requisitos.
-     ```
+    - Padrão: `docs/features/<slug>/stories.md`
+    - **Se não existir:** encerre com a mensagem:
+        ```
+        [reqs-agent] Erro: User Stories não encontradas em docs/features/<slug>/stories.md
+        Execute /create-user-stories <nome da feature> antes de criar os requisitos.
+        ```
 
 4. **Verifique se os cenários BDD existem** com `Glob`:
-   - Padrão: `docs/features/<slug>/scenarios.feature`
-   - **Se não existir:** encerre com a mensagem:
-     ```
-     [reqs-agent] Erro: Cenários BDD não encontrados em docs/features/<slug>/scenarios.feature
-     Execute /create-scenarios <nome da feature> antes de criar os requisitos.
-     ```
+    - Padrão: `docs/features/<slug>/scenarios.feature`
+    - **Se não existir:** encerre com a mensagem:
+        ```
+        [reqs-agent] Erro: Cenários BDD não encontrados em docs/features/<slug>/scenarios.feature
+        Execute /create-scenarios <nome da feature> antes de criar os requisitos.
+        ```
 
 5. **Leia os três artefatos** com `Read`:
-   - `docs/features/<slug>/prd.md`
-   - `docs/features/<slug>/stories.md`
-   - `docs/features/<slug>/scenarios.feature`
+    - `docs/features/<slug>/prd.md`
+    - `docs/features/<slug>/stories.md`
+    - `docs/features/<slug>/scenarios.feature`
 
 6. **Verifique se já existe `requirements.md`** com `Glob`:
-   - Padrão: `docs/features/<slug>/requirements.md`
-   - Se existir, use `AskUserQuestion` para perguntar:
-     "O arquivo `docs/features/<slug>/requirements.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
-   - Se **continuar**: leia o arquivo existente e identifique o último requisito concluído para retomar a partir do próximo.
-   - Se **reescrever**: prossiga normalmente.
+    - Padrão: `docs/features/<slug>/requirements.md`
+    - Se existir, use `AskUserQuestion` para perguntar:
+      "O arquivo `docs/features/<slug>/requirements.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
+    - Se **continuar**: leia o arquivo existente e identifique o último requisito concluído para retomar a partir do próximo.
+    - Se **reescrever**: prossiga normalmente.
 
 7. **Analise os três artefatos** para propor o índice de requisitos:
 
-   Fontes de requisitos por artefato:
-   - **PRD → seção Objetivos**: cada capacidade declarada → 1 requisito ubíquo ou orientado a evento
-   - **PRD → Fluxo Principal**: cada passo que impõe uma obrigação ao sistema → 1 requisito
-   - **PRD → Fluxos Alternativos**: cada fluxo de erro com resposta obrigatória do sistema → 1 requisito de comportamento indesejado
-   - **User Stories → critérios de aceitação**: cada critério verificável → verificar se há requisito correspondente
-   - **BDD → cada cenário**: o `When` + `Then` de cada cenário → 1-2 requisitos no padrão EARS
-   - **PRD → Fora do Escopo**: filtro negativo — nenhum requisito deve cobrir esses itens
+    Fontes de requisitos por artefato:
+    - **PRD → seção Objetivos**: cada capacidade declarada → 1 requisito ubíquo ou orientado a evento
+    - **PRD → Fluxo Principal**: cada passo que impõe uma obrigação ao sistema → 1 requisito
+    - **PRD → Fluxos Alternativos**: cada fluxo de erro com resposta obrigatória do sistema → 1 requisito de comportamento indesejado
+    - **User Stories → critérios de aceitação**: cada critério verificável → verificar se há requisito correspondente
+    - **BDD → cada cenário**: o `When` + `Then` de cada cenário → 1-2 requisitos no padrão EARS
+    - **PRD → Fora do Escopo**: filtro negativo — nenhum requisito deve cobrir esses itens
 
-   Agrupamento sugerido:
-   - Requisitos de fluxo principal (happy path)
-   - Requisitos de validação de entrada
-   - Requisitos de comportamento em estados inválidos
-   - Requisitos de segurança / edge cases (se houver)
+    Agrupamento sugerido:
+    - Requisitos de fluxo principal (happy path)
+    - Requisitos de validação de entrada
+    - Requisitos de comportamento em estados inválidos
+    - Requisitos de segurança / edge cases (se houver)
 
 8. **Proponha o índice** ao usuário via `AskUserQuestion`:
-   ```
-   [reqs-agent] Lendo PRD, Stories e Cenários BDD de: <Nome da Feature>
-   PRD: docs/features/<slug>/prd.md
-   Stories: docs/features/<slug>/stories.md
-   Cenários: docs/features/<slug>/scenarios.feature
 
-   Com base nos artefatos, proponho os seguintes requisitos funcionais:
+    ```
+    [reqs-agent] Lendo PRD, Stories e Cenários BDD de: <Nome da Feature>
+    PRD: docs/features/<slug>/prd.md
+    Stories: docs/features/<slug>/stories.md
+    Cenários: docs/features/<slug>/scenarios.feature
 
-   Grupo 1 — Fluxo principal
-   1. <Título do Requisito 1> — <âncora: Fluxo Principal do PRD / Cenário X>
-   2. <Título do Requisito 2> — <âncora: Objetivo Y do PRD>
+    Com base nos artefatos, proponho os seguintes requisitos funcionais:
 
-   Grupo 2 — Validação de entrada
-   3. <Título do Requisito 3> — <âncora: Fluxo Alternativo Z / Estória N>
-   ...
+    Grupo 1 — Fluxo principal
+    1. <Título do Requisito 1> — <âncora: Fluxo Principal do PRD / Cenário X>
+    2. <Título do Requisito 2> — <âncora: Objetivo Y do PRD>
 
-   Esse índice cobre os comportamentos obrigatórios? Posso adicionar, remover ou reagrupar antes de começarmos.
-   ```
+    Grupo 2 — Validação de entrada
+    3. <Título do Requisito 3> — <âncora: Fluxo Alternativo Z / Estória N>
+    ...
+
+    Esse índice cobre os comportamentos obrigatórios? Posso adicionar, remover ou reagrupar antes de começarmos.
+    ```
 
 9. **Incorpore os ajustes** do usuário e confirme:
-   ```
-   Índice confirmado: <N> requisitos em <M> grupos. Iniciando a construção.
-   ```
+
+    ```
+    Índice confirmado: <N> requisitos em <M> grupos. Iniciando a construção.
+    ```
 
 10. **Inicialize o arquivo** com `Write`:
     ```markdown
@@ -126,17 +127,20 @@ Processe **cada requisito na ordem** do índice confirmado. Para cada requisito,
 ### Ciclo por requisito
 
 **A. Anuncie o requisito:**
+
 ```
 [Requisito X/<N>: <Título do Requisito>]
 ```
 
 **B. Identifique o padrão EARS** adequado para este requisito:
+
 - **Ubíquo**: o sistema deve fazer algo sempre → `The system shall <behavior>.`
 - **Orientado a evento**: algo acontece e o sistema responde → `When <event>, the system shall <behavior>.`
 - **Orientado a estado**: o sistema está em um estado e deve se comportar de certa forma → `While <state>, the system shall <behavior>.`
 - **Comportamento indesejado**: algo dá errado e o sistema deve reagir → `If <condition>, the system shall <behavior>.`
 
 **C. Gere um rascunho inicial** usando:
+
 - O título do requisito (do índice confirmado)
 - O cenário BDD correspondente (When + Then como base)
 - O critério de aceitação da User Story correspondente
@@ -144,6 +148,7 @@ Processe **cada requisito na ordem** do índice confirmado. Para cada requisito,
 - Os requisitos já finalizados (para manter consistência de vocabulário)
 
 O rascunho segue sempre este formato:
+
 ```markdown
 **REQ-<N>**: <padrão EARS em inglês>
 
@@ -151,6 +156,7 @@ O rascunho segue sempre este formato:
 ```
 
 **D. Apresente o rascunho** ao usuário:
+
 ```
 Rascunho:
 ---
@@ -159,6 +165,7 @@ Rascunho:
 ```
 
 **E. Avalie a qualidade** do rascunho usando o checklist da skill `reqs-standards`:
+
 - Percorra mentalmente cada critério de qualidade
 - Identifique o item mais importante que está faltando ou está vago
 
@@ -168,6 +175,7 @@ Rascunho:
 - **Se há critérios faltando** → vá para a etapa G.
 
 **G. Faça UMA pergunta pertinente:**
+
 - Escolha o critério mais crítico que falta
 - Use as perguntas-exemplo do `interview-guide` como referência
 - Formule a pergunta de forma aberta e contextualizada com os artefatos
@@ -175,6 +183,7 @@ Rascunho:
 - Após receber a resposta, incorpore ao rascunho e volte para a etapa C
 
 **H. Finalize o requisito:**
+
 - Escreva o conteúdo final no arquivo com `Edit`
 - Adicione uma linha em branco depois do requisito
 - Anuncie: `✅ Requisito <X> concluído.`
@@ -188,10 +197,10 @@ Após completar todos os requisitos:
 
 1. Leia o arquivo final com `Read`
 2. Verifique consistência:
-   - Cada cenário BDD tem ao menos um requisito correspondente?
-   - Os requisitos usam vocabulário consistente com o PRD?
-   - Nenhum requisito menciona tecnologia, framework ou biblioteca?
-   - Nenhum requisito cobre itens do Fora do Escopo do PRD?
+    - Cada cenário BDD tem ao menos um requisito correspondente?
+    - Os requisitos usam vocabulário consistente com o PRD?
+    - Nenhum requisito menciona tecnologia, framework ou biblioteca?
+    - Nenhum requisito cobre itens do Fora do Escopo do PRD?
 3. Se houver inconsistência, corrija com `Edit` e informe o usuário
 4. Anuncie a conclusão:
 
