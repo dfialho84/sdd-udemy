@@ -34,7 +34,7 @@
 
 ---
 
-### T-56: Implementar port `AvatarStoragePort` (interface)
+### T-61: Implementar port `AvatarStoragePort` (interface)
 
 - [x] Definir a interface `AvatarStoragePort` na camada domain/ports com o método `save(buffer: Buffer, mimeType: string): Promise<string>`. A interface não deve referenciar o filesystem, nenhum serviço de cloud storage nem qualquer dependência de infraestrutura; apenas o contrato de entrada (bytes e tipo) e retorno (caminho relativo como string).
 
@@ -44,37 +44,37 @@
 
 ---
 
-### T-57: Implementar `LocalAvatarStorageAdapter`
+### T-62: Implementar `LocalAvatarStorageAdapter`
 
 - [x] Implementar a classe `LocalAvatarStorageAdapter` como adapter outbound concreto de `AvatarStoragePort`. O adapter deve derivar a extensão do arquivo a partir do `mimeType` (jpeg → `.jpg`, png → `.png`, webp → `.webp`), gerar um UUID único por chamada como nome do arquivo, criar o diretório `public/uploads/avatars/` caso não exista e gravar o buffer nesse caminho. Deve retornar o caminho relativo no formato `/uploads/avatars/<uuid>.<ext>` e propagar qualquer exceção de escrita ao chamador.
 
 **Rastreabilidade:** REQ-1 · DT-6
-**Depende de:** T-56
+**Depende de:** T-61
 **Concluída quando:** `LocalAvatarStorageAdapter.save()` grava o arquivo em `public/uploads/avatars/<uuid>.<ext>` e retorna o caminho relativo correto; duas chamadas consecutivas produzem nomes de arquivo distintos.
 
 ---
 
-### T-58: Cobrir UT-7 — `LocalAvatarStorageAdapter.save()` com filesystem mockado (unitário)
+### T-63: Cobrir UT-7 — `LocalAvatarStorageAdapter.save()` com filesystem mockado (unitário)
 
 - [x] Implementar os testes unitários UT-7 cobrindo: (a) buffer JPEG gravado com extensão `.jpg` e caminho relativo `/uploads/avatars/<uuid>.jpg`; (b) PNG com extensão `.png`; (c) WebP com extensão `.webp`; (d) duas chamadas consecutivas geram nomes de arquivo distintos; (e) falha de escrita no filesystem propaga exceção ao chamador. Usar mock do módulo `fs` do Node.js para evitar gravação em disco.
 
 **Rastreabilidade:** REQ-1 · DT-6
-**Depende de:** T-57
+**Depende de:** T-62
 **Concluída quando:** Os cinco casos de UT-7 passam sem gravar nenhum arquivo em disco real; o mock de `fs` captura as chamadas de escrita.
 
 ---
 
-### T-59: Cobrir IT-5 — `LocalAvatarStorageAdapter.save()` com filesystem real (integração)
+### T-64: Cobrir IT-5 — `LocalAvatarStorageAdapter.save()` com filesystem real (integração)
 
 - [x] Implementar o teste de integração IT-5 cobrindo: (a) buffer JPEG gravado em disco; arquivo existe no caminho retornado; caminho tem formato `/uploads/avatars/<uuid>.jpg`; (b) PNG e WebP com extensões derivadas corretamente; (c) diretório de destino criado automaticamente se não existir. Usar diretório temporário de teste isolado para evitar poluição de `public/`; limpar os arquivos gravados após cada caso.
 
 **Rastreabilidade:** REQ-1 · DT-6
-**Depende de:** T-57
+**Depende de:** T-62
 **Concluída quando:** Os três casos de IT-5 passam com gravação real em disco; nenhum arquivo de teste permanece no diretório após a execução.
 
 ---
 
-### T-60: Cobrir ST-4 — rejeição de upload com tipo MIME não permitido (segurança)
+### T-65: Cobrir ST-4 — rejeição de upload com tipo MIME não permitido (segurança)
 
 - [x] Implementar o teste ST-4 verificando que o `RegisterUserHandler` rejeita arquivos de avatar com tipo MIME não permitido, retornando HTTP 400 sem persistir nenhum dado e sem gravar nenhum arquivo em disco. Cobrir: (a) upload com `Content-Type: application/pdf` — HTTP 400, nenhum arquivo gravado, nenhum registro criado; (b) upload com `Content-Type: text/html` — HTTP 400, mesmos critérios; (c) upload com tipo permitido e tamanho acima de 2 MB — HTTP 400, mesmos critérios; (d) upload com tipo permitido e tamanho abaixo de 2 MB — HTTP 200, arquivo gravado com extensão derivada do mimeType.
 
