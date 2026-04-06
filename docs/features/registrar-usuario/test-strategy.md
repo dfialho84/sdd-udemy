@@ -10,7 +10,7 @@
   - Token com `expires_at` no passado retorna `true`
   - Token com `expires_at` exatamente igual ao instante atual retorna `true`
 - **Mocks necessários:** nenhum — domínio puro
-- **Rastreabilidade:** REQ-12 · REQ-13
+- **Rastreabilidade:** REQ-15 · REQ-16
 
 ---
 
@@ -21,7 +21,7 @@
   - Caminho feliz: token com `used_at = null` retorna `false`
   - Token com `used_at` preenchido retorna `true`
 - **Mocks necessários:** nenhum — domínio puro
-- **Rastreabilidade:** REQ-14 · REQ-15
+- **Rastreabilidade:** REQ-14 · REQ-17 · REQ-18
 
 ---
 
@@ -32,9 +32,9 @@
   - Caminho feliz com avatar: email inédito, `avatarUrl` preenchido com caminho relativo → hash de senha gerado → usuário criado com status `pending` e `avatarUrl` persistido → token gerado e persistido → email enviado → log emitido
   - Caminho feliz sem avatar: `avatarUrl = null` → usuário criado com `avatar_url = null` no banco
   - Email já cadastrado: `UserRepository.findByEmail` retorna usuário existente → erro com código 409 → nenhum registro criado
-  - Falha no envio de email: `EmailService.send` lança exceção → falha logada em JSON → conta permanece `pending`, token permanece válido
+  - Falha no envio de email: `EmailService.send` lança exceção → falha logada em JSON com campos timestamp, requestId, email mascarado, tipoEvento e motivoFalha → conta permanece `pending`, token permanece válido
 - **Mocks necessários:** `UserRepository`, `PasswordHasher`, `TokenGenerator`, `EmailService`, `ConfirmationTokenRepository`
-- **Rastreabilidade:** REQ-1 · REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-2 · NFR-6
+- **Rastreabilidade:** REQ-3 · REQ-4 · REQ-5 · REQ-7 · REQ-11 · NFR-4 · NFR-10
 
 ---
 
@@ -42,12 +42,12 @@
 
 - **O que testa:** Orquestração do fluxo de confirmação de conta com todas as ramificações
 - **Casos cobertos:**
-  - Caminho feliz: token válido, não expirado, não usado → `used_at` atualizado → status alterado para `active` → log emitido
-  - Token não encontrado: `ConfirmationTokenRepository.findByToken` retorna `null` → erro HTTP 404
-  - Token já utilizado: `used_at` não nulo → erro HTTP 409 → status da conta não alterado
-  - Token expirado: `expires_at < agora` → cadastro pendente removido via `UserRepository.delete` → erro HTTP 410 → log emitido
+  - Caminho feliz: token válido, não expirado, não usado → `used_at` atualizado → status alterado para `active` → log emitido com timestamp, resultado=`sucesso`, tokenId e requestId
+  - Token não encontrado: `ConfirmationTokenRepository.findByToken` retorna `null` → sinal para redirect `/confirm?error=not_found`
+  - Token já utilizado: `used_at` não nulo → log emitido → sinal para redirect `/confirm?error=already_confirmed` → status da conta não alterado
+  - Token expirado: `expires_at < agora` → `UserRepository.delete` chamado → log emitido → sinal para redirect `/confirm?error=expired`
 - **Mocks necessários:** `UserRepository`, `ConfirmationTokenRepository`
-- **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15 · NFR-3 · NFR-7
+- **Rastreabilidade:** REQ-12 · REQ-13 · REQ-14 · REQ-15 · REQ-17 · REQ-18 · NFR-5 · NFR-11
 
 ---
 
@@ -58,7 +58,7 @@
   - Caminho feliz: token gerado tem 32 caracteres hexadecimais (16 bytes = 128 bits)
   - Duas chamadas consecutivas retornam valores distintos
 - **Mocks necessários:** nenhum — adapter de infraestrutura testado diretamente
-- **Rastreabilidade:** NFR-3
+- **Rastreabilidade:** NFR-5
 
 ---
 
@@ -69,7 +69,7 @@
   - Caminho feliz: hash gerado é diferente da senha em texto simples
   - Hash da mesma senha é verificável (`verify` retorna `true`)
 - **Mocks necessários:** nenhum — adapter de infraestrutura testado diretamente
-- **Rastreabilidade:** NFR-2
+- **Rastreabilidade:** NFR-4
 
 ---
 
@@ -83,7 +83,7 @@
   - Dois saves consecutivos geram nomes de arquivo distintos (UUID único por chamada)
   - Falha de escrita no filesystem (ex: permissão negada): exceção propagada ao chamador
 - **Mocks necessários:** módulo `fs` do Node.js (para testar falha de escrita sem gravar em disco real)
-- **Rastreabilidade:** REQ-1 · DT-6
+- **Rastreabilidade:** REQ-2 · DT-6
 
 ---
 
@@ -96,7 +96,32 @@
   - Tentativa após expiração da janela de 15 minutos é permitida (contador resetado)
   - IPs distintos não compartilham contadores
 - **Mocks necessários:** relógio — substituição de `Date.now()` para controlar a janela de 15 minutos
-- **Rastreabilidade:** NFR-4
+- **Rastreabilidade:** NFR-6
+
+---
+
+### UT-9: HomePage — acessibilidade WCAG 2.1 AA
+
+- **O que testa:** Conformidade da página inicial com WCAG 2.1 nível AA usando jest-axe; presença do link de navegação acessível para `/register`
+- **Casos cobertos:**
+  - Renderização da página não gera violações axe reportadas (ausência de erros de contraste, ausência de elementos sem label, estrutura de headings válida)
+  - Link de registro presente no DOM com texto acessível (não vazio, não genérico)
+  - Link de registro navegável por teclado (`href` aponta para `/register`)
+- **Mocks necessários:** nenhum — componente React Server Component renderizado em ambiente de teste
+- **Rastreabilidade:** REQ-1 · REQ-2 · NFR-9 · DT-8
+
+---
+
+### UT-10: RegisterPage — acessibilidade WCAG 2.1 AA e campos do formulário
+
+- **O que testa:** Conformidade do formulário de cadastro com WCAG 2.1 nível AA usando jest-axe; presença e associação correta de todos os campos exigidos pelo REQ-2
+- **Casos cobertos:**
+  - Renderização do formulário não gera violações axe reportadas
+  - Campos nome, email, senha, confirmação de senha, data de nascimento e foto de perfil presentes no DOM com labels associados corretamente (`htmlFor` / `aria-label`)
+  - Campos de senha com `type="password"` (não expõem o valor ao leitor de tela como texto)
+  - Mensagens de erro de validação acessíveis via `aria-live` ou `role="alert"` quando exibidas
+- **Mocks necessários:** nenhum — componente React renderizado em ambiente de teste (jsdom)
+- **Rastreabilidade:** REQ-2 · NFR-9 · DT-8
 
 ---
 
@@ -111,7 +136,7 @@
   - Caminho feliz sem avatar: usuário criado com `avatar_url = null`; `findByEmail` retorna `avatar_url` como `null`
   - Email duplicado: segunda chamada `create` com o mesmo email lança erro de constraint UNIQUE
 - **Setup necessário:** banco de teste limpo; migration aplicada
-- **Rastreabilidade:** REQ-1 · REQ-3 · REQ-8
+- **Rastreabilidade:** REQ-3 · REQ-7 · REQ-11
 
 ---
 
@@ -123,7 +148,7 @@
   - `activate`: usuário com status `pending` tem status atualizado para `active` no banco
   - `delete`: usuário removido não é mais encontrado por `findById`
 - **Setup necessário:** usuário `pending` pré-inserido no banco de teste
-- **Rastreabilidade:** REQ-10 · REQ-12
+- **Rastreabilidade:** REQ-12 · REQ-15
 
 ---
 
@@ -136,7 +161,7 @@
   - `findByToken`: token recuperado pelo valor; retorna `null` para token inexistente
   - `markAsUsed`: `used_at` atualizado para o instante atual; chamada subsequente a `findByToken` retorna token com `used_at` preenchido
 - **Setup necessário:** usuário pré-inserido (chave estrangeira); banco de teste limpo
-- **Rastreabilidade:** REQ-9 · REQ-14 · REQ-15 · NFR-3
+- **Rastreabilidade:** REQ-4 · REQ-14 · REQ-17 · REQ-18 · NFR-5
 
 ---
 
@@ -148,7 +173,7 @@
   - Caminho feliz: email enviado com destinatário, assunto e link de confirmação corretos; mensagem aparece na API do Mailhog
   - Falha de conexão SMTP: adapter lança exceção que pode ser capturada pelo chamador
 - **Setup necessário:** Mailhog rodando via Docker Compose; caixa limpa antes do teste
-- **Rastreabilidade:** REQ-9 · NFR-6
+- **Rastreabilidade:** REQ-4 · NFR-3 · NFR-10
 
 ---
 
@@ -162,7 +187,7 @@
   - Diretório de destino criado automaticamente se não existir
   - Cleanup: arquivo removido após o teste para não poluir o diretório `public/`
 - **Setup necessário:** diretório temporário de teste isolado; permissão de escrita garantida
-- **Rastreabilidade:** REQ-1 · DT-6
+- **Rastreabilidade:** REQ-2 · DT-6
 
 ---
 
@@ -182,7 +207,7 @@
   - Email já cadastrado: HTTP 409 com mensagem específica; nenhum registro criado
   - Quarta tentativa do mesmo IP em 15 min: HTTP 429; nenhum registro criado
 - **Setup necessário:** banco de teste limpo; Mailhog disponível; `RateLimiter` resetado entre casos; diretório `public/uploads/avatars/` com permissão de escrita; cleanup dos arquivos de avatar após os testes
-- **Rastreabilidade:** REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4
+- **Rastreabilidade:** REQ-3 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · REQ-10 · REQ-11 · NFR-6
 
 ---
 
@@ -197,13 +222,27 @@
   - Token já utilizado: HTTP 302 Redirect para `/confirm?error=already_confirmed`; status da conta não alterado
   - Token expirado: HTTP 302 Redirect para `/confirm?error=expired`; cadastro pendente removido do banco
 - **Setup necessário:** usuário `pending` e token pré-inseridos no banco; `expires_at` manipulado para simular expiração
-- **Rastreabilidade:** REQ-10 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · REQ-15
+- **Rastreabilidade:** REQ-12 · REQ-13 · REQ-14 · REQ-15 · REQ-16 · REQ-17 · REQ-18
 
 ---
 
 ## 3. Testes E2E Gherkin
 
-### GH-1: Scenario "Cadastro realizado com dados validos"
+### GH-1: Scenario "Acessar formulario de cadastro via link na home"
+
+- **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
+- **Step definitions necessários:**
+  - `Given que o visitante esta na pagina inicial` → navegar para `/` e verificar que a página inicial está carregada
+  - `When o visitante clica no link de registro` → localizar o link de registro na página e clicar nele
+  - `Then o visitante e levado para a pagina de cadastro` → verificar que a URL atual é `/register`
+  - `And o sistema exibe um formulario com os campos nome, email, senha, confirmacao de senha, data de nascimento e foto de perfil` → verificar presença dos campos: nome, email, senha, confirmação de senha, data de nascimento e foto de perfil no DOM da página `/register`
+- **Steps reutilizáveis de outros Scenarios:** `Given que o visitante esta na pagina inicial` pode ser base para outros cenários que partem da home; `Then o visitante e levado para a pagina de cadastro` é reutilizável como precondição em GH-2 e GH-3
+- **Estado inicial necessário:** banco de teste limpo; página `/` acessível
+- **Rastreabilidade:** REQ-1 · REQ-2 · NFR-1 · NFR-9
+
+---
+
+### GH-2: Scenario "Cadastro realizado com dados validos"
 
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
@@ -211,28 +250,28 @@
   - `When o visitante preenche todos os campos obrigatorios com dados validos e envia o formulario` → preencher nome, email, senha válida, confirmação, data de nascimento via `multipart/form-data`; o campo avatar é opcional — o step pode omiti-lo ou incluir um arquivo de imagem válido; submeter o formulário
   - `Then o visitante ve uma tela informando que um link de confirmacao foi enviado ao seu email` → verificar exibição da mensagem de link enviado
   - `And o sistema envia um email de confirmacao ao endereco informado` → consultar API do Mailhog e verificar presença do email com o link de confirmação
-- **Steps reutilizáveis de outros Scenarios:** `Given que o visitante esta na pagina de cadastro` — reutilizado em GH-2
+- **Steps reutilizáveis de outros Scenarios:** `Given que o visitante esta na pagina de cadastro` — reutilizado em GH-3
 - **Estado inicial necessário:** banco de teste limpo; Mailhog disponível; diretório `public/uploads/avatars/` com permissão de escrita (caso o step inclua upload de avatar)
-- **Rastreabilidade:** REQ-1 · REQ-8 · REQ-9
+- **Rastreabilidade:** REQ-3 · REQ-4 · REQ-5 · NFR-3
 
 ---
 
-### GH-2: Scenario Outline "Cadastro com dados invalidos no formulario"
+### GH-3: Scenario Outline "Cadastro com dados invalidos no formulario"
 
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
-  - `Given o visitante esta na pagina de cadastro` → navegar para `/register` (reutilizável com GH-1)
+  - `Given o visitante esta na pagina de cadastro` → navegar para `/register` (reutilizável com GH-2)
   - `When o visitante preenche o formulario com <situacao>` → parametrizado; preencher formulário com cada situação inválida da tabela de Examples
   - `And o visitante submete o formulario` → clicar no botão de envio
   - `Then o sistema exibe a mensagem "<mensagem_de_erro>"` → verificar que a mensagem de erro específica está visível na tela
   - `And nenhum cadastro e criado` → consultar banco de teste e verificar ausência de novo registro
-- **Steps reutilizáveis de outros Scenarios:** `Given o visitante esta na pagina de cadastro` — reutilizado de GH-1
+- **Steps reutilizáveis de outros Scenarios:** `Given o visitante esta na pagina de cadastro` — reutilizado de GH-2
 - **Estado inicial necessário:** para o caso "email já associado a uma conta existente", um usuário com esse email deve estar pré-cadastrado no banco; demais casos requerem banco limpo
-- **Rastreabilidade:** REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7
+- **Rastreabilidade:** REQ-6 · REQ-7 · REQ-8 · REQ-9 · REQ-10 · REQ-11
 
 ---
 
-### GH-3: Scenario "Confirmacao de conta via link valido"
+### GH-4: Scenario "Confirmacao de conta via link valido"
 
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
@@ -240,13 +279,13 @@
   - `When o visitante clica no link de confirmacao dentro do prazo de 24 horas` → navegar para `GET /api/auth/confirm?token=<valor>` no Cypress
   - `Then o visitante ve a pagina de confirmacao "/confirm" com mensagem de sucesso informando que a conta foi ativada` → verificar que a URL atual é `/confirm` (ou contém `status=success`) e que a mensagem de sucesso está visível no HTML
   - `And um link para acessar o sistema e apresentado ao visitante na pagina "/confirm"` → verificar presença de link de acesso ao sistema na página `/confirm`
-- **Steps reutilizáveis de outros Scenarios:** setup de usuário `pending` e token — base reutilizável para GH-4 e GH-5 com variações no estado do token
+- **Steps reutilizáveis de outros Scenarios:** setup de usuário `pending` e token — base reutilizável para GH-5 e GH-6 com variações no estado do token
 - **Estado inicial necessário:** usuário `pending` e token com `expires_at` futuro inseridos no banco de teste
-- **Rastreabilidade:** REQ-10 · REQ-11
+- **Rastreabilidade:** REQ-12 · REQ-13 · REQ-14
 
 ---
 
-### GH-4: Scenario "Confirmacao de cadastro com link expirado"
+### GH-5: Scenario "Confirmacao de cadastro com link expirado"
 
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
@@ -255,13 +294,13 @@
   - `Then o visitante ve a pagina de confirmacao "/confirm" com mensagem informando que o link expirou e que o cadastro deve ser realizado novamente` → verificar que a URL atual é `/confirm` (ou contém `error=expired`) e que a mensagem de expiração está visível no HTML
   - `And o cadastro pendente associado ao link e removido automaticamente` → consultar banco de teste e verificar ausência do usuário
   - `And a pagina "/confirm" apresenta um link para a pagina de cadastro` → verificar presença de link apontando para `/register` na página `/confirm`
-- **Steps reutilizáveis de outros Scenarios:** setup de usuário `pending` reutilizável de GH-3 com `expires_at` ajustado para o passado
+- **Steps reutilizáveis de outros Scenarios:** setup de usuário `pending` reutilizável de GH-4 com `expires_at` ajustado para o passado
 - **Estado inicial necessário:** usuário `pending` e token com `expires_at = now - 25h` inseridos diretamente no banco de teste
-- **Rastreabilidade:** REQ-12 · REQ-13
+- **Rastreabilidade:** REQ-15 · REQ-16
 
 ---
 
-### GH-5: Scenario "Confirmacao de cadastro com link ja utilizado"
+### GH-6: Scenario "Confirmacao de cadastro com link ja utilizado"
 
 - **Arquivo:** `docs/features/registrar-usuario/scenarios.feature`
 - **Step definitions necessários:**
@@ -271,29 +310,49 @@
   - `And o sistema nao altera o status da conta` → consultar banco de teste e verificar que o status do usuário permanece `active`
 - **Steps reutilizáveis de outros Scenarios:** nenhum — estado inicial específico (conta `active`, token com `used_at` preenchido)
 - **Estado inicial necessário:** usuário `active` e token com `used_at` preenchido inseridos diretamente no banco de teste
-- **Rastreabilidade:** REQ-14 · REQ-15
+- **Rastreabilidade:** REQ-17 · REQ-18
 
 ---
 
 ## 4. Testes de Performance
 
-### PT-1: Latência de POST /api/auth/register sob carga
+### PT-1: Latência de navegação home → /register
 
-- **O que mede:** Latência de ponta a ponta (p95) do endpoint `POST /api/auth/register` com dados válidos, incluindo hash argon2id, persistência no banco e envio de email
-- **Threshold:** ≤ 3.000 ms no percentil p95 (NFR-1)
-- **Método de medição:** teste de carga com k6
-- **Número de execuções:** 10 usuários virtuais simultâneos por 60 segundos; pelo menos 100 requisições com dados válidos
+- **O que mede:** Tempo decorrido entre o clique no link de registro na homepage e o carregamento completo da página `/register` para 95% das requisições
+- **Threshold:** ≤ 1.000 ms no percentil p95 (NFR-1)
+- **Método de medição:** teste de carga com k6 simulando navegação GET `/` seguido de GET `/register`
+- **Número de execuções:** 10 usuários virtuais simultâneos por 60 segundos; pelo menos 100 ciclos de navegação
 - **Rastreabilidade:** NFR-1
 
 ---
 
-### PT-2: Tempo de hashing argon2id em benchmark isolado
+### PT-2: Latência de POST /api/auth/register sob carga
+
+- **O que mede:** Latência de ponta a ponta (p95) do endpoint `POST /api/auth/register` com dados válidos, incluindo hash argon2id, persistência no banco e envio de email
+- **Threshold:** ≤ 3.000 ms no percentil p95 (NFR-2)
+- **Método de medição:** teste de carga com k6
+- **Número de execuções:** 10 usuários virtuais simultâneos por 60 segundos; pelo menos 100 requisições com dados válidos
+- **Rastreabilidade:** NFR-2
+
+---
+
+### PT-3: Tempo de hashing argon2id em benchmark isolado
 
 - **O que mede:** Tempo de execução de `Argon2PasswordHasher.hash()` com os parâmetros de produção (64 MB, 3 iterações, paralelismo 2)
-- **Threshold:** ≤ 1.000 ms por operação (budget dentro do SLA de 3 s de NFR-1, deixando margem para persistência e envio de email)
+- **Threshold:** ≤ 1.000 ms por operação (budget dentro do SLA de 3 s de NFR-2, deixando margem para persistência e envio de email)
 - **Método de medição:** benchmark local com Jest usando `performance.now()`
 - **Número de execuções:** 10 execuções consecutivas; relatar média e valor máximo
-- **Rastreabilidade:** NFR-1 · NFR-2
+- **Rastreabilidade:** NFR-2 · NFR-4
+
+---
+
+### PT-4: Suporte a 100 usuários simultâneos no fluxo de cadastro e confirmação
+
+- **O que mede:** Taxa de erros e latência p95 do fluxo completo (cadastro + confirmação) com 100 usuários virtuais simultâneos
+- **Threshold:** taxa de erros = 0%; latência p95 ≤ 3.000 ms; sem erros de disponibilidade (NFR-7)
+- **Método de medição:** teste de carga com k6 simulando 100 usuários virtuais executando o fluxo completo: POST `/api/auth/register` seguido de GET `/api/auth/confirm?token=<valor>`
+- **Número de execuções:** 100 usuários virtuais simultâneos por 60 segundos
+- **Rastreabilidade:** NFR-7
 
 ---
 
@@ -307,7 +366,7 @@
   - Três primeiras tentativas do mesmo IP: HTTP 200 ou 4xx (processadas normalmente)
   - Quarta tentativa do mesmo IP dentro de 15 min: HTTP 429 com estrutura `{ codigo, mensagem, requestId, timestamp }`; nenhum processamento adicional realizado
   - Tentativa de IP diferente não é bloqueada
-- **Rastreabilidade:** NFR-4 · Risco "acúmulo de cadastros pendentes" (PRD)
+- **Rastreabilidade:** NFR-6 · Risco "acúmulo de cadastros pendentes" (PRD)
 
 ---
 
@@ -318,7 +377,7 @@
 - **Casos cobertos:**
   - Primeiro uso do token: HTTP 302 Redirect para `/confirm?status=success`; `used_at` preenchido no banco
   - Segundo uso do mesmo token: HTTP 302 Redirect para `/confirm?error=already_confirmed`; status da conta não alterado; nenhum dado sensível exposto na resposta
-- **Rastreabilidade:** NFR-3 · REQ-14 · REQ-15 · Risco "Token de confirmação previsível ou reutilizável" (PRD)
+- **Rastreabilidade:** NFR-5 · REQ-14 · REQ-17 · REQ-18 · Risco "Token de confirmação previsível ou reutilizável" (PRD)
 
 ---
 
@@ -329,7 +388,7 @@
 - **Casos cobertos:**
   - Após criação de usuário: `password_hash` no banco não é igual à senha informada
   - `password_hash` começa com o identificador do algoritmo argon2id (`$argon2id$`)
-- **Rastreabilidade:** NFR-2 · Risco "proteção dos dados dos usuários" (PRD)
+- **Rastreabilidade:** NFR-4 · Risco "proteção dos dados dos usuários" (PRD)
 
 ---
 
@@ -342,7 +401,7 @@
   - Upload com `Content-Type: text/html`: HTTP 400; nenhum arquivo gravado; nenhum registro criado
   - Upload com tamanho > 2 MB (qualquer tipo): HTTP 400; nenhum arquivo gravado; nenhum registro criado
   - Upload com tipo permitido e tamanho ≤ 2 MB: HTTP 200; arquivo gravado com extensão derivada do mimeType
-- **Rastreabilidade:** REQ-1 · DT-6 · Risco "proteção dos dados dos usuários" (PRD)
+- **Rastreabilidade:** REQ-2 · DT-6 · Risco "proteção dos dados dos usuários" (PRD)
 
 ---
 
@@ -354,36 +413,45 @@
   - Token gerado tem comprimento de 32 caracteres hexadecimais (16 bytes = 128 bits)
   - Amostra de 1.000 tokens gerados não contém duplicatas
   - Tokens não seguem padrão previsível (ex: sequencial, baseado em timestamp)
-- **Rastreabilidade:** NFR-3 · Risco "Token de confirmação previsível ou reutilizável" (PRD)
+- **Rastreabilidade:** NFR-5 · Risco "Token de confirmação previsível ou reutilizável" (PRD)
 
 ---
 
 ## Resumo de Cobertura
 
-| Requisito | Unitário | Integração | E2E Gherkin | Performance | Segurança |
-|-----------|----------|------------|-------------|-------------|-----------|
-| REQ-1     | UT-3, UT-7 | IT-1, IT-5, IT-6 | GH-1     | —           | ST-4      |
-| REQ-2     | —        | IT-6       | GH-2        | —           | —         |
-| REQ-3     | UT-3     | IT-1, IT-6 | GH-2        | —           | —         |
-| REQ-4     | —        | IT-6       | GH-2        | —           | —         |
-| REQ-5     | —        | IT-6       | GH-2        | —           | —         |
-| REQ-6     | —        | IT-6       | GH-2        | —           | —         |
-| REQ-7     | UT-3     | IT-6       | GH-2        | —           | —         |
-| REQ-8     | UT-3     | IT-1, IT-6 | GH-1        | —           | —         |
-| REQ-9     | UT-3     | IT-3, IT-4, IT-6 | GH-1  | —           | —         |
-| REQ-10    | UT-4     | IT-2, IT-7 | GH-3        | —           | —         |
-| REQ-11    | UT-4     | IT-7       | GH-3        | —           | —         |
-| REQ-12    | UT-1, UT-4 | IT-2, IT-7 | GH-4      | —           | —         |
-| REQ-13    | UT-1, UT-4 | IT-7     | GH-4        | —           | —         |
-| REQ-14    | UT-2, UT-4 | IT-3, IT-7 | GH-5      | —           | ST-2      |
-| REQ-15    | UT-2, UT-4 | IT-3, IT-7 | GH-5      | —           | ST-2      |
-| NFR-1     | —        | —          | —           | PT-1, PT-2  | —         |
-| NFR-2     | UT-6     | —          | —           | PT-2        | ST-3      |
-| NFR-3     | UT-4, UT-5 | IT-3     | —           | —           | ST-2, ST-5 |
-| NFR-4     | UT-8     | IT-6       | —           | —           | ST-1      |
-| NFR-5     | —        | —          | —           | —           | —         |
-| NFR-6     | UT-3     | IT-4       | —           | —           | —         |
-| NFR-7     | UT-4     | IT-7       | —           | —           | —         |
+| Requisito | Unitário       | Integração           | E2E Gherkin | Performance      | Segurança |
+|-----------|----------------|----------------------|-------------|------------------|-----------|
+| REQ-1     | UT-9           | —                    | GH-1        | PT-1             | —         |
+| REQ-2     | UT-7, UT-10    | IT-5, IT-6           | GH-1        | —                | ST-4      |
+| REQ-3     | UT-3           | IT-1, IT-6           | GH-2        | —                | —         |
+| REQ-4     | UT-3           | IT-3, IT-4, IT-6     | GH-2        | —                | —         |
+| REQ-5     | UT-3           | IT-6                 | GH-2        | —                | —         |
+| REQ-6     | —              | IT-6                 | GH-3        | —                | —         |
+| REQ-7     | UT-3           | IT-1, IT-6           | GH-3        | —                | —         |
+| REQ-8     | —              | IT-6                 | GH-3        | —                | —         |
+| REQ-9     | —              | IT-6                 | GH-3        | —                | —         |
+| REQ-10    | —              | IT-6                 | GH-3        | —                | —         |
+| REQ-11    | UT-3           | IT-6                 | GH-3        | —                | —         |
+| REQ-12    | UT-4           | IT-2, IT-7           | GH-4        | —                | —         |
+| REQ-13    | UT-4           | IT-7                 | GH-4        | —                | —         |
+| REQ-14    | UT-2, UT-4     | IT-3, IT-7           | GH-4        | —                | ST-2      |
+| REQ-15    | UT-1, UT-4     | IT-2, IT-7           | GH-5        | —                | —         |
+| REQ-16    | UT-1, UT-4     | IT-7                 | GH-5        | —                | —         |
+| REQ-17    | UT-2, UT-4     | IT-3, IT-7           | GH-6        | —                | ST-2      |
+| REQ-18    | UT-2, UT-4     | IT-3, IT-7           | GH-6        | —                | ST-2      |
+| NFR-1     | —              | —                    | GH-1        | PT-1             | —         |
+| NFR-2     | —              | —                    | —           | PT-2, PT-3       | —         |
+| NFR-3     | —              | IT-4                 | —           | —                | —         |
+| NFR-4     | UT-6           | —                    | —           | PT-3             | ST-3      |
+| NFR-5     | UT-4, UT-5     | IT-3                 | —           | —                | ST-2, ST-5 |
+| NFR-6     | UT-8           | IT-6                 | —           | —                | ST-1      |
+| NFR-7     | —              | —                    | —           | PT-4             | —         |
+| NFR-8     | —              | —                    | —           | —                | —         |
+| NFR-9     | UT-9, UT-10    | —                    | GH-1        | —                | —         |
+| NFR-10    | UT-3           | IT-4, IT-6           | —           | —                | —         |
+| NFR-11    | UT-4           | IT-7                 | —           | —                | —         |
+| NFR-12    | —              | —                    | —           | —                | —         |
 
-> **NFR-5** (disponibilidade 99,9% ao mês): não gera teste automatizado — é SLA de infraestrutura
-> monitorado via Prometheus e Grafana, fora do escopo da test suite da feature.
+> **NFR-8** (disponibilidade 99,9% ao mês): não gera teste automatizado — é SLA de infraestrutura monitorado via Prometheus e Grafana, fora do escopo da test suite da feature.
+
+> **NFR-12** (logs entregues ao Grafana Loki por 7 dias): não gera teste automatizado na suite da feature — é verificado por operações de infraestrutura e configuração do pipeline de observabilidade, fora do escopo do test runner.

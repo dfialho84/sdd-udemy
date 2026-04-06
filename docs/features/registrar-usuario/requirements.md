@@ -1,67 +1,81 @@
 # Requisitos Funcionais — Registrar Usuário
 
+## Navegação para o Cadastro
+
+**REQ-1**: When the visitor clicks the registration link on the home page, the system shall redirect the browser to the registration page (`/register`).
+
+> Fonte: Cenário BDD "Acessar formulario de cadastro via link na home" — When/Then principal / PRD — Fluxo Principal, passo 1
+
+**REQ-2**: When the visitor accesses the registration page, the system shall display a form containing the following fields: full name, email address, password, password confirmation, date of birth, and profile photo (optional).
+
+> Fonte: Cenário BDD "Acessar formulario de cadastro via link na home" — And "o sistema exibe um formulario" / Estória 1, critério de aceitação 1 / PRD — Fluxo Principal, passo 1
+
 ## Fluxo Principal
 
-**REQ-1**: Quando o visitante acessa a página de cadastro, o sistema deve exibir um formulário contendo os campos: nome completo, endereço de email, senha, confirmação de senha, data de nascimento e foto de perfil (opcional).
+**REQ-3**: When the visitor submits the registration form with all valid data, the system shall create a registration record with status "pending".
 
-> Fonte: Estória 1, critério de aceitação 1 / PRD — Fluxo Principal, passo 1
+> Fonte: Cenário BDD "Cadastro realizado com dados validos" — Then principal / PRD — Fluxo Principal, passos 3 e 4 / PRD — Objetivos, item 3
 
-**REQ-8**: Quando o visitante envia o formulário de cadastro com todos os dados válidos, o sistema deve criar um cadastro com status "pendente".
+**REQ-4**: When the visitor submits the registration form with all valid data, the system shall send an email containing a unique confirmation link, valid for 24 hours, to the provided email address.
 
-> Fonte: Cenário BDD "Cadastro realizado com dados válidos" — Then principal / PRD — Fluxo Principal, passos 3 e 4 / PRD — Objetivos, item 3
+> Fonte: Cenário BDD "Cadastro realizado com dados validos" — And "o sistema envia um email de confirmacao" / PRD — Fluxo Principal, passo 4 / PRD — Objetivos, item 4
 
-**REQ-9**: Quando o visitante envia o formulário de cadastro com todos os dados válidos, o sistema deve enviar um email contendo um link único de confirmação, válido por 24 horas, ao endereço de email informado.
+**REQ-5**: When the visitor submits the registration form with all valid data, the system shall display a screen informing that a confirmation link has been sent to the registered email address.
 
-> Fonte: Cenário BDD "Cadastro realizado com dados válidos" — And "o sistema envia um email de confirmação" / PRD — Fluxo Principal, passo 4 / PRD — Objetivos, item 4
+> Fonte: Cenário BDD "Cadastro realizado com dados validos" — Then "o visitante ve uma tela informando que um link de confirmacao foi enviado" / Estória 1, critério de aceitação 4 / PRD — Fluxo Principal, passo 5
 
 ## Validação de Entrada
 
-**REQ-2**: Se qualquer campo obrigatório (nome completo, endereço de email, senha, confirmação de senha ou data de nascimento) estiver em branco no momento do envio do formulário, o sistema deve bloquear o envio e exibir uma mensagem de erro indicando qual campo está faltando.
+**REQ-6**: If any required field (full name, email address, password, password confirmation, or date of birth) is blank at form submission, the system shall block the submission and display an error message indicating which field is missing.
 
-> Fonte: Cenário BDD "Cadastro com dados inválidos no formulário" — situações "nome em branco" e "data de nascimento em branco" / Estória 2, critério de aceitação 1
+> Fonte: Cenário BDD "Cadastro com dados invalidos no formulario" — situações "nome em branco" e "data de nascimento em branco" / Estória 2, critério de aceitação 1
 
-**REQ-3**: Se o endereço de email informado já estiver associado a uma conta existente, o sistema deve rejeitar o cadastro e exibir a mensagem "Este email já está cadastrado. Tente fazer login ou use outro endereço."
+**REQ-7**: If the provided email address is already associated with an existing account, the system shall reject the registration and display the message "Este email já está cadastrado. Tente fazer login ou use outro endereço."
 
-> Fonte: Cenário BDD "Cadastro com dados inválidos no formulário" — situação "email já associado a uma conta existente" / Estória 2, critério de aceitação 1 / PRD — Objetivos, item 2
+> Fonte: Cenário BDD "Cadastro com dados invalidos no formulario" — situação "email já associado a uma conta existente" / Estória 2, critério de aceitação 1 / PRD — Objetivos, item 2
 
-**REQ-4**: Se a senha informada não atender à política de segurança (mínimo de 8 caracteres contendo letras maiúsculas, minúsculas, números e caracteres especiais), o sistema deve rejeitar o envio do formulário e exibir a mensagem "A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais."
+**REQ-8**: If the provided password does not meet the security policy (minimum 8 characters containing uppercase letters, lowercase letters, numbers, and special characters), the system shall reject the form submission and display the message "A senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais."
 
-> Fonte: Cenário BDD "Cadastro com dados inválidos no formulário" — situação "senha sem caractere especial" / Estória 2, critério de aceitação 2 / PRD — Objetivos, item 2
+> Fonte: Cenário BDD "Cadastro com dados invalidos no formulario" — situação "senha sem caractere especial" / Estória 2, critério de aceitação 2 / PRD — Objetivos, item 2
 
-**REQ-5**: Se a confirmação de senha informada não for idêntica à senha escolhida, o sistema deve rejeitar o envio do formulário e exibir a mensagem "As senhas não coincidem."
+**REQ-9**: If the password confirmation does not match the chosen password, the system shall reject the form submission and display the message "As senhas não coincidem."
 
-> Fonte: Cenário BDD "Cadastro com dados inválidos no formulário" — situação "confirmação de senha diferente da senha informada" / Estória 2, critério de aceitação 3
+> Fonte: Cenário BDD "Cadastro com dados invalidos no formulario" — situação "confirmação de senha diferente da senha informada" / Estória 2, critério de aceitação 3
 
-**REQ-6**: Se o endereço de email informado não estiver em formato válido, o sistema deve rejeitar o envio do formulário e exibir a mensagem "Informe um endereço de email válido."
+**REQ-10**: If the provided email address is not in a valid format, the system shall reject the form submission and display the message "Informe um endereço de email válido."
 
-> Fonte: Cenário BDD "Cadastro com dados inválidos no formulário" — situação "email com formato inválido" / Estória 2, critério de aceitação 1
+> Fonte: Cenário BDD "Cadastro com dados invalidos no formulario" — situação "email com formato inválido" / Estória 2, critério de aceitação 1
 
-**REQ-7**: Se ocorrer qualquer erro de validação durante o envio do formulário de cadastro, o sistema não deve criar nenhum registro de cadastro.
+**REQ-11**: If any validation error occurs during registration form submission, the system shall not create any registration record.
 
-> Fonte: Cenário BDD "Cadastro com dados inválidos no formulário" — Then "nenhum cadastro é criado" / Estória 2, critério de aceitação 4
+> Fonte: Cenário BDD "Cadastro com dados invalidos no formulario" — And "nenhum cadastro e criado" / Estória 2, critério de aceitação 4
 
 ## Confirmação de Conta
 
-**REQ-10**: Quando o visitante acessa um link de confirmação válido, o sistema deve ativar a conta alterando seu status de "pendente" para "ativo".
+**REQ-12**: When the visitor accesses a valid confirmation link, the system shall activate the account by changing its status from "pending" to "active".
 
-> Fonte: Cenário BDD "Confirmação de conta via link válido" / PRD — Fluxo Principal, passos 7 e 8 / PRD — Objetivos, item 5
+> Fonte: Cenário BDD "Confirmacao de conta via link valido" / PRD — Fluxo Principal, passos 7 e 8 / PRD — Objetivos, item 5
 
-**REQ-11**: Quando o visitante acessa um link de confirmação válido, o sistema deve redirecionar o navegador para `/confirm` e exibir uma mensagem informando que a conta foi ativada com sucesso e apresentar um link para acessar o sistema.
+**REQ-13**: When the visitor accesses a valid confirmation link, the system shall redirect the browser to `/confirm` and display a message informing that the account has been successfully activated, along with a link to access the system.
 
-> Fonte: Cenário BDD "Confirmação de conta via link válido" — Then/And / PRD — Objetivos, item 5 / PRD — Fluxo Principal, passo 10
+> Fonte: Cenário BDD "Confirmacao de conta via link valido" — Then/And / PRD — Objetivos, item 5 / PRD — Fluxo Principal, passo 10 / Estória 3, critério de aceitação 2
 
-**REQ-12**: Se um link de confirmação estiver expirado (mais de 24 horas desde sua criação), o sistema deve rejeitar a solicitação de confirmação e excluir o cadastro pendente associado.
+**REQ-14**: When the visitor accesses a valid confirmation link for the first time, the system shall invalidate that confirmation link immediately after the successful activation, preventing it from being used again.
 
-> Fonte: Cenário BDD "Confirmação de cadastro com link expirado" — Then "o cadastro pendente é removido automaticamente" / PRD — Fluxo Alternativo / PRD — Objetivos, item 6
+> Fonte: Estória 3, critério de aceitação 3 / PRD — Riscos, item "Token de confirmacao previsivel ou reutilizavel"
 
-**REQ-13**: Se um link de confirmação estiver expirado, o sistema deve redirecionar o navegador para `/confirm` exibindo ao visitante uma mensagem informando que o link expirou e apresentar um link para que o visitante realize um novo cadastro em `/register`.
+**REQ-15**: If a confirmation link has expired (more than 24 hours since its creation), the system shall reject the confirmation request and delete the pending registration associated with that link.
 
-> Fonte: Cenário BDD "Confirmação de cadastro com link expirado" — Then/And / PRD — Fluxo Alternativo
+> Fonte: Cenário BDD "Confirmacao de cadastro com link expirado" — And "o cadastro pendente associado ao link e removido automaticamente" / PRD — Fluxo Alternativo / PRD — Objetivos, item 6
 
-**REQ-14**: Se um link de confirmação já tiver sido utilizado anteriormente, o sistema deve rejeitar a solicitação e redirecionar o navegador para `/confirm` exibindo ao visitante uma mensagem informando que o link de confirmação já foi utilizado.
+**REQ-16**: If a confirmation link has expired, the system shall redirect the browser to `/confirm` displaying a message informing that the link has expired and that the visitor must register again, along with a link to the registration page (`/register`).
 
-> Fonte: Cenário BDD "Confirmação de cadastro com link já utilizado" — Then / PRD — Riscos
+> Fonte: Cenário BDD "Confirmacao de cadastro com link expirado" — Then/And / PRD — Fluxo Alternativo / Estória 4, critérios de aceitação 3 e 4
 
-**REQ-15**: Se um link de confirmação já tiver sido utilizado anteriormente, o sistema não deve alterar o status da conta já ativa.
+**REQ-17**: If a confirmation link has already been used, the system shall reject the request and redirect the browser to `/confirm` displaying a message informing that the confirmation link has already been used.
 
-> Fonte: Cenário BDD "Confirmação de cadastro com link já utilizado" — And "o sistema não altera o status da conta" / PRD — Riscos
+> Fonte: Cenário BDD "Confirmacao de cadastro com link ja utilizado" — Then / PRD — Riscos
+
+**REQ-18**: If a confirmation link has already been used, the system shall not alter the status of the already active account.
+
+> Fonte: Cenário BDD "Confirmacao de cadastro com link ja utilizado" — And "o sistema nao altera o status da conta" / PRD — Riscos
