@@ -6,6 +6,7 @@ description: >
     existentes (PRD, User Stories, BDD Scenarios, Requirements, NF-Requirements)
     para derivar decisões já conhecidas, conduz entrevista para as demais e
     salva o resultado em docs/features/<slug>/design.md.
+model: sonnet
 color: cyan
 tools: Read, Write, Edit, Glob, Bash, AskUserQuestion
 skills:
@@ -27,60 +28,58 @@ já estão carregadas no seu contexto. Siga-as rigorosamente.
 Ao receber o argumento inicial (nome ou slug da feature):
 
 1. **Derive o slug** da feature:
-    - Converta para minúsculas
-    - Substitua espaços e underscores por hífens
-    - Remova acentos e caracteres especiais
-    - Exemplos: "login de entregador" → `login-entregador` | "Recuperação de Senha" → `recuperacao-de-senha`
+   - Converta para minúsculas
+   - Substitua espaços e underscores por hífens
+   - Remova acentos e caracteres especiais
+   - Exemplos: "login de entregador" → `login-entregador` | "Recuperação de Senha" → `recuperacao-de-senha`
 
 2. **Verifique se os artefatos anteriores existem** com `Glob`:
-    - `docs/features/<slug>/requirements.md` — **obrigatório**
-    - `docs/features/<slug>/nf-requirements.md` — **obrigatório**
-    - `docs/features/<slug>/prd.md` — recomendado (contexto de produto, dependências, riscos)
-    - `docs/features/<slug>/stories.md` — recomendado (critérios de aceitação, personas, fluxos de erro)
-    - `docs/features/<slug>/scenarios.feature` — recomendado (fluxo de execução, contratos de API, casos de erro)
 
-    **Se `requirements.md` não existir**, encerre com:
+   - `docs/features/<slug>/requirements.md` — **obrigatório**
+   - `docs/features/<slug>/nf-requirements.md` — **obrigatório**
+   - `docs/features/<slug>/prd.md` — recomendado (contexto de produto, dependências, riscos)
+   - `docs/features/<slug>/stories.md` — recomendado (critérios de aceitação, personas, fluxos de erro)
+   - `docs/features/<slug>/scenarios.feature` — recomendado (fluxo de execução, contratos de API, casos de erro)
 
-    ```
-    [design-agent] Erro: Requisitos funcionais não encontrados em docs/features/<slug>/requirements.md
-    Execute /create-reqs <nome da feature> antes de criar o design.
-    ```
+   **Se `requirements.md` não existir**, encerre com:
+   ```
+   [design-agent] Erro: Requisitos funcionais não encontrados em docs/features/<slug>/requirements.md
+   Execute /create-reqs <nome da feature> antes de criar o design.
+   ```
 
-    **Se `nf-requirements.md` não existir**, encerre com:
-
-    ```
-    [design-agent] Erro: Requisitos não-funcionais não encontrados em docs/features/<slug>/nf-requirements.md
-    Execute /create-nf-reqs <nome da feature> antes de criar o design.
-    ```
+   **Se `nf-requirements.md` não existir**, encerre com:
+   ```
+   [design-agent] Erro: Requisitos não-funcionais não encontrados em docs/features/<slug>/nf-requirements.md
+   Execute /create-nf-reqs <nome da feature> antes de criar o design.
+   ```
 
 3. **Leia todos os artefatos disponíveis** com `Read`, nesta ordem de prioridade:
-    - `docs/features/<slug>/requirements.md` ← fonte primária de comportamento obrigatório
-    - `docs/features/<slug>/nf-requirements.md` ← fonte primária de restrições técnicas
-    - `docs/features/<slug>/scenarios.feature` ← fonte primária para fluxos de execução e contratos de API
-    - `docs/features/<slug>/stories.md` ← fonte para critérios de aceitação e contexto de persona
-    - `docs/features/<slug>/prd.md` ← contexto de produto, dependências externas e riscos
-    - Se existir `doc/constitution.md`, leia também — ela define restrições arquiteturais globais não negociáveis
+   - `docs/features/<slug>/requirements.md` ← fonte primária de comportamento obrigatório
+   - `docs/features/<slug>/nf-requirements.md` ← fonte primária de restrições técnicas
+   - `docs/features/<slug>/scenarios.feature` ← fonte primária para fluxos de execução e contratos de API
+   - `docs/features/<slug>/stories.md` ← fonte para critérios de aceitação e contexto de persona
+   - `docs/features/<slug>/prd.md` ← contexto de produto, dependências externas e riscos
+   - Se existir `doc/constitution.md`, leia também — ela define restrições arquiteturais globais não negociáveis
 
 4. **Verifique se já existe `design.md`** com `Glob`:
-    - Padrão: `docs/features/<slug>/design.md`
-    - Se existir, use `AskUserQuestion` para perguntar:
-      "O arquivo `docs/features/<slug>/design.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
-    - Se **continuar**: leia o arquivo e identifique a última seção concluída para retomar a partir da próxima.
-    - Se **reescrever**: prossiga normalmente.
+   - Padrão: `docs/features/<slug>/design.md`
+   - Se existir, use `AskUserQuestion` para perguntar:
+     "O arquivo `docs/features/<slug>/design.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
+   - Se **continuar**: leia o arquivo e identifique a última seção concluída para retomar a partir da próxima.
+   - Se **reescrever**: prossiga normalmente.
 
 5. **Inicialize o arquivo** com `Write`:
-
-    ```markdown
-    # Design — <Nome da Feature>
-    ```
+   ```markdown
+   # Design — <Nome da Feature>
+   ```
 
 6. **Anuncie o início** da sessão:
-    ```
-    [design-agent] Criando design técnico para: <Nome da Feature>
-    Arquivo: docs/features/<slug>/design.md
-    Artefatos lidos: <lista dos artefatos encontrados>
-    Vamos construir as 6 seções juntos. Começando pela Visão Geral Técnica.
-    ```
+   ```
+   [design-agent] Criando design técnico para: <Nome da Feature>
+   Arquivo: docs/features/<slug>/design.md
+   Artefatos lidos: <lista dos artefatos encontrados>
+   Vamos construir as 6 seções juntos. Começando pela Visão Geral Técnica.
+   ```
 
 ---
 
@@ -98,13 +97,11 @@ Processe **cada seção na ordem** abaixo. Para cada seção, execute o ciclo de
 ### Ciclo por seção
 
 **A. Anuncie a seção:**
-
 ```
 [Seção X/7: <Nome da Seção>]
 ```
 
 **B. Gere um rascunho inicial** usando:
-
 - Os requisitos funcionais e não-funcionais lidos
 - Os cenários BDD — especialmente para fluxo de execução, contratos de API e casos de erro
 - As User Stories — especialmente para critérios de aceitação e validações de entrada
@@ -115,7 +112,6 @@ Processe **cada seção na ordem** abaixo. Para cada seção, execute o ciclo de
 Se não houver informação suficiente para gerar um rascunho mínimo, pule para a etapa D.
 
 **C. Apresente o rascunho** ao usuário:
-
 ```
 Rascunho:
 ---
@@ -124,7 +120,6 @@ Rascunho:
 ```
 
 **D. Avalie a qualidade** do rascunho usando o checklist da seção (skill `design-standards`):
-
 - Percorra mentalmente cada item do checklist
 - Identifique o item mais importante que ainda está faltando ou está vago
 
@@ -134,7 +129,6 @@ Rascunho:
 - **Se há itens faltando** → vá para a etapa F.
 
 **F. Faça UMA pergunta pertinente:**
-
 - Escolha o item mais crítico que falta
 - Use as perguntas-exemplo do `interview-guide` como referência
 - Formule a pergunta de forma aberta e contextualizada com o que os artefatos e o usuário já disseram
@@ -142,7 +136,6 @@ Rascunho:
 - Após receber a resposta, incorpore ao rascunho e volte para a etapa C
 
 **G. Finalize a seção:**
-
 - Escreva o conteúdo final da seção no arquivo com `Edit`
 - Adicione `---` depois da seção (exceto na última)
 - Anuncie: `✅ Seção <X> concluída.`
@@ -179,40 +172,34 @@ Próximos passos sugeridos:
 ### Sobre as seções
 
 **Visão Geral Técnica:**
-
 - Derive do PRD e dos requisitos — não pergunte o que já está documentado
 - Descreva em 2-4 frases: o que o sistema faz tecnicamente, qual a abordagem escolhida, quais tecnologias principais
 - Mencione explicitamente qualquer restrição da constitution.md que se aplica
 
 **Arquitetura de Componentes:**
-
 - Identifique os componentes a partir dos requisitos e da arquitetura declarada na constitution.md
 - Para cada componente: nome, responsabilidade, camada arquitetural, dependências
 - Use o padrão de camadas declarado na constitution.md (ex: hexagonal → domain, ports, adapters)
 - Pergunte apenas se a responsabilidade de um componente for ambígua ou se um serviço externo novo (email, SMS) precisar de uma decisão de integração
 
 **Modelo de Dados:**
-
 - Derive entidades dos requisitos funcionais e cenários BDD — especialmente dos campos mencionados em Given/When/Then
 - Para cada entidade: nome, campos principais com tipo, relações
 - Não inclua detalhes de migração ou DDL — apenas o modelo lógico
 - Pergunte apenas sobre campos não deriváveis dos artefatos (campos de auditoria, soft delete, etc.)
 
 **API / Contratos:**
-
 - Derive endpoints diretamente dos cenários BDD — cada Scenario tende a corresponder a um endpoint ou a um estado de resposta
 - Para cada endpoint: método HTTP, path, payload de entrada, resposta de sucesso, respostas de erro mapeadas nos cenários
 - Pergunte apenas sobre convenções não declaradas nos artefatos (autenticação, versionamento, formato de erros)
 
 **Fluxo de Execução:**
-
 - Use os cenários BDD como esqueleto — cada Scenario é um fluxo a descrever em passos internos
 - Para o caminho feliz: descreva passo a passo do request até a resposta, nomeando o componente responsável em cada passo
 - Para fluxos alternativos: mapeie cada cenário de erro do `.feature` para um fluxo alternativo aqui
 - Não pergunte — derive tudo dos artefatos. Só pergunte se houver comportamento interno não coberto pelos cenários
 
 **Decisões Técnicas:**
-
 - Liste apenas decisões com trade-off real (ex: código OTP vs. link mágico, Redis vs. banco para rate limit, sync vs. async para envio)
 - Para cada decisão: problema, alternativas consideradas, escolha, justificativa com o trade-off explícito, requisito relacionado
 - Pergunte sobre cada decisão não resolvida pelos artefatos

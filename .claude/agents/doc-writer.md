@@ -7,6 +7,7 @@ description: >
     gerar relatório de cobertura do projeto. Invoque sempre que o usuário pedir
     para documentar código, verificar qualidade de docs, auditar cobertura JSDoc,
     ou melhorar comentários existentes em arquivos TS/JS.
+model: haiku
 color: cyan
 tools: Read, Write, Edit, Glob, Grep, Bash
 skills:
