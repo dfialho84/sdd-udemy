@@ -18,7 +18,10 @@ const config: Config = {
     "src/ports/**/*.ts",
     "src/adapters/**/*.ts",
   ],
-  testPathIgnorePatterns: ["/node_modules/", "/cypress/"],
+  // Testes de componentes React (.tsx) ficam em src/__tests__/ui/ e rodam
+  // exclusivamente via jest.config.ui.ts (que tem jsdom + jsx:react-jsx).
+  // O jest.config.ts principal usa node environment sem suporte a JSX.
+  testPathIgnorePatterns: ["/node_modules/", "/cypress/", "/src/__tests__/ui/"],
 };
 
 export default config;

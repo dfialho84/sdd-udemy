@@ -6,7 +6,7 @@
 
 ### T-66: Implementar `HomePage` — página inicial com link de navegação para `/register`
 
-- [ ] Implementar a página React Server Component em `src/app/page.tsx` que exibe a página inicial com um link de navegação acessível para `/register`. O link deve usar HTML semântico, ter texto descritivo (não vazio, não genérico), ser navegável por teclado e ser compatível com leitores de tela, conforme NFR-9. A página não deve conter lógica de negócio — apenas apresentação e navegação.
+- [x] Implementar a página React Server Component em `src/app/page.tsx` que exibe a página inicial com um link de navegação acessível para `/register`. O link deve usar HTML semântico, ter texto descritivo (não vazio, não genérico), ser navegável por teclado e ser compatível com leitores de tela, conforme NFR-9. A página não deve conter lógica de negócio — apenas apresentação e navegação.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · NFR-1 · NFR-9
 **Depende de:** —
@@ -16,7 +16,7 @@
 
 ### T-67: Cobrir UT-9 — `HomePage` acessibilidade WCAG 2.1 AA (unitário)
 
-- [ ] Implementar os testes unitários UT-9 cobrindo: (a) renderização da página não gera violações axe reportadas (contraste, labels, estrutura de headings); (b) link de registro presente no DOM com texto acessível (não vazio, não genérico); (c) link de registro navegável por teclado com `href` apontando para `/register`. Usar jest-axe para validação automatizada de acessibilidade.
+- [x] Implementar os testes unitários UT-9 cobrindo: (a) renderização da página não gera violações axe reportadas (contraste, labels, estrutura de headings); (b) link de registro presente no DOM com texto acessível (não vazio, não genérico); (c) link de registro navegável por teclado com `href` apontando para `/register`. Usar jest-axe para validação automatizada de acessibilidade.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · NFR-9 · DT-8 · Scenario: "Acessar formulario de cadastro via link na home"
 **Depende de:** T-66
@@ -26,7 +26,7 @@
 
 ### T-68: Cobrir GH-1 — Scenario "Acessar formulario de cadastro via link na home" (E2E)
 
-- [ ] Implementar os step definitions e o teste E2E Gherkin GH-1 cobrindo: navegação para `/`, clique no link de registro, verificação de que a URL atual é `/register` e verificação da presença dos campos nome, email, senha, confirmação de senha, data de nascimento e foto de perfil no DOM da página `/register`.
+- [x] Implementar os step definitions e o teste E2E Gherkin GH-1 cobrindo: navegação para `/`, clique no link de registro, verificação de que a URL atual é `/register` e verificação da presença dos campos nome, email, senha, confirmação de senha, data de nascimento e foto de perfil no DOM da página `/register`.
 
 **Rastreabilidade:** REQ-1 · REQ-2 · NFR-1 · NFR-9 · Scenario: "Acessar formulario de cadastro via link na home"
 **Depende de:** T-66 · T-76
@@ -36,7 +36,7 @@
 
 ### T-69: Cobrir PT-1 — latência de navegação home → /register (performance)
 
-- [ ] Implementar o teste de performance PT-1 com k6 simulando 10 usuários virtuais simultâneos por 60 segundos executando o ciclo: GET `/` seguido de GET `/register`. O teste deve falhar se o p95 de latência do ciclo completo exceder 1.000 ms.
+- [x] Implementar o teste de performance PT-1 com k6 simulando 10 usuários virtuais simultâneos por 60 segundos executando o ciclo: GET `/` seguido de GET `/register`. O teste deve falhar se o p95 de latência do ciclo completo exceder 1.000 ms.
 
 **Rastreabilidade:** NFR-1 · REQ-1 · Scenario: "Acessar formulario de cadastro via link na home"
 **Depende de:** T-66 · T-76
@@ -90,7 +90,7 @@
 
 ### T-70: Cobrir UT-10 — `RegisterPage` acessibilidade WCAG 2.1 AA e campos do formulário (unitário)
 
-- [ ] Implementar os testes unitários UT-10 cobrindo: (a) renderização do formulário não gera violações axe reportadas; (b) campos nome, email, senha, confirmação de senha, data de nascimento e foto de perfil presentes no DOM com labels associados corretamente; (c) campos de senha com `type="password"`; (d) mensagens de erro de validação acessíveis via `aria-live` ou `role="alert"` quando exibidas. Usar jest-axe para validação automatizada de acessibilidade.
+- [x] Implementar os testes unitários UT-10 cobrindo: (a) renderização do formulário não gera violações axe reportadas; (b) campos nome, email, senha, confirmação de senha, data de nascimento e foto de perfil presentes no DOM com labels associados corretamente; (c) campos de senha com `type="password"`; (d) mensagens de erro de validação acessíveis via `aria-live` ou `role="alert"` quando exibidas. Usar jest-axe para validação automatizada de acessibilidade.
 
 **Rastreabilidade:** REQ-2 · NFR-9 · DT-8
 **Depende de:** T-76
@@ -798,7 +798,7 @@ _(REQ-18 é coberto pelas mesmas tasks de REQ-17: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-72: Cobrir PT-4 — suporte a 100 usuários simultâneos no fluxo completo (performance)
 
-- [ ] Implementar o teste de carga PT-4 com k6 simulando 100 usuários virtuais simultâneos por 60 segundos executando o fluxo completo: `POST /api/auth/register` seguido de `GET /api/auth/confirm?token=<valor>`. O teste deve falhar se a taxa de erros for maior que 0% ou se o p95 de latência exceder 3.000 ms.
+- [x] Implementar o teste de carga PT-4 com k6 simulando 100 usuários virtuais simultâneos por 60 segundos executando o fluxo completo: `POST /api/auth/register` seguido de `GET /api/auth/confirm?token=<valor>`. O teste deve falhar se a taxa de erros for maior que 0% ou se o p95 de latência exceder 3.000 ms.
 
 **Rastreabilidade:** NFR-7
 **Depende de:** T-20 · T-39

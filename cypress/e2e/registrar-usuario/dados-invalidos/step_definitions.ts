@@ -133,8 +133,16 @@ When("o visitante submete o formulario", () => {
 });
 
 Then("o sistema exibe a mensagem {string}", (mensagem: string) => {
-  cy.get('[data-testid="error-message"]', { timeout: 10000 }).should("be.visible");
-  cy.get('[data-testid="error-message"]').should("contain.text", mensagem);
+  // A RegisterPage exibe dois tipos de mensagem de erro:
+  //   - Erros de campo (Zod/react-hook-form): data-testid="error-name", "error-email",
+  //     "error-password", "error-password-confirmation", "error-birth-date"
+  //   - Erro de API (resposta HTTP): data-testid="error-message" (ex: email duplicado)
+  //
+  // O seletor [data-testid^="error-"] captura qualquer elemento cujo data-testid
+  // comece com "error-", cobrindo ambos os casos sem depender do tipo especifico.
+  cy.get('[data-testid^="error-"]', { timeout: 10000 })
+    .filter(":visible")
+    .should("contain.text", mensagem);
 });
 
 Then("nenhum cadastro e criado", () => {

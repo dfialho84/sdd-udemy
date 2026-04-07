@@ -1,5 +1,9 @@
 // Step Definitions — GH-5: Confirmacao de cadastro com link ja utilizado
 // Rastreabilidade: T-47 · REQ-14 · REQ-15 · Scenario: "Confirmacao de cadastro com link ja utilizado"
+//
+// Correcao: o endpoint GET /api/auth/confirm retorna HTTP 302 Redirect para
+// /confirm?error=already_confirmed (nao HTTP 409 com JSON). Os steps agora usam cy.visit
+// para seguir o redirect e verificam o conteudo HTML da pagina /confirm.
 
 import { Given, When, Then, Before, After } from "@badeball/cypress-cucumber-preprocessor";
 
@@ -11,13 +15,7 @@ const tokenValue = Array.from(crypto.getRandomValues(new Uint8Array(16)))
   .join(""); // 32 hex chars
 const testEmail = `gh5-${Date.now()}@example.com`;
 
-// Resposta do endpoint de confirmacao com token ja utilizado
-let confirmResponse: Cypress.Response<{
-  codigo?: number;
-  mensagem?: string;
-  requestId?: string;
-  timestamp?: string;
-}>;
+// (variavel de resposta removida — agora usamos cy.visit e verificamos o DOM)
 
 // Insere usuario active + token ja utilizado no banco antes do cenario
 Before({ tags: "@gh5" }, () => {
@@ -53,30 +51,29 @@ Given(
 /**
  * GH-5 — When: visitante tenta acessar o mesmo link de confirmacao novamente
  *
- * Acessa GET /api/auth/confirm?token=<valor ja utilizado> via cy.request
+ * Usa cy.visit para seguir o HTTP 302 Redirect para /confirm?error=already_confirmed,
+ * simulando o comportamento real do usuario que reutiliza o link no email.
  */
 When("o visitante tenta acessar o mesmo link de confirmacao novamente", () => {
-  cy.request({
-    method: "GET",
-    url: `/api/auth/confirm?token=${tokenValue}`,
-    failOnStatusCode: false,
-  }).then((response) => {
-    confirmResponse = response as typeof confirmResponse;
-  });
+  // cy.visit segue automaticamente o redirect 302 do endpoint para /confirm?error=already_confirmed
+  cy.visit(`/api/auth/confirm?token=${tokenValue}`);
 });
 
 /**
  * GH-5 — Then: sistema exibe mensagem informando que o link ja foi utilizado
  *
- * Verifica HTTP 409 e presenca de mensagem de link ja utilizado (REQ-14)
+ * Verifica conteudo HTML da pagina /confirm?error=already_confirmed (REQ-14).
+ * A pagina exibe: "Esta conta ja foi confirmada."
  */
 Then(
   "o sistema exibe mensagem informando que o link de confirmacao ja foi utilizado",
   () => {
-    expect(confirmResponse.status).to.eq(409);
-    expect(confirmResponse.body.codigo).to.eq(409);
-    expect(confirmResponse.body.mensagem).to.be.a("string");
-    expect(confirmResponse.body.mensagem.toLowerCase()).to.include("utilizado");
+    // Verifica que o redirect levou para /confirm com error=already_confirmed
+    cy.url().should("include", "/confirm");
+    cy.url().should("include", "error=already_confirmed");
+
+    // Verifica conteudo da pagina — mensagem de link ja utilizado
+    cy.contains("Esta conta já foi confirmada.").should("be.visible");
   },
 );
 

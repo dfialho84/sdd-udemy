@@ -1,5 +1,9 @@
 // Step Definitions — GH-3: Confirmacao de conta via link valido
 // Rastreabilidade: T-42 · REQ-10 · REQ-11 · Scenario: "Confirmacao de conta via link valido"
+//
+// Correcao: o endpoint GET /api/auth/confirm retorna HTTP 302 Redirect para /confirm?status=success
+// (nao JSON com HTTP 200). Os steps agora usam cy.visit para seguir o redirect e verificam
+// o conteudo HTML da pagina /confirm renderizada pelo Next.js.
 
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 
@@ -10,13 +14,6 @@ const testIp = `10.3.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random
 
 // Token extraido do Mailhog apos o registro
 let confirmationToken: string;
-
-// Resposta do endpoint de confirmacao
-let confirmResponse: Cypress.Response<{
-  message: string;
-  loginUrl: string;
-  registerUrl: string;
-}>;
 
 /**
  * GH-3 — Given: visitante possui cadastro "pendente" e recebeu o link por email
@@ -31,24 +28,26 @@ Given(
     // Inicializar contexto do Cypress visitando a pagina base antes das requisicoes
     cy.visit("/");
 
-    // Registrar usuario via API — cria usuario pending e envia email com token
+    // Registrar usuario via multipart/form-data — cria usuario pending e envia email com token.
+    // O endpoint exige multipart/form-data (DT-6). Usa cy.window().fetch para enviar FormData.
     // Usa IP unico via X-Forwarded-For para evitar bloqueio pelo rate limiter.
-    cy.request({
-      method: "POST",
-      url: "/api/auth/register",
-      headers: {
-        "X-Forwarded-For": testIp,
-      },
-      body: {
-        name: "Visitante GH3",
-        email: testEmail,
-        password: "Senha@1234",
-        passwordConfirmation: "Senha@1234",
-        birthDate: "1990-06-15",
-      },
-      failOnStatusCode: false,
-    }).then((response) => {
-      expect(response.status, `POST /api/auth/register retornou ${response.status} (esperado 200)`).to.eq(200);
+    cy.window().then((win) => {
+      const formData = new win.FormData();
+      formData.append("name", "Visitante GH3");
+      formData.append("email", testEmail);
+      formData.append("password", "Senha@1234");
+      formData.append("passwordConfirmation", "Senha@1234");
+      formData.append("birthDate", "1990-06-15");
+
+      return win
+        .fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "X-Forwarded-For": testIp },
+          body: formData,
+        })
+        .then((res: Response) => {
+          expect(res.status, `POST /api/auth/register retornou ${res.status} (esperado 200)`).to.eq(200);
+        });
     });
 
     // Aguardar o email ser entregue ao Mailhog e extrair o token do link
@@ -109,34 +108,35 @@ Given(
 /**
  * GH-3 — When: visitante clica no link de confirmacao dentro do prazo de 24 horas
  *
- * Acessa GET /api/auth/confirm?token=<valor> diretamente via cy.request
+ * Usa cy.visit para seguir o HTTP 302 Redirect para /confirm?status=success,
+ * simulando o comportamento real do usuario que clica no link no email.
  */
 When("o visitante clica no link de confirmacao dentro do prazo de 24 horas", () => {
-  cy.request({
-    method: "GET",
-    url: `/api/auth/confirm?token=${confirmationToken}`,
-    failOnStatusCode: false,
-  }).then((response) => {
-    confirmResponse = response as typeof confirmResponse;
-  });
+  // cy.visit segue automaticamente o redirect 302 do endpoint para /confirm?status=success
+  cy.visit(`/api/auth/confirm?token=${confirmationToken}`);
 });
 
 /**
  * GH-3 — Then: sistema exibe mensagem de sucesso informando que a conta foi ativada
  *
- * Verifica HTTP 200 e presenca da mensagem de ativacao na resposta
+ * Verifica conteudo HTML da pagina /confirm?status=success renderizada pelo Next.js (REQ-11).
+ * A pagina exibe: "Sua conta foi ativada com sucesso." e um link "Fazer login" para /login.
  */
 Then("o sistema exibe uma mensagem de sucesso informando que a conta foi ativada", () => {
-  expect(confirmResponse.status).to.eq(200);
-  expect(confirmResponse.body.message).to.include("ativada com sucesso");
+  // Verifica que o redirect levou para /confirm com status=success
+  cy.url().should("include", "/confirm");
+  cy.url().should("include", "status=success");
+
+  // Verifica conteudo da pagina — mensagem de ativacao bem-sucedida
+  cy.contains("Sua conta foi ativada com sucesso.").should("be.visible");
 });
 
 /**
  * GH-3 — And: link para acessar o sistema e apresentado ao visitante
  *
- * Verifica presenca do loginUrl na resposta (REQ-11)
+ * Verifica presenca do link "Fazer login" apontando para /login (REQ-11).
  */
 Then("um link para acessar o sistema e apresentado ao visitante", () => {
-  expect(confirmResponse.body.loginUrl).to.be.a("string");
-  expect(confirmResponse.body.loginUrl).to.include("/login");
+  cy.get('a[href="/login"]').should("be.visible");
+  cy.get('a[href="/login"]').should("contain.text", "Fazer login");
 });

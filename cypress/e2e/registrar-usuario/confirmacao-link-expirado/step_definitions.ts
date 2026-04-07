@@ -1,5 +1,9 @@
 // Step Definitions — GH-4: Confirmacao de cadastro com link expirado
 // Rastreabilidade: T-45 · REQ-12 · REQ-13 · Scenario: "Confirmacao de cadastro com link expirado"
+//
+// Correcao: o endpoint GET /api/auth/confirm retorna HTTP 302 Redirect para /confirm?error=expired
+// (nao HTTP 410 com JSON). Os steps agora usam cy.visit para seguir o redirect e verificam
+// o conteudo HTML da pagina /confirm renderizada pelo Next.js.
 
 import { Given, When, Then, Before, After } from "@badeball/cypress-cucumber-preprocessor";
 
@@ -11,14 +15,7 @@ const tokenValue = Array.from(crypto.getRandomValues(new Uint8Array(16)))
   .join(""); // 32 hex chars
 const testEmail = `gh4-${Date.now()}@example.com`;
 
-// Resposta do endpoint de confirmacao com token expirado
-let confirmResponse: Cypress.Response<{
-  codigo?: number;
-  mensagem?: string;
-  requestId?: string;
-  timestamp?: string;
-  registerUrl?: string;
-}>;
+// (variavel de resposta removida — agora usamos cy.visit e verificamos o DOM)
 
 // Insere usuario pending + token expirado no banco antes do cenario
 Before({ tags: "@gh4" }, () => {
@@ -55,30 +52,29 @@ Given(
 /**
  * GH-4 — When: visitante acessa o link de confirmacao expirado
  *
- * Acessa GET /api/auth/confirm?token=<valor expirado> via cy.request
+ * Usa cy.visit para seguir o HTTP 302 Redirect para /confirm?error=expired,
+ * simulando o comportamento real do usuario que clica no link no email.
  */
 When("o visitante acessa o link de confirmacao expirado", () => {
-  cy.request({
-    method: "GET",
-    url: `/api/auth/confirm?token=${tokenValue}`,
-    failOnStatusCode: false,
-  }).then((response) => {
-    confirmResponse = response as typeof confirmResponse;
-  });
+  // cy.visit segue automaticamente o redirect 302 do endpoint para /confirm?error=expired
+  cy.visit(`/api/auth/confirm?token=${tokenValue}`);
 });
 
 /**
  * GH-4 — Then: sistema exibe mensagem informando que o link expirou
  *
- * Verifica HTTP 410 e presenca de mensagem de link expirado (REQ-13)
+ * Verifica conteudo HTML da pagina /confirm?error=expired (REQ-13).
+ * A pagina exibe: "Este link de confirmacao expirou."
  */
 Then(
   "o sistema exibe mensagem informando que o link expirou e que o cadastro deve ser realizado novamente",
   () => {
-    expect(confirmResponse.status).to.eq(410);
-    expect(confirmResponse.body.codigo).to.eq(410);
-    expect(confirmResponse.body.mensagem).to.be.a("string");
-    expect(confirmResponse.body.mensagem).to.include("expirou");
+    // Verifica que o redirect levou para /confirm com error=expired
+    cy.url().should("include", "/confirm");
+    cy.url().should("include", "error=expired");
+
+    // Verifica conteudo da pagina — mensagem de link expirado
+    cy.contains("Este link de confirmação expirou.").should("be.visible");
   },
 );
 
@@ -94,9 +90,9 @@ Then("o cadastro pendente associado ao link e removido automaticamente", () => {
 /**
  * GH-4 — And: visitante e redirecionado para a pagina de cadastro
  *
- * Verifica presenca de registerUrl na resposta apontando para /register (REQ-13)
+ * Verifica presenca do link "Novo cadastro" apontando para /register na pagina /confirm (REQ-13).
  */
 Then("o visitante e redirecionado para a pagina de cadastro", () => {
-  expect(confirmResponse.body.registerUrl).to.be.a("string");
-  expect(confirmResponse.body.registerUrl).to.include("/register");
+  cy.get('a[href="/register"]').should("be.visible");
+  cy.get('a[href="/register"]').should("contain.text", "Novo cadastro");
 });
