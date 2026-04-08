@@ -13,7 +13,8 @@ export interface RegisterUserInput {
   email: string;
   password: string;
   birthDate: Date;
-  avatarUrl?: string | null;
+  /** Object key do MinIO (`avatars/<uuid>.<ext>`) ou null quando não há avatar. */
+  avatarKey?: string | null;
   /** requestId gerado no adapter HTTP para rastreabilidade dos logs (NFR-6) */
   requestId: string;
 }
@@ -77,7 +78,7 @@ export class RegisterUserUseCase {
       logger,
     } = this.deps;
 
-    const { name, email, password, birthDate, avatarUrl, requestId } = input;
+    const { name, email, password, birthDate, avatarKey, requestId } = input;
 
     // 1. Verificar unicidade do email (REQ-3)
     const existing = await userRepository.findByEmail(email);
@@ -99,7 +100,7 @@ export class RegisterUserUseCase {
       email,
       passwordHash,
       birthDate,
-      avatarUrl: avatarUrl ?? null,
+      avatarKey: avatarKey ?? null,
       status: "pending",
     });
 

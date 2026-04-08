@@ -22,7 +22,7 @@ async function createTestUser(): Promise<string> {
     email: `token-test-${userId}@example.com`,
     passwordHash: "$argon2id$v=19$token-test",
     birthDate: new Date("1990-01-01"),
-    avatarUrl: null,
+    avatarKey: null,
     status: "pending",
   });
   return userId;

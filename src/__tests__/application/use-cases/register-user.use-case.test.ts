@@ -24,7 +24,7 @@ function makeUser(overrides: Partial<ConstructorParameters<typeof User>[0]> = {}
     email: "joao@example.com",
     passwordHash: "$argon2id$hash",
     birthDate: new Date("1990-01-01"),
-    avatarUrl: null,
+    avatarKey: null,
     status: "pending",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -93,7 +93,7 @@ function makeInput(overrides: Partial<RegisterUserInput> = {}): RegisterUserInpu
     email: "joao@example.com",
     password: "Senha@123",
     birthDate: new Date("1990-01-01"),
-    avatarUrl: null,
+    avatarKey: null,
     requestId: "req-id-abc",
     ...overrides,
   };

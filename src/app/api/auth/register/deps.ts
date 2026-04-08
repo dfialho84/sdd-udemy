@@ -8,7 +8,7 @@ import { DrizzleConfirmationTokenRepository } from "@/adapters/outbound/persiste
 import { Argon2PasswordHasher } from "@/adapters/outbound/persistence/argon2-password-hasher";
 import { CryptoTokenGenerator } from "@/adapters/outbound/persistence/crypto-token-generator";
 import { MailhogEmailAdapter } from "@/adapters/outbound/email/mailhog-email-adapter";
-import { LocalAvatarStorageAdapter } from "@/adapters/outbound/storage/local-avatar-storage.adapter";
+import { MinioAvatarStorageAdapter } from "@/adapters/outbound/storage/minio-avatar-storage.adapter";
 import type { RegisterUserUseCaseDeps } from "@/application/use-cases/register-user.use-case";
 import type { AvatarStoragePort } from "@/domain/ports/avatar-storage.port";
 
@@ -28,7 +28,7 @@ export function buildUseCaseDeps(): RegisterHandlerDeps {
     passwordHasher: new Argon2PasswordHasher(),
     tokenGenerator: new CryptoTokenGenerator(),
     emailService: new MailhogEmailAdapter(),
-    avatarStorageAdapter: new LocalAvatarStorageAdapter(),
+    avatarStorageAdapter: new MinioAvatarStorageAdapter(),
     appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3000",
     logger,
   };

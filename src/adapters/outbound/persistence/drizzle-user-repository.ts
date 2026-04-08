@@ -20,7 +20,7 @@ export class DrizzleUserRepository implements UserRepository {
       email: input.email,
       passwordHash: input.passwordHash,
       birthDate: input.birthDate,
-      avatarUrl: input.avatarUrl ?? null,
+      avatarKey: input.avatarKey ?? null,
       status: input.status,
     });
 
@@ -82,7 +82,7 @@ export class DrizzleUserRepository implements UserRepository {
       email: record.email,
       passwordHash: record.passwordHash,
       birthDate: record.birthDate instanceof Date ? record.birthDate : new Date(record.birthDate),
-      avatarUrl: record.avatarUrl ?? null,
+      avatarKey: record.avatarKey ?? null,
       status: record.status as "pending" | "active",
       createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt),
       updatedAt: record.updatedAt instanceof Date ? record.updatedAt : new Date(record.updatedAt),

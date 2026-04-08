@@ -20,7 +20,7 @@ function makeCreateInput(overrides: Partial<CreateUserInput> = {}): CreateUserIn
     email: `test-${randomUUID()}@example.com`,
     passwordHash: "$argon2id$v=19$test",
     birthDate: new Date("1990-06-15"),
-    avatarUrl: null,
+    avatarKey: null,
     status: "pending",
     ...overrides,
   };
@@ -48,7 +48,7 @@ describe("IT-1: DrizzleUserRepository — create() e findByEmail()", () => {
     it("persiste o usuário com todos os campos e retorna entidade User", async () => {
       const input = makeCreateInput({
         name: "João Silva",
-        avatarUrl: "https://example.com/avatar.jpg",
+        avatarKey: "https://example.com/avatar.jpg",
       });
 
       const user = await repo.create(input);
@@ -58,17 +58,17 @@ describe("IT-1: DrizzleUserRepository — create() e findByEmail()", () => {
       expect(user.email).toBe(input.email);
       expect(user.passwordHash).toBe("$argon2id$v=19$test");
       expect(user.status).toBe("pending");
-      expect(user.avatarUrl).toBe("https://example.com/avatar.jpg");
+      expect(user.avatarKey).toBe("https://example.com/avatar.jpg");
       expect(user.createdAt).toBeInstanceOf(Date);
       expect(user.updatedAt).toBeInstanceOf(Date);
     });
 
-    it("persiste usuário com avatarUrl null", async () => {
-      const input = makeCreateInput({ avatarUrl: null });
+    it("persiste usuário com avatarKey null", async () => {
+      const input = makeCreateInput({ avatarKey: null });
 
       const user = await repo.create(input);
 
-      expect(user.avatarUrl).toBeNull();
+      expect(user.avatarKey).toBeNull();
     });
   });
 

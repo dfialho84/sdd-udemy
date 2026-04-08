@@ -1,6 +1,6 @@
 // Schemas do banco de dados — adicionados por feature.
 // Cada tabela deve corresponder a uma entidade em src/domain/entities/.
-// Rastreabilidade: T-02 · REQ-1 · REQ-8 · T-25 · REQ-9 · NFR-3
+// Rastreabilidade: T-02 · REQ-1 · REQ-2 · REQ-8 · T-25 · REQ-9 · NFR-3
 
 import {
   mysqlTable,
@@ -17,7 +17,8 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   birthDate: date("birth_date").notNull(),
-  avatarUrl: varchar("avatar_url", { length: 2048 }),
+  /** Object key do MinIO no formato `avatars/<uuid>.<ext>` */
+  avatarKey: varchar("avatar_key", { length: 500 }),
   status: mysqlEnum("status", ["pending", "active"]).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),

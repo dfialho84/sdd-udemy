@@ -1,8 +1,8 @@
 // Route Handler — POST /api/auth/register
 // Adapter de transporte inbound: aplica rate limiting, lê multipart/form-data,
-// valida arquivo de avatar (tipo MIME e tamanho), invoca LocalAvatarStorageAdapter
-// e delega ao RegisterUserUseCase.
-// Rastreabilidade: T-20 · T-04 · T-07 · REQ-1 · REQ-2 · REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-4 · DT-6
+// valida arquivo de avatar (tipo MIME e tamanho), invoca MinioAvatarStorageAdapter
+// para obter a object key do MinIO, e delega ao RegisterUserUseCase.
+// Rastreabilidade: T-20 · T-04 · T-07 · REQ-2 · REQ-3 · REQ-7 · REQ-8 · REQ-9 · NFR-4 · NFR-13 · DT-6
 
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return errorResponse(400, "O corpo da requisição deve ser multipart/form-data.", requestId);
   }
 
-  // --- Validação do arquivo de avatar, se presente (REQ-1 · DT-6) ---
-  let avatarUrl: string | null = null;
+  // --- Validação do arquivo de avatar, se presente (REQ-2 · DT-6) ---
+  let avatarKey: string | null = null;
   const avatarField = formData.get("avatar");
 
   if (avatarField !== null && avatarField instanceof File && avatarField.size > 0) {
@@ -99,11 +99,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Persiste o arquivo via AvatarStoragePort (DT-6)
+    // Persiste o arquivo via AvatarStoragePort — obtém a object key do MinIO (DT-6)
     try {
       const buffer = Buffer.from(await file.arrayBuffer());
       const { avatarStorageAdapter } = getDepsFactory()();
-      avatarUrl = await avatarStorageAdapter.save(buffer, file.type);
+      avatarKey = await avatarStorageAdapter.save(buffer, file.type);
     } catch (err) {
       logger.error(
         {
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       email: parsed.data.email,
       password: parsed.data.password,
       birthDate: new Date(parsed.data.birthDate),
-      avatarUrl,
+      avatarKey,
       requestId,
     });
 

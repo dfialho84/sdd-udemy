@@ -166,14 +166,14 @@ describe("ST-4: Rejeição de upload de arquivo com tipo MIME não permitido", (
 
   // ST-4d: tipo permitido e tamanho ≤ 2 MB → HTTP 200, arquivo gravado
   it("(d) aceita upload com tipo permitido e tamanho dentro do limite — HTTP 200, arquivo gravado", async () => {
-    mockAvatarSave.mockResolvedValue("/uploads/avatars/mock-uuid.jpg");
+    mockAvatarSave.mockResolvedValue("avatars/mock-uuid.jpg");
     mockUserCreate.mockResolvedValue({
       id: "mock-user-id",
       name: validFields.name,
       email: validFields.email,
       passwordHash: "$argon2id$mock",
       birthDate: new Date("1990-01-01"),
-      avatarUrl: "/uploads/avatars/mock-uuid.jpg",
+      avatarKey: "avatars/mock-uuid.jpg",
       status: "pending",
       createdAt: new Date(),
       updatedAt: new Date(),

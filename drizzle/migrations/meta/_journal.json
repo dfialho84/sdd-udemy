@@ -15,6 +15,13 @@
       "when": 1775003840234,
       "tag": "0001_strong_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1744126800000,
+      "tag": "0002_rename_avatar_url_to_avatar_key",
+      "breakpoints": true
     }
   ]
 }

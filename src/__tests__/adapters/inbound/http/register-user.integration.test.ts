@@ -1,26 +1,35 @@
 // Teste de integração IT-6 — RegisterUserHandler POST /api/auth/register
 // Testa o endpoint completo com banco MySQL real e Mailhog real.
-// Rastreabilidade: T-21 · IT-6 · REQ-1 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4 · DT-6
+// Rastreabilidade: T-21 · IT-6 · REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · NFR-4 · DT-6
 //
 // Pré-requisitos:
 //   - banco MySQL de teste rodando com migration aplicada (kanban_mysql)
 //   - Mailhog rodando via Docker Compose (kanban_mailhog)
 //   - DATABASE_URL apontando para o banco de teste
+//
+// O adapter de armazenamento de avatar é mockado neste teste para isolar o banco e email.
+// A verificação com MinIO real é coberta por IT-5 (T-64).
 
-import fs from "fs";
-import os from "os";
-import path from "path";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/auth/register/route";
 import { setDepsFactory, resetDepsFactory, buildUseCaseDeps } from "@/app/api/auth/register/deps";
-import { LocalAvatarStorageAdapter } from "@/adapters/outbound/storage/local-avatar-storage.adapter";
+import type { AvatarStoragePort } from "@/domain/ports/avatar-storage.port";
 import { registerRateLimiter } from "@/adapters/inbound/http/rate-limiter";
 import { db } from "@/lib/db";
 import { users, confirmationTokens } from "@/lib/db/schema";
 import { eq, like } from "drizzle-orm";
+import { randomUUID } from "crypto";
 
-// Diretório temporário isolado para armazenar avatares durante os testes
-let testAvatarDir: string;
+/** Mock do AvatarStoragePort — retorna object key no formato MinIO sem instância real */
+class MockAvatarStorageAdapter implements AvatarStoragePort {
+  async save(_buffer: Buffer, mimeType: string): Promise<string> {
+    const ext = mimeType === "image/jpeg" ? ".jpg"
+      : mimeType === "image/png" ? ".png"
+      : mimeType === "image/webp" ? ".webp"
+      : ".bin";
+    return `avatars/${randomUUID()}${ext}`;
+  }
+}
 
 /** Monta uma NextRequest com multipart/form-data (somente campos de texto) */
 function makeFormRequest(
@@ -86,35 +95,22 @@ async function cleanupTestUsers() {
 
 describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)", () => {
   beforeAll(() => {
-    // Diretório temporário isolado para avatares de teste
-    testAvatarDir = fs.mkdtempSync(path.join(os.tmpdir(), "it6-avatars-"));
-
-    // Injetar dependências concretas com o adapter de avatar usando diretório temporário
+    // Injetar dependências concretas com mock do adapter de avatar (sem MinIO real).
+    // A verificação com MinIO real é coberta por IT-5 (T-64).
     setDepsFactory(() => ({
       ...buildUseCaseDeps(),
-      avatarStorageAdapter: new LocalAvatarStorageAdapter(testAvatarDir),
+      avatarStorageAdapter: new MockAvatarStorageAdapter(),
     }));
   });
 
   beforeEach(async () => {
     await cleanupTestUsers();
     registerRateLimiter.resetAll();
-    // Limpa os arquivos de avatar gravados por testes anteriores no diretório temporário
-    if (fs.existsSync(testAvatarDir)) {
-      for (const f of fs.readdirSync(testAvatarDir)) {
-        fs.unlinkSync(path.join(testAvatarDir, f));
-      }
-    }
   });
 
   afterAll(async () => {
     await cleanupTestUsers();
     resetDepsFactory();
-
-    // Remove diretório temporário de avatares
-    if (fs.existsSync(testAvatarDir)) {
-      fs.rmSync(testAvatarDir, { recursive: true, force: true });
-    }
 
     // Encerra o pool de conexões para o Jest não ficar aguardando handles abertos
     await (db.$client as { end?: () => Promise<void> }).end?.();
@@ -132,7 +128,7 @@ describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)",
       expect(json.message).toBe("Um link de confirmacao foi enviado ao seu email.");
     });
 
-    it("persiste o usuário com status 'pending' e avatar_url = null no banco", async () => {
+    it("persiste o usuário com status 'pending' e avatar_key = null no banco", async () => {
       await POST(makeFormRequest(validFields));
 
       const rows = await db
@@ -142,15 +138,15 @@ describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)",
 
       expect(rows).toHaveLength(1);
       expect(rows[0]!.status).toBe("pending");
-      expect(rows[0]!.avatarUrl).toBeNull();
+      expect(rows[0]!.avatarKey).toBeNull();
     });
   });
 
   // -----------------------------------------------------------------------
-  // Caminho feliz com avatar JPEG válido: HTTP 200, arquivo gravado, avatar_url preenchido
+  // Caminho feliz com avatar JPEG válido: HTTP 200, objeto gravado no MinIO, avatar_key preenchida
   // -----------------------------------------------------------------------
-  describe("HTTP 200 — dados válidos com avatar JPEG válido ≤ 2 MB (REQ-1 · DT-6)", () => {
-    it("retorna 200 e persiste avatar_url com caminho relativo no banco", async () => {
+  describe("HTTP 200 — dados válidos com avatar JPEG válido ≤ 2 MB (REQ-2 · DT-6)", () => {
+    it("retorna 200 e persiste avatar_key com object key do MinIO no banco", async () => {
       const fakeJpeg = Buffer.from("fake-jpeg-data");
 
       const response = await POST(
@@ -170,19 +166,17 @@ describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)",
         .where(eq(users.email, "it6-avatar@example.com"));
 
       expect(rows).toHaveLength(1);
-      expect(rows[0]!.avatarUrl).toMatch(/^\/uploads\/avatars\/[0-9a-f-]{36}\.jpg$/);
-
-      // Arquivo deve existir no diretório temporário de teste
-      const filename = path.basename(rows[0]!.avatarUrl!);
-      expect(fs.existsSync(path.join(testAvatarDir, filename))).toBe(true);
+      // avatar_key deve ser a object key retornada pelo adapter de armazenamento
+      expect(rows[0]!.avatarKey).toBeDefined();
+      expect(rows[0]!.avatarKey).not.toBeNull();
     });
   });
 
   // -----------------------------------------------------------------------
   // HTTP 400 — avatar com tipo MIME não permitido (ST-4)
   // -----------------------------------------------------------------------
-  describe("HTTP 400 — avatar com tipo MIME não permitido (ST-4 · REQ-1)", () => {
-    it("retorna 400 e não cria registro nem grava arquivo quando MIME é image/gif", async () => {
+  describe("HTTP 400 — avatar com tipo MIME não permitido (ST-4 · REQ-2)", () => {
+    it("retorna 400 e não cria registro quando MIME é image/gif", async () => {
       const response = await POST(
         makeFormRequestWithAvatar(
           { ...validFields, email: "it6-badmime@example.com" },
@@ -202,18 +196,14 @@ describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)",
         .from(users)
         .where(eq(users.email, "it6-badmime@example.com"));
       expect(rows).toHaveLength(0);
-
-      // Nenhum arquivo gravado no diretório de avatares
-      const filesInDir = fs.readdirSync(testAvatarDir);
-      expect(filesInDir).toHaveLength(0);
     });
   });
 
   // -----------------------------------------------------------------------
   // HTTP 400 — avatar acima de 2 MB
   // -----------------------------------------------------------------------
-  describe("HTTP 400 — avatar acima de 2 MB (REQ-1)", () => {
-    it("retorna 400 e não cria registro nem grava arquivo quando tamanho excede 2 MB", async () => {
+  describe("HTTP 400 — avatar acima de 2 MB (REQ-2)", () => {
+    it("retorna 400 e não cria registro quando tamanho excede 2 MB", async () => {
       const oversizedContent = new Uint8Array(2 * 1024 * 1024 + 1).fill(0xff);
 
       const response = await POST(
@@ -235,10 +225,6 @@ describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)",
         .from(users)
         .where(eq(users.email, "it6-bigfile@example.com"));
       expect(rows).toHaveLength(0);
-
-      // Nenhum arquivo gravado
-      const filesInDir = fs.readdirSync(testAvatarDir);
-      expect(filesInDir).toHaveLength(0);
     });
   });
 

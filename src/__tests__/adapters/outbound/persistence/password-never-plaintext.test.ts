@@ -31,7 +31,7 @@ describe("ST-3: Senhas nunca persistidas em texto simples", () => {
       email: "st3-test@example.com",
       passwordHash,
       birthDate: new Date("1995-03-20"),
-      avatarUrl: null,
+      avatarKey: null,
       status: "pending",
     });
 

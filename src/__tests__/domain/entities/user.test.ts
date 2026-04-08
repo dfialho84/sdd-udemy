@@ -9,7 +9,7 @@ const baseProps: UserProps = {
   email: "maria@example.com",
   passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$hash",
   birthDate: new Date("1990-01-01"),
-  avatarUrl: null,
+  avatarKey: null,
   status: "pending",
   createdAt: new Date("2024-01-01T00:00:00Z"),
   updatedAt: new Date("2024-01-01T00:00:00Z"),
@@ -24,15 +24,15 @@ describe("User entity", () => {
     expect(user.email).toBe(baseProps.email);
     expect(user.passwordHash).toBe(baseProps.passwordHash);
     expect(user.birthDate).toEqual(baseProps.birthDate);
-    expect(user.avatarUrl).toBeNull();
+    expect(user.avatarKey).toBeNull();
     expect(user.status).toBe("pending");
     expect(user.createdAt).toEqual(baseProps.createdAt);
     expect(user.updatedAt).toEqual(baseProps.updatedAt);
   });
 
-  it("deve aceitar avatarUrl quando fornecido", () => {
-    const user = new User({ ...baseProps, avatarUrl: "https://example.com/avatar.png" });
-    expect(user.avatarUrl).toBe("https://example.com/avatar.png");
+  it("deve aceitar avatarKey quando fornecido", () => {
+    const user = new User({ ...baseProps, avatarKey: "https://example.com/avatar.png" });
+    expect(user.avatarKey).toBe("https://example.com/avatar.png");
   });
 
   it("isPending() deve retornar true quando status é pending", () => {
