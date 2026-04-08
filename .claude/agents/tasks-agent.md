@@ -53,10 +53,87 @@ Ao receber o argumento inicial (nome ou slug da feature):
 
 4. **Verifique se já existe `tasks.md`** com `Glob`:
    - Padrão: `docs/features/<slug>/tasks.md`
-   - Se existir, use `AskUserQuestion`:
-     "O arquivo `docs/features/<slug>/tasks.md` já existe. Deseja reescrever do zero ou continuar de onde parou?"
-   - Se **continuar**: leia o arquivo, identifique os blocos de REQ já gerados e retome a partir do próximo.
-   - Se **reescrever**: prossiga normalmente.
+   - Se existir, use `AskUserQuestion` com três opções:
+     ```
+     O arquivo `docs/features/<slug>/tasks.md` já existe. O que deseja fazer?
+     (a) Reescrever do zero
+     (b) Continuar de onde parou (adicionar blocos/tasks faltantes)
+     (c) Atualizar (identificar tasks concluídas que precisam ser refeitas + adicionar tasks novas)
+     ```
+   - Se **(a) reescrever**: prossiga normalmente.
+   - Se **(b) continuar**: leia o arquivo, identifique os blocos de REQ já gerados e retome a partir do próximo.
+   - Se **(c) atualizar**: execute o **Passo 0A** antes de avançar para o Passo 1.
+
+---
+
+## Passo 0A — Análise de impacto (modo "Atualizar")
+
+> Execute este passo **somente** quando o usuário escolher a opção **(c) Atualizar** no Passo 0.
+
+### 1. Leitura do estado atual
+
+Leia o `tasks.md` existente com `Read` e identifique todas as tasks marcadas como concluídas (`- [x]`), anotando:
+- ID da task (ex: `T-03`)
+- Título / descrição
+- Componentes, classes, campos ou adapters mencionados no corpo da task
+
+### 2. Detecção de impacto
+
+Para cada task `[x]`, compare sua descrição com o estado atual dos artefatos já lidos (`design.md`, `requirements.md`, `nf-requirements.md`) e verifique se **ao menos uma** das seguintes condições é verdadeira:
+
+| Condição | Exemplo |
+|---|---|
+| Nome de classe/adapter que o `design.md` **não menciona mais** com esse nome | `LocalAvatarStorageAdapter` → `MinioAvatarStorageAdapter` |
+| Nome de campo/coluna que o `design.md` ou `requirements.md` descreve diferente | `avatar_url VARCHAR(2048)` → `avatar_key` |
+| Referência a um componente do qual a task depende e que foi substituído por outro | task usa `FileSystemPort` que agora é `ObjectStoragePort` |
+
+> **Regra conservadora:** só marque como impactada se a mudança afeta diretamente a implementação daquela task. Não desmarque tasks por mudanças que não alteram o que aquela task específica faz.
+
+### 3. Detecção de tasks novas
+
+Percorra os artefatos (`design.md`, `requirements.md`, `nf-requirements.md`, `test-strategy.md`) e identifique componentes, métodos, endpoints ou testes que **não possuem nenhuma task** no `tasks.md` atual.
+
+### 4. Relatório de impacto (antes de modificar qualquer coisa)
+
+Apresente via `AskUserQuestion`:
+
+```
+[tasks-agent] Análise de impacto — docs/features/<slug>/tasks.md
+
+Tasks a desmarcar (- [x] → - [ ]):
+- T-XX — <título> · Razão: <mudança detectada objetivamente>
+- T-YY — <título> · Razão: <mudança detectada objetivamente>
+
+Tasks novas a adicionar:
+- T-NN: <título> (bloco REQ-N)
+- T-MM: <título> (bloco REQ-N)
+
+Nenhuma alteração fora desta lista será feita.
+Confirma as alterações acima?
+```
+
+Se não houver tasks a desmarcar nem tasks novas, informe:
+```
+[tasks-agent] Nenhum impacto detectado. O tasks.md está alinhado com os artefatos atuais.
+Deseja prosseguir para adicionar tasks novas manualmente ou encerrar?
+```
+
+### 5. Aplicação das alterações (somente após confirmação)
+
+Após o usuário confirmar:
+
+1. Para cada task impactada: use `Edit` para substituir `- [x]` por `- [ ]` no trecho correspondente e, se necessário, atualize a descrição para refletir o nome/campo correto.
+2. Para tasks novas: adicione-as ao bloco do REQ correspondente usando `Edit`, seguindo o formato da skill `tasks-standards`.
+3. Anuncie a conclusão:
+   ```
+   [tasks-agent] Atualização concluída.
+   - Tasks desmarcadas: <N>
+   - Tasks novas adicionadas: <N>
+
+   Avançando para o Passo 1 para revisar o índice completo...
+   ```
+
+Após anunciar, avance para o **Passo 1** normalmente.
 
 ---
 
