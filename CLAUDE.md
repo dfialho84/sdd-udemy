@@ -15,6 +15,7 @@ Aplicação de quadros Kanban para gerenciamento de sprints, desenvolvida com a 
 - **Validação de Fomulários**: zod
 - **Forms**: react hook form
 - **Banco**: MySQL
+- **Repositório de arquivos**: MinIO
 - **Testes unitários/integração**: Jest
 - **Testes E2E**: Cypress + Cucumber
 - **Testes de carga**: k6

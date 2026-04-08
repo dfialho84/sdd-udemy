@@ -28,6 +28,10 @@
 
 > Fonte: PRD — Riscos / REQ-3 (criação de cadastro)
 
+**NFR-13**: O sistema deve rejeitar requisições HTTP para acesso à foto de perfil do usuário quando a requisição não estiver autenticada (retornar HTTP 401 — Unauthorized) ou quando a conta do usuário cuja foto está sendo acessada estiver desativada ou bloqueada (retornar HTTP 403 — Forbidden). Todas as rejeições devem ser registradas em log estruturado no formato JSON, incluindo: timestamp, userId do requisitor, userId do proprietário da foto, tipoRejeicao (401 ou 403) e requestId.
+
+> Fonte: Contexto de segurança (acesso restrito a fotos de perfil) + PRD — campo "foto de perfil" (linhas 19, 49) + REQ-2 (profile photo como campo do cadastro)
+
 ## Escalabilidade
 
 **NFR-7**: O sistema deve suportar no mínimo 100 usuários simultâneos no fluxo de cadastro e confirmação de conta sem degradação perceptível de performance ou erros de disponibilidade.
