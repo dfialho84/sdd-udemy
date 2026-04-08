@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral Técnica
 
-O fluxo de registro de usuário é implementado em arquitetura hexagonal com quatro etapas: navegação da home para o formulário de cadastro, validação e criação do cadastro, envio de email com token de confirmação e ativação da conta via link. A senha é armazenada com hash argon2id (64 MB de memória, 3 iterações, paralelismo 2) e o token de confirmação é gerado com entropia mínima de 128 bits, invalidado imediatamente após o primeiro uso bem-sucedido. O adapter HTTP inbound recebe os dados via `multipart/form-data`, valida todos os campos e, se um arquivo de avatar for fornecido, delega o armazenamento ao `LocalAvatarStorageAdapter` antes de encaminhar ao Domain; o `RegisterUserUseCase` continua recebendo `avatarUrl: string | null` — sem alteração no Domain. O armazenamento do avatar é feito em filesystem local (`public/uploads/avatars/<uuid>.<ext>`), servido diretamente pelo Next.js via diretório `public/`. O envio de email é responsabilidade de um adapter de infraestrutura isolado, com SLA de entrega de até 60 segundos (NFR-3). Rate limiting de 3 tentativas por IP em janela de 15 minutos é aplicado no adapter de transporte, retornando HTTP 429 quando o limite é excedido (NFR-6). As páginas `/` e `/register` devem estar em conformidade com WCAG 2.1 nível AA (NFR-9).
+O fluxo de registro de usuário é implementado em arquitetura hexagonal com quatro etapas: navegação da home para o formulário de cadastro, validação e criação do cadastro, envio de email com token de confirmação e ativação da conta via link. A senha é armazenada com hash argon2id (64 MB de memória, 3 iterações, paralelismo 2) e o token de confirmação é gerado com entropia mínima de 128 bits, invalidado imediatamente após o primeiro uso bem-sucedido. O adapter HTTP inbound recebe os dados via `multipart/form-data`, valida todos os campos e, se um arquivo de avatar for fornecido, delega o armazenamento ao `MinioAvatarStorageAdapter` — que persiste o arquivo no MinIO (repositório de objetos do stack do projeto) e retorna a object key; o `RegisterUserUseCase` recebe `avatarKey: string | null` sem qualquer dependência do MinIO. O acesso às fotos de perfil é protegido por autenticação obrigatória: requisições não autenticadas recebem HTTP 401 e acessos a contas desativadas ou bloqueadas recebem HTTP 403, com todas as rejeições registradas em log estruturado JSON (NFR-13). O envio de email é responsabilidade de um adapter de infraestrutura isolado, com SLA de entrega de até 60 segundos (NFR-3). Rate limiting de 3 tentativas por IP em janela de 15 minutos é aplicado no adapter de transporte, retornando HTTP 429 quando o limite é excedido (NFR-6). As páginas `/` e `/register` devem estar em conformidade com WCAG 2.1 nível AA (NFR-9).
 
 ---
 
@@ -65,15 +65,26 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com qua
 ### AvatarStoragePort (port outbound) — _novo_
 
 - **Camada:** domain/ports
-- **Responsabilidade:** Interface de armazenamento de avatar; abstrai o meio de persistência (filesystem, cloud) do adapter HTTP.
-- **Métodos:** `save(buffer: Buffer, mimeType: string): Promise<string>`
+- **Responsabilidade:** Interface de armazenamento de avatar; abstrai o meio de persistencia (object storage, filesystem) do adapter HTTP. Metodo principal: `save(buffer: Buffer, mimeType: string): Promise<string>` — retorna a object key do arquivo armazenado.
 - **Depende de:** —
 
-### LocalAvatarStorageAdapter (adapter outbound) — _novo_
+### AvatarAccessPort (port outbound) — _novo_
+
+- **Camada:** domain/ports
+- **Responsabilidade:** Interface para recuperacao de avatares armazenados; abstrai a geracao de URL ou stream de download. Metodo principal: `getPresignedUrl(avatarKey: string, expiresInSeconds: number): Promise<string>`.
+- **Depende de:** —
+
+### MinioAvatarStorageAdapter (adapter outbound) — _novo_
 
 - **Camada:** infrastructure
-- **Responsabilidade:** Implementação concreta de `AvatarStoragePort`; salva o arquivo em `public/uploads/avatars/<uuid>.<ext>` e retorna o caminho relativo.
-- **Depende de:** `AvatarStoragePort`, módulo `fs` do Node.js
+- **Responsabilidade:** Implementacao concreta de `AvatarStoragePort` e `AvatarAccessPort` usando o SDK oficial do MinIO. Faz upload do buffer para o bucket configurado com nome `<uuid>.<ext>` e retorna a object key. Gera presigned URLs temporarias para acesso autenticado (NFR-13, DT-6).
+- **Depende de:** `AvatarStoragePort`, `AvatarAccessPort`, SDK MinIO
+
+### AvatarAccessHandler (adapter inbound) — _novo_
+
+- **Camada:** infrastructure (transport)
+- **Responsabilidade:** Route Handler Next.js (`GET /api/users/[userId]/avatar`) que verifica autenticacao da requisicao via next-auth e o status da conta do proprietario antes de redirecionar para a presigned URL temporaria do MinIO. Retorna HTTP 401 se nao autenticado, HTTP 403 se a conta do proprietario estiver desativada ou bloqueada, e registra todas as rejeicoes em log estruturado JSON com timestamp, userId do requisitor, userId do proprietario, tipoRejeicao e requestId (NFR-13).
+- **Depende de:** `UserRepository`, `AvatarAccessPort`, next-auth session
 
 ### HomePage (adapter de apresentação) — _novo_
 
@@ -90,7 +101,7 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com qua
 ### RegisterUserHandler (adapter inbound)
 
 - **Camada:** infrastructure (transport)
-- **Responsabilidade:** Route Handler Next.js (`POST /api/auth/register`) que lê `multipart/form-data`, valida e sanitiza todos os campos de entrada — incluindo tipo MIME (image/jpeg|png|webp) e tamanho (≤ 2 MB) do arquivo de avatar, se fornecido —, invoca `LocalAvatarStorageAdapter.save()` para obter o caminho relativo e delega ao `RegisterUserUseCase`. Aplica o `RateLimiter` antes de processar.
+- **Responsabilidade:** Route Handler Next.js (`POST /api/auth/register`) que le `multipart/form-data`, valida e sanitiza todos os campos de entrada — incluindo tipo MIME (image/jpeg|png|webp) e tamanho (≤ 2 MB) do arquivo de avatar, se fornecido —, invoca `MinioAvatarStorageAdapter.save()` para obter a object key e delega ao `RegisterUserUseCase`. Aplica o `RateLimiter` antes de processar.
 - **Depende de:** `RegisterUserUseCase`, `RateLimiter`, `AvatarStoragePort`
 
 ### ConfirmAccountHandler (adapter inbound)
@@ -154,7 +165,7 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com qua
 | email         | VARCHAR                   | Endereco de email (unico)                                                                                                |
 | password_hash | VARCHAR                   | Hash argon2id da senha (NFR-4)                                                                                           |
 | birth_date    | DATE                      | Data de nascimento                                                                                                       |
-| avatar_url    | VARCHAR (nullable)        | Caminho relativo ao servidor do arquivo de avatar salvo (`/uploads/avatars/<uuid>.<ext>`); null se não fornecido (REQ-2) |
+| avatar_key    | VARCHAR (nullable)        | Object key do arquivo de avatar no MinIO (`avatars/<uuid>.<ext>`); null se nao fornecido (REQ-2, DT-6) |
 | status        | ENUM('pending', 'active') | Status da conta (REQ-3, REQ-12)                                                                                          |
 | created_at    | TIMESTAMP                 | Data de criacao do registro                                                                                              |
 | updated_at    | TIMESTAMP                 | Data da ultima atualizacao                                                                                               |
@@ -214,6 +225,27 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com qua
 
     **Nota sobre resposta neutra (NFR anti-enumeracao):** o endpoint retorna HTTP 200 com a mensagem padrao mesmo quando o email ja esta cadastrado? Nao — REQ-7 exige exibir mensagem especifica de email ja cadastrado, portanto este endpoint retorna 409 explicitamente. Anti-enumeracao nao se aplica ao fluxo de registro por decisao dos requisitos.
 
+### GET /api/users/[userId]/avatar
+
+- **Autenticacao:** obrigatoria (JWT via next-auth — sessao ativa)
+- **Path params:**
+  | Parametro | Tipo | Descricao |
+  |-----------|------|-----------|
+  | userId | UUID | Identificador do usuario cujo avatar se deseja acessar |
+- **Response 302:** Redirect para presigned URL temporaria do MinIO (valida por tempo configurado, ex: 60 segundos)
+- **Erros:**
+  | Codigo | Condicao |
+  |--------|----------|
+  | 401 | Requisicao nao autenticada — sessao ausente ou invalida (NFR-13) |
+  | 403 | Conta do proprietario do avatar esta desativada ou bloqueada (NFR-13) |
+  | 404 | Usuario nao encontrado ou sem avatar cadastrado |
+
+  Todas as rejeicoes 401 e 403 geram log estruturado JSON com: timestamp, userId do requisitor, userId do proprietario, tipoRejeicao (`401` ou `403`) e requestId (NFR-13).
+
+  Respostas de erro seguem a estrutura padronizada: `{ codigo, mensagem, requestId, timestamp }` (constitution.md, regra 5).
+
+---
+
 ### GET /api/auth/confirm
 
 - **Autenticacao:** publica
@@ -253,11 +285,11 @@ O fluxo de registro de usuário é implementado em arquitetura hexagonal com qua
 
 1. `RegisterUserHandler` recebe `POST /api/auth/register` e verifica o limite de tentativas via `RateLimiter`; se excedido, retorna HTTP 429.
 2. `RegisterUserHandler` extrai campos e arquivo do `FormData`. Valida campos obrigatórios, formato de email, política de senha e coincidência das senhas. Se qualquer validação falhar, retorna HTTP 400 com a mensagem de erro correspondente e nenhum registro é criado (REQ-6, REQ-8, REQ-9, REQ-10, REQ-11).
-   2b. Se arquivo de avatar fornecido: `RegisterUserHandler` valida tipo MIME (image/jpeg, image/png ou image/webp) e tamanho (≤ 2 MB). Se inválido, retorna HTTP 400. Caso contrário, invoca `LocalAvatarStorageAdapter.save()`, obtém caminho relativo e o usa como `avatarUrl`. Se falha no armazenamento, retorna HTTP 500.
-3. `RegisterUserHandler` delega ao `RegisterUserUseCase` com os dados validados, incluindo `avatarUrl` (caminho relativo ou `null`).
+   2b. Se arquivo de avatar fornecido: `RegisterUserHandler` valida tipo MIME (image/jpeg, image/png ou image/webp) e tamanho (≤ 2 MB). Se inválido, retorna HTTP 400. Caso contrário, invoca `MinioAvatarStorageAdapter.save()`, obtém a object key (`avatars/<uuid>.<ext>`) e a usa como `avatarKey`. Se falha no armazenamento, retorna HTTP 500.
+3. `RegisterUserHandler` delega ao `RegisterUserUseCase` com os dados validados, incluindo `avatarKey` (object key do MinIO ou `null`).
 4. `RegisterUserUseCase` consulta `UserRepository.findByEmail` para verificar unicidade do email. Se o email ja existir, retorna erro HTTP 409 com a mensagem de email ja cadastrado (REQ-7). Nenhum registro e criado.
 5. `RegisterUserUseCase` solicita a `PasswordHasher.hash` o hash argon2id da senha (64 MB, 3 iteracoes, paralelismo 2 — NFR-4).
-6. `RegisterUserUseCase` cria a entidade `User` com status `pending` e persiste via `UserRepository.create` (REQ-3).
+6. `RegisterUserUseCase` cria a entidade `User` com status `pending`, incluindo `avatarKey` (object key no MinIO ou `null`), e persiste via `UserRepository.create` (REQ-3).
 7. `RegisterUserUseCase` solicita a `TokenGenerator.generate` um token com entropia minima de 128 bits. `CryptoTokenGenerator` usa `crypto.randomBytes(16)` e retorna o valor em hex (NFR-5).
 8. `RegisterUserUseCase` cria a entidade `ConfirmationToken` com `expires_at = agora + 24 horas` e persiste via `ConfirmationTokenRepository.create` (REQ-4).
 9. `RegisterUserUseCase` solicita a `EmailService.send` o envio do email com o link de confirmacao contendo o token. O email deve ser entregue em ate 60 segundos (NFR-3). Falhas de envio sao registradas em log estruturado JSON com os campos: timestamp, requestId, email parcialmente mascarado, tipoEvento e motivoFalha (NFR-10).
@@ -300,6 +332,24 @@ Coberto pelos fluxos alternativos do "Fluxo: Cadastro realizado com dados valido
 
 ---
 
+### Fluxo: Acesso autenticado ao avatar do usuario
+
+1. `AvatarAccessHandler` recebe `GET /api/users/[userId]/avatar`.
+2. `AvatarAccessHandler` verifica a sessao ativa via next-auth (`getServerSession`). Se a sessao nao existir ou for invalida: registra log estruturado JSON com `{ timestamp, userId: null, ownerUserId: userId, tipoRejeicao: 401, requestId }` e retorna HTTP 401 (NFR-13).
+3. `AvatarAccessHandler` consulta `UserRepository.findById(userId)` para obter os dados do proprietario do avatar. Se o usuario nao for encontrado, retorna HTTP 404.
+4. `AvatarAccessHandler` verifica o status da conta do proprietario. Se o status for `inactive` ou `blocked`: registra log estruturado JSON com `{ timestamp, userId: <id do requisitor>, ownerUserId: userId, tipoRejeicao: 403, requestId }` e retorna HTTP 403 (NFR-13).
+5. `AvatarAccessHandler` verifica se `User.avatar_key` e nao nulo. Se nulo, retorna HTTP 404.
+6. `AvatarAccessHandler` invoca `AvatarAccessPort.getPresignedUrl(avatarKey, 60)` para obter URL temporaria de download no MinIO.
+7. `AvatarAccessHandler` retorna HTTP 302 Redirect para a presigned URL gerada.
+
+**Fluxos alternativos:**
+
+- Se a sessao estiver ausente ou invalida: log JSON com `tipoRejeicao: 401` + HTTP 401 (NFR-13).
+- Se a conta do proprietario estiver desativada ou bloqueada: log JSON com `tipoRejeicao: 403` + HTTP 403 (NFR-13).
+- Se o usuario nao existir ou nao tiver avatar: HTTP 404, sem log de rejeicao de seguranca.
+
+---
+
 ## 6. Decisões Técnicas
 
 ### DT-1: Algoritmo de hash de senha — argon2id vs. bcrypt
@@ -334,13 +384,13 @@ Coberto pelos fluxos alternativos do "Fluxo: Cadastro realizado com dados valido
 - **Justificativa:** O token opaco permite invalidacao imediata apos o uso (basta setar `used_at`), o que e exigido por NFR-5 e REQ-14. JWTs sao stateless e nao podem ser invalidados sem uma blocklist, o que adicionaria complexidade equivalente a manter o banco de tokens — sem o beneficio da invalidacao imediata. O trade-off do token opaco e a necessidade de consultar o banco em cada confirmacao, mas isso ja e necessario para verificar expiracao e ativar a conta.
 - **Requisito relacionado:** NFR-5, REQ-14, REQ-18
 
-### DT-6: Estrategia de armazenamento de avatar — filesystem local vs. cloud storage
+### DT-6: Estrategia de armazenamento de avatar — MinIO vs. filesystem local
 
 - **Problema:** Onde armazenar os arquivos de avatar enviados no cadastro?
-- **Alternativas consideradas:** Filesystem local (`public/uploads/avatars/`); cloud storage (S3/R2/GCS); base64 em coluna BLOB no banco
-- **Decisao:** Filesystem local em `public/uploads/avatars/`
-- **Justificativa:** Stack do projeto nao inclui servico de armazenamento externo. Adicionar S3/R2 apenas para avatar seria overengineering para o escopo do curso. O Next.js serve arquivos de `public/` nativamente sem configuracao extra. O trade-off e que a solucao nao escala horizontalmente (replicas), mas e aceitavel para ambiente de desenvolvimento e curso. Base64 em BLOB nao foi considerado: aumentaria o tamanho das queries e nao e pratica recomendada para arquivos binarios.
-- **Requisito relacionado:** REQ-2
+- **Alternativas consideradas:** MinIO (object storage do stack do projeto via Docker Compose); filesystem local (`public/uploads/avatars/`); base64 em coluna BLOB no banco
+- **Decisao:** MinIO como object storage, usando o SDK oficial (`minio` para Node.js), com bucket dedicado para avatares. A object key (`avatars/<uuid>.<ext>`) e armazenada no campo `avatar_key` da tabela `users`.
+- **Justificativa:** O stack do projeto (CLAUDE.md) inclui MinIO explicitamente como repositorio de arquivos. Usar filesystem local ignoraria uma dependencia ja prevista e nao escalaria horizontalmente entre replicas. O MinIO fornece API compativel com S3, permite presigned URLs para acesso temporario e protegido (necessario para NFR-13), e e servico ja disponivel no Docker Compose do ambiente de desenvolvimento. O trade-off e a necessidade de configurar o bucket e credenciais no ambiente, mas isso ja e esperado pelo stack declarado. Base64 em BLOB nao foi considerado: aumentaria o tamanho das queries e nao e pratica recomendada para arquivos binarios.
+- **Requisito relacionado:** REQ-2, NFR-13
 
 ### DT-5: Remocao do cadastro pendente apos expiracao — sincrona vs. job assincrono
 
@@ -357,6 +407,14 @@ Coberto pelos fluxos alternativos do "Fluxo: Cadastro realizado com dados valido
 - **Decisao:** Processo unico do Next.js com o rate limiter em memoria
 - **Justificativa:** O fluxo de cadastro e majoritariamente I/O-bound (banco + email). O Node.js e seu modelo de event loop lidam eficientemente com 100 requisicoes concorrentes sem necessidade de workers adicionais. O trade-off e que o rate limiter em memoria nao e compartilhado entre replicas — aceito para o escopo educacional, conforme DT-3. Em producao real, o correto seria usar Redis para compartilhar o estado do rate limiter entre instancias.
 - **Requisito relacionado:** NFR-7
+
+### DT-9: Estrategia de acesso protegido ao avatar — presigned URL vs. proxy do servidor
+
+- **Problema:** Como servir o arquivo de avatar armazenado no MinIO de forma autenticada, garantindo que requisicoes nao autenticadas ou a contas bloqueadas sejam rejeitadas (NFR-13)?
+- **Alternativas consideradas:** Proxy via servidor Next.js (o servidor baixa o objeto do MinIO e retorna o conteudo ao cliente); redirect para presigned URL temporaria gerada pelo servidor apos verificacao de autenticacao
+- **Decisao:** Redirect 302 para presigned URL temporaria do MinIO, gerada pelo `AvatarAccessHandler` somente apos verificar autenticacao e status da conta do proprietario.
+- **Justificativa:** A presigned URL delega a transferencia do arquivo diretamente do MinIO para o cliente, sem passar pelo processo Next.js — eliminando bottleneck de bandwidth no servidor. O controle de acesso permanece no servidor (quem gera a URL decide se o acesso e permitido), atendendo ao NFR-13. O trade-off e que a URL gerada tem validade temporaria (ex: 60 segundos) — se o cliente armazenar a URL e tenta reusa-la apos expiracao, recebera erro do MinIO; isso e comportamento esperado e aceitavel para o fluxo de exibicao de avatares. A alternativa de proxy adiciona latencia e consume recursos do servidor Next.js para cada acesso a avatar, o que e desproporcionalmente custoso para arquivos binarios.
+- **Requisito relacionado:** NFR-13, REQ-2
 
 ### DT-8: Conformidade com WCAG 2.1 AA — responsabilidade no adapter de apresentacao
 

@@ -50,7 +50,7 @@
 
 ### T-01: Criar entidade `User` com campos e invariantes de domínio
 
-- [x] Criar a entidade `User` na camada domain com os campos: id (UUID), name, email, password_hash, birth_date, avatar_url (nullable), status (pending/active), created_at e updated_at. A entidade não deve ter dependência de frameworks, ORM ou HTTP.
+- [ ] Criar a entidade `User` na camada domain com os campos: id (UUID), name, email, password_hash, birth_date, avatar_key (nullable, object key do MinIO), status (pending/active), created_at e updated_at. A entidade não deve ter dependência de frameworks, ORM ou HTTP.
 
 **Rastreabilidade:** REQ-2 · REQ-3
 **Depende de:** —
@@ -60,7 +60,7 @@
 
 ### T-02: Criar migration da tabela `users`
 
-- [x] Criar a migration para a tabela `users` com todos os campos do modelo de dados, incluindo constraint UNIQUE no campo `email` e os tipos definidos no design (UUID para id, ENUM para status, DATE para birth_date, VARCHAR nullable para avatar_url).
+- [ ] Criar a migration para a tabela `users` com todos os campos do modelo de dados, incluindo constraint UNIQUE no campo `email` e os tipos definidos no design (UUID para id, ENUM para status, DATE para birth_date, VARCHAR nullable para `avatar_key` — object key do MinIO no formato `avatars/<uuid>.<ext>`).
 
 **Rastreabilidade:** REQ-2 · REQ-3
 **Depende de:** T-01
@@ -98,9 +98,19 @@
 
 ---
 
+### T-73: Implementar port `AvatarAccessPort` (interface)
+
+- [ ] Definir a interface `AvatarAccessPort` na camada domain/ports com o método `getPresignedUrl(avatarKey: string, expiresInSeconds: number): Promise<string>`. A interface não deve referenciar o MinIO, nenhum serviço de cloud storage nem qualquer dependência de infraestrutura; apenas o contrato de entrada (object key e TTL em segundos) e retorno (URL temporária como string).
+
+**Rastreabilidade:** REQ-2 · NFR-13 · DT-9
+**Depende de:** —
+**Concluída quando:** A interface `AvatarAccessPort` existe na camada domain/ports, compila sem erros e o `AvatarAccessHandler` pode referenciá-la via injeção de dependência sem importar nenhum módulo de infraestrutura.
+
+---
+
 ### T-61: Implementar port `AvatarStoragePort` (interface)
 
-- [x] Definir a interface `AvatarStoragePort` na camada domain/ports com o método `save(buffer: Buffer, mimeType: string): Promise<string>`. A interface não deve referenciar o filesystem, nenhum serviço de cloud storage nem qualquer dependência de infraestrutura; apenas o contrato de entrada (bytes e tipo) e retorno (caminho relativo como string).
+- [x] Definir a interface `AvatarStoragePort` na camada domain/ports com o método `save(buffer: Buffer, mimeType: string): Promise<string>`. A interface não deve referenciar o filesystem, nenhum serviço de cloud storage nem qualquer dependência de infraestrutura; apenas o contrato de entrada (bytes e tipo) e retorno (object key como string, no formato `avatars/<uuid>.<ext>`).
 
 **Rastreabilidade:** REQ-2 · DT-6
 **Depende de:** —
@@ -108,43 +118,43 @@
 
 ---
 
-### T-62: Implementar `LocalAvatarStorageAdapter`
+### T-62: Implementar `MinioAvatarStorageAdapter` — `save()` e `getPresignedUrl()`
 
-- [x] Implementar a classe `LocalAvatarStorageAdapter` como adapter outbound concreto de `AvatarStoragePort`. O adapter deve derivar a extensão do arquivo a partir do `mimeType` (jpeg → `.jpg`, png → `.png`, webp → `.webp`), gerar um UUID único por chamada como nome do arquivo, criar o diretório `public/uploads/avatars/` caso não exista e gravar o buffer nesse caminho. Deve retornar o caminho relativo no formato `/uploads/avatars/<uuid>.<ext>` e propagar qualquer exceção de escrita ao chamador.
+- [ ] Implementar a classe `MinioAvatarStorageAdapter` como adapter outbound concreto de `AvatarStoragePort` e `AvatarAccessPort`, usando o SDK oficial do MinIO (`minio` para Node.js). O método `save(buffer, mimeType)` deve: derivar a extensão do arquivo a partir do `mimeType` (jpeg → `.jpg`, png → `.png`, webp → `.webp`), gerar um UUID único por chamada como nome do objeto, fazer upload do buffer para o bucket configurado via `putObject` com a object key no formato `avatars/<uuid>.<ext>` e content-type correto, e retornar a object key. O método `getPresignedUrl(avatarKey, expiresInSeconds)` deve gerar uma presigned URL temporária de download via `presignedGetObject` e retornar a URL gerada. Propagar qualquer exceção do SDK ao chamador.
 
-**Rastreabilidade:** REQ-2 · DT-6
-**Depende de:** T-61
-**Concluída quando:** `LocalAvatarStorageAdapter.save()` grava o arquivo em `public/uploads/avatars/<uuid>.<ext>` e retorna o caminho relativo correto; duas chamadas consecutivas produzem nomes de arquivo distintos.
-
----
-
-### T-63: Cobrir UT-7 — `LocalAvatarStorageAdapter.save()` com filesystem mockado (unitário)
-
-- [x] Implementar os testes unitários UT-7 cobrindo: (a) buffer JPEG gravado com extensão `.jpg` e caminho relativo `/uploads/avatars/<uuid>.jpg`; (b) PNG com extensão `.png`; (c) WebP com extensão `.webp`; (d) duas chamadas consecutivas geram nomes de arquivo distintos; (e) falha de escrita no filesystem propaga exceção ao chamador. Usar mock do módulo `fs` do Node.js para evitar gravação em disco.
-
-**Rastreabilidade:** REQ-2 · DT-6
-**Depende de:** T-62
-**Concluída quando:** Os cinco casos de UT-7 passam sem gravar nenhum arquivo em disco real; o mock de `fs` captura as chamadas de escrita.
+**Rastreabilidade:** REQ-2 · NFR-13 · DT-6 · DT-9
+**Depende de:** T-61 · T-73
+**Concluída quando:** `MinioAvatarStorageAdapter.save()` faz upload do buffer para o bucket MinIO e retorna a object key no formato `avatars/<uuid>.<ext>`; duas chamadas consecutivas produzem object keys distintas. `getPresignedUrl()` retorna uma URL temporária válida para o objeto armazenado.
 
 ---
 
-### T-64: Cobrir IT-5 — `LocalAvatarStorageAdapter.save()` com filesystem real (integração)
+### T-63: Cobrir UT-7 — `MinioAvatarStorageAdapter.save()` com SDK MinIO mockado (unitário)
 
-- [x] Implementar o teste de integração IT-5 cobrindo: (a) buffer JPEG gravado em disco; arquivo existe no caminho retornado; caminho tem formato `/uploads/avatars/<uuid>.jpg`; (b) PNG e WebP com extensões derivadas corretamente; (c) diretório de destino criado automaticamente se não existir. Usar diretório temporário de teste isolado para evitar poluição de `public/`; limpar os arquivos gravados após cada caso.
+- [ ] Implementar os testes unitários UT-7 cobrindo: (a) buffer JPEG enviado ao MinIO com extensão `.jpg`; SDK `putObject` chamado com bucket configurado, object key `avatars/<uuid>.jpg` e content-type `image/jpeg`; retorna object key `avatars/<uuid>.jpg`; (b) PNG com extensão `.png` derivada corretamente; (c) WebP com extensão `.webp` derivada corretamente; (d) duas chamadas consecutivas geram object keys distintas (UUID único por chamada); (e) falha de conexão com MinIO (`putObject` lança exceção) é propagada ao chamador. Usar mock do SDK MinIO para testar sem instância real.
 
 **Rastreabilidade:** REQ-2 · DT-6
 **Depende de:** T-62
-**Concluída quando:** Os três casos de IT-5 passam com gravação real em disco; nenhum arquivo de teste permanece no diretório após a execução.
+**Concluída quando:** Os cinco casos de UT-7 passam sem instância real do MinIO; o mock do SDK captura as chamadas de `putObject` com os parâmetros corretos.
+
+---
+
+### T-64: Cobrir IT-5 — `MinioAvatarStorageAdapter.save()` com MinIO real (integração)
+
+- [ ] Implementar o teste de integração IT-5 cobrindo: (a) buffer JPEG enviado ao MinIO de teste; objeto existe no bucket com a object key retornada; key tem formato `avatars/<uuid>.jpg`; (b) PNG e WebP com extensões derivadas corretamente para cada mimeType; (c) bucket inexistente lança exceção descritiva ao chamador. Usar MinIO rodando via Docker Compose; criar bucket de teste antes; remover os objetos de teste do bucket após cada caso para não poluir o ambiente.
+
+**Rastreabilidade:** REQ-2 · DT-6
+**Depende de:** T-62
+**Concluída quando:** Os três casos de IT-5 passam com MinIO real via Docker Compose; nenhum objeto de teste permanece no bucket após a execução; credenciais e endpoint MinIO são lidos de variáveis de ambiente de teste.
 
 ---
 
 ### T-65: Cobrir ST-4 — rejeição de upload com tipo MIME não permitido (segurança)
 
-- [x] Implementar o teste ST-4 verificando que o `RegisterUserHandler` rejeita arquivos de avatar com tipo MIME não permitido, retornando HTTP 400 sem persistir nenhum dado e sem gravar nenhum arquivo em disco. Cobrir: (a) upload com `Content-Type: application/pdf` — HTTP 400, nenhum arquivo gravado, nenhum registro criado; (b) upload com `Content-Type: text/html` — HTTP 400, mesmos critérios; (c) upload com tipo permitido e tamanho acima de 2 MB — HTTP 400, mesmos critérios; (d) upload com tipo permitido e tamanho abaixo de 2 MB — HTTP 200, arquivo gravado com extensão derivada do mimeType.
+- [ ] Implementar o teste ST-4 verificando que o `RegisterUserHandler` rejeita arquivos de avatar com tipo MIME não permitido, retornando HTTP 400 sem persistir nenhum dado e sem enviar nenhum objeto ao MinIO. Cobrir: (a) upload com `Content-Type: application/pdf` — HTTP 400, nenhum objeto gravado no MinIO, nenhum registro criado; (b) upload com `Content-Type: text/html` — HTTP 400, mesmos critérios; (c) upload com tipo permitido e tamanho acima de 2 MB — HTTP 400, mesmos critérios; (d) upload com tipo permitido e tamanho abaixo de 2 MB — HTTP 200, objeto gravado no MinIO com object key no formato `avatars/<uuid>.<ext>`.
 
 **Rastreabilidade:** REQ-2 · DT-6 · ST-4
 **Depende de:** T-20
-**Concluída quando:** Os quatro casos de ST-4 passam; nenhum arquivo é gravado em disco nos casos de rejeição; a resposta HTTP 400 segue a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
+**Concluída quando:** Os quatro casos de ST-4 passam; nenhum objeto é enviado ao MinIO nos casos de rejeição; a resposta HTTP 400 segue a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
 
 ---
 
@@ -154,21 +164,21 @@
 
 ### T-20: Implementar `RegisterUserHandler` — endpoint `POST /api/auth/register`
 
-- [x] Implementar o Route Handler Next.js em `app/api/auth/register/route.ts`. O handler deve: (1) aplicar o `RateLimiter` antes de processar; (2) ler o corpo como `multipart/form-data`; (3) se arquivo de avatar presente, validar tipo MIME (`image/jpeg`, `image/png` ou `image/webp`) e tamanho máximo de 2 MB — retornar HTTP 400 se inválido; (4) invocar `LocalAvatarStorageAdapter.save()` para obter o caminho relativo, retornando HTTP 500 em caso de falha de armazenamento; (5) validar os campos textuais com o schema; (6) delegar ao `RegisterUserUseCase` com os dados validados incluindo `avatarUrl` (caminho relativo ou `null`); (7) retornar HTTP 200 com `{ message: "Um link de confirmacao foi enviado ao seu email." }` no caminho feliz. Todas as respostas de erro devem seguir a estrutura `{ codigo, mensagem, requestId, timestamp }`.
+- [ ] Implementar o Route Handler Next.js em `app/api/auth/register/route.ts`. O handler deve: (1) aplicar o `RateLimiter` antes de processar; (2) ler o corpo como `multipart/form-data`; (3) se arquivo de avatar presente, validar tipo MIME (`image/jpeg`, `image/png` ou `image/webp`) e tamanho máximo de 2 MB — retornar HTTP 400 se inválido; (4) invocar `MinioAvatarStorageAdapter.save()` para obter a object key no MinIO, retornando HTTP 500 em caso de falha de armazenamento; (5) validar os campos textuais com o schema; (6) delegar ao `RegisterUserUseCase` com os dados validados incluindo `avatarKey` (object key do MinIO ou `null`); (7) retornar HTTP 200 com `{ message: "Um link de confirmacao foi enviado ao seu email." }` no caminho feliz. Todas as respostas de erro devem seguir a estrutura `{ codigo, mensagem, requestId, timestamp }`.
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-4 · NFR-6
-**Depende de:** T-03 · T-06 · T-37 · T-56 · T-57
-**Concluída quando:** `POST /api/auth/register` com dados válidos retorna HTTP 200 com a mensagem correta; o usuário é persistido com status `pending` no banco; upload de avatar válido grava o arquivo em `public/uploads/avatars/` e preenche `avatar_url`; arquivo com tipo MIME inválido ou acima de 2 MB retorna HTTP 400 sem criar nenhum registro nem gravar nenhum arquivo.
+**Depende de:** T-03 · T-06 · T-37 · T-56 · T-57 · T-62
+**Concluída quando:** `POST /api/auth/register` com dados válidos retorna HTTP 200 com a mensagem correta; o usuário é persistido com status `pending` no banco e `avatar_key` preenchido com a object key do MinIO; arquivo com tipo MIME inválido ou acima de 2 MB retorna HTTP 400 sem criar nenhum registro nem enviar nenhum objeto ao MinIO.
 
 ---
 
 ### T-21: Cobrir IT-6 — `RegisterUserHandler POST /api/auth/register` (integração)
 
-- [x] Implementar o teste de integração IT-6 cobrindo todos os casos: dados válidos sem avatar (HTTP 200, usuário `pending` com `avatar_url = null` no banco), dados válidos com avatar JPEG válido até 2 MB (HTTP 200, `avatar_url` preenchido com caminho relativo, arquivo gravado em `public/uploads/avatars/`), avatar com tipo MIME não permitido como `image/gif` (HTTP 400, nenhum registro criado, nenhum arquivo gravado), avatar acima de 2 MB (HTTP 400, nenhum registro criado, nenhum arquivo gravado), campo obrigatório ausente (HTTP 400), email inválido (HTTP 400), senha fora da política (HTTP 400), senhas divergentes (HTTP 400), email duplicado (HTTP 409) e quarta tentativa do mesmo IP em 15 min (HTTP 429). Limpar arquivos de avatar gravados após os testes.
+- [x] Implementar o teste de integração IT-6 cobrindo todos os casos: dados válidos sem avatar (HTTP 200, usuário `pending` com `avatar_key = null` no banco), dados válidos com avatar JPEG válido até 2 MB (HTTP 200, `avatar_key` preenchido com object key no formato `avatars/<uuid>.jpg`, objeto gravado no bucket MinIO de teste), avatar com tipo MIME não permitido como `image/gif` (HTTP 400, nenhum registro criado, nenhum objeto gravado no MinIO), avatar acima de 2 MB (HTTP 400, nenhum registro criado, nenhum objeto gravado no MinIO), campo obrigatório ausente (HTTP 400), email inválido (HTTP 400), senha fora da política (HTTP 400), senhas divergentes (HTTP 400), email duplicado (HTTP 409) e quarta tentativa do mesmo IP em 15 min (HTTP 429). Remover objetos de avatar gravados no MinIO após os testes.
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · REQ-8 · REQ-9 · REQ-10 · REQ-11 · NFR-6
 **Depende de:** T-20
-**Concluída quando:** Todos os casos de IT-6 passam contra banco MySQL de teste, Mailhog disponível e diretório `public/uploads/avatars/` com permissão de escrita; nenhum arquivo de avatar permanece no diretório após os testes.
+**Concluída quando:** Todos os casos de IT-6 passam contra banco MySQL de teste, Mailhog disponível e MinIO disponível com bucket de teste criado; nenhum objeto de avatar permanece no bucket após os testes.
 
 ---
 
@@ -803,3 +813,45 @@ _(REQ-18 é coberto pelas mesmas tasks de REQ-17: T-36, T-38, T-40, T-43, T-46, 
 **Rastreabilidade:** NFR-7
 **Depende de:** T-20 · T-39
 **Concluída quando:** O script k6 executa com 100 usuários virtuais simultâneos; taxa de erros é 0% e p95 é igual ou inferior a 3.000 ms em ambiente de teste local.
+
+---
+
+### NFR-13 — Acesso protegido à foto de perfil: autenticação obrigatória e rejeição por status de conta
+
+### T-74: Implementar `AvatarAccessHandler` — endpoint `GET /api/users/[userId]/avatar`
+
+- [ ] Implementar o Route Handler Next.js em `app/api/users/[userId]/avatar/route.ts`. O handler deve: (1) verificar a sessão ativa via next-auth (`getServerSession`) — se ausente ou inválida, emitir log estruturado JSON com `{ timestamp, userId: null, ownerUserId: userId, tipoRejeicao: 401, requestId }` e retornar HTTP 401; (2) consultar `UserRepository.findById(userId)` — retornar HTTP 404 se o usuário não for encontrado; (3) verificar o status da conta do proprietário — se `inactive` ou `blocked`, emitir log estruturado JSON com `{ timestamp, userId: <id do requisitor>, ownerUserId: userId, tipoRejeicao: 403, requestId }` e retornar HTTP 403; (4) verificar se `User.avatar_key` é não nulo — retornar HTTP 404 se nulo; (5) invocar `AvatarAccessPort.getPresignedUrl(avatarKey, 60)` para obter a URL temporária de download; (6) retornar HTTP 302 Redirect para a presigned URL gerada. Todas as respostas de erro devem seguir a estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
+
+**Rastreabilidade:** NFR-13 · REQ-2 · DT-9
+**Depende de:** T-05 · T-62 · T-73
+**Concluída quando:** `GET /api/users/[userId]/avatar` com sessão válida e proprietário ativo retorna HTTP 302 Redirect para presigned URL do MinIO; requisição sem sessão retorna HTTP 401 com log JSON emitido; proprietário com status `inactive` ou `blocked` retorna HTTP 403 com log JSON emitido; proprietário inexistente ou sem avatar retorna HTTP 404 sem log de rejeição de segurança.
+
+---
+
+### T-75: Cobrir UT-11 — `AvatarAccessHandler` lógica de autenticação e controle de acesso (unitário)
+
+- [ ] Implementar os testes unitários UT-11 cobrindo: (a) caminho feliz — sessão válida, proprietário `active` e `avatar_key` preenchido → `AvatarAccessPort.getPresignedUrl` chamado → HTTP 302 Redirect para a URL gerada; (b) requisição sem sessão — `getServerSession` retorna `null` → log JSON emitido com `{ timestamp, userId: null, ownerUserId, tipoRejeicao: 401, requestId }` → HTTP 401; (c) sessão presente, proprietário `inactive` → log JSON emitido com `{ timestamp, userId, ownerUserId, tipoRejeicao: 403, requestId }` → HTTP 403; (d) sessão presente, proprietário `blocked` → log JSON emitido idem → HTTP 403; (e) proprietário não encontrado no banco → HTTP 404 sem log de rejeição de segurança; (f) proprietário encontrado mas `avatar_key = null` → HTTP 404 sem log de rejeição de segurança. Mockar `getServerSession`, `UserRepository`, `AvatarAccessPort` e o logger.
+
+**Rastreabilidade:** NFR-13 · REQ-2 · Scenario: "Acesso autenticado ao avatar do usuario"
+**Depende de:** T-74
+**Concluída quando:** Os seis casos de UT-11 passam sem banco de dados, MinIO ou next-auth reais; o logger mockado captura os campos obrigatórios nos eventos de rejeição.
+
+---
+
+### T-78: Cobrir IT-8 — `AvatarAccessHandler GET /api/users/[userId]/avatar` (integração)
+
+- [ ] Implementar o teste de integração IT-8 cobrindo: (a) sessão ausente → HTTP 401; log JSON emitido com `{ timestamp, userId: null, ownerUserId, tipoRejeicao: 401, requestId }`; nenhuma presigned URL gerada; (b) sessão válida, proprietário `active` e `avatar_key` preenchido → HTTP 302 Redirect para presigned URL temporária do MinIO (URL contém o endpoint MinIO e a object key); (c) sessão válida, proprietário `inactive` → HTTP 403; log JSON emitido com `{ timestamp, userId, ownerUserId, tipoRejeicao: 403, requestId }`; (d) sessão válida, proprietário `blocked` → HTTP 403; log JSON emitido idem; (e) sessão válida, userId inexistente no banco → HTTP 404; nenhum log de rejeição; (f) sessão válida, proprietário com `avatar_key = null` → HTTP 404; nenhum log de rejeição. Usar banco MySQL de teste e MinIO de teste via Docker Compose; pré-inserir usuários com diferentes status; pré-carregar objeto de avatar no bucket MinIO para o caso do caminho feliz; mockar a sessão next-auth ou configurá-la para os casos autenticados.
+
+**Rastreabilidade:** NFR-13 · REQ-2
+**Depende de:** T-74
+**Concluída quando:** Todos os seis casos de IT-8 passam com banco MySQL de teste e MinIO reais; os logs JSON contêm os campos obrigatórios do NFR-13; nenhuma presigned URL é gerada nos casos de rejeição 401/403.
+
+---
+
+### T-77: Cobrir ST-6 — acesso não autenticado e acesso a conta bloqueada ao endpoint de avatar (segurança)
+
+- [ ] Implementar o teste ST-6 verificando: (a) requisição sem token de sessão para `GET /api/users/<userId>/avatar` → HTTP 401; log JSON contém `{ timestamp, userId: null, ownerUserId: <userId>, tipoRejeicao: 401, requestId }`; nenhum campo sensível exposto na resposta; (b) requisição com sessão válida para avatar de usuário com status `inactive` → HTTP 403; log JSON contém `{ timestamp, userId: <requisitor>, ownerUserId: <userId>, tipoRejeicao: 403, requestId }`; nenhuma presigned URL gerada; (c) requisição com sessão válida para avatar de usuário com status `blocked` → HTTP 403; log JSON idem; (d) requisição com sessão válida para avatar de usuário com status `active` → HTTP 302 Redirect para presigned URL; nenhum log de rejeição emitido. O teste simula os vetores de ataque: acesso direto sem autenticação (vazamento de fotos) e acesso a avatares de contas banidas via token de sessão ainda válido.
+
+**Rastreabilidade:** NFR-13 · REQ-2
+**Depende de:** T-74
+**Concluída quando:** Os quatro casos de ST-6 passam; os campos obrigatórios do log JSON estão presentes e corretos nos casos de rejeição; nenhuma informação sensível é exposta nas respostas de erro.
