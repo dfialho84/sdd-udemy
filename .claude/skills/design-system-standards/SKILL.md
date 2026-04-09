@@ -5,8 +5,9 @@ description: >
     docs/design-system/. Define a estrutura obrigatória de cada arquivo
     (colors.md, typography.md, spacing.md, components.md, themes.md),
     critérios de qualidade por arquivo, como extrair decisões de
-    configurações existentes (tailwind.config, CSS, shadcn/ui) e regras
-    gerais. Use junto com interview-guide e design-system-example.
+    configurações existentes (qualquer stack: Tailwind, CSS Modules,
+    Styled Components, etc.) e regras gerais. Use junto com
+    interview-guide e design-system-example.
 ---
 
 # Padrões de Design System
@@ -90,11 +91,11 @@ Cores adicionais do projeto (se houver) — status, categorias, etc.
 ```
 
 **Checklist de qualidade:**
-- [ ] Todos os tokens semânticos do shadcn/ui estão presentes (`primary`, `secondary`, `destructive`, `muted`, `accent`, `background`, `foreground`, `border`, `ring`)
-- [ ] Cada token tem valor, classe Tailwind correspondente e descrição de uso
+- [ ] Tokens semânticos cobrem pelo menos: ação principal, ação destrutiva, fundo, texto principal e borda
+- [ ] Cada token tem valor, referência de uso (classe, variável CSS ou prop) e descrição de uso
 - [ ] Contraste mínimo WCAG AA declarado para combinações primárias
-- [ ] Regra explícita de não usar hex diretamente no código
-- [ ] Paleta é derivada do `tailwind.config.ts` / `globals.css` quando existem — não inventada
+- [ ] Regra explícita de não usar valores de cor diretamente no código — sempre via token semântico
+- [ ] Paleta é derivada das configurações encontradas no projeto — não inventada
 
 ---
 
@@ -129,10 +130,10 @@ Cores adicionais do projeto (se houver) — status, categorias, etc.
 ```
 
 **Checklist de qualidade:**
-- [ ] Ao menos uma família de fonte declarada com classe e uso
+- [ ] Ao menos uma família de fonte declarada com referência de uso (classe, variável CSS ou prop)
 - [ ] Escala com ao menos 5 níveis cobrindo do título ao caption
-- [ ] Cada nível tem classe Tailwind, tamanho em px, peso e uso claro
-- [ ] Derivado do `tailwind.config.ts` quando há fontes customizadas
+- [ ] Cada nível tem referência de uso, tamanho em px, peso e uso claro
+- [ ] Derivado das configurações encontradas no projeto quando há fontes customizadas
 
 ---
 
@@ -145,33 +146,35 @@ Cores adicionais do projeto (se houver) — status, categorias, etc.
 # Espaçamento
 
 ## Escala Base
-O projeto usa a escala padrão do Tailwind (base 4px):
+O projeto usa <descrever a escala — ex: escala padrão do Tailwind base 4px, escala customizada via CSS custom properties, etc.>:
 
-| Token | Valor | Classe exemplo | Uso típico |
-|-------|-------|---------------|------------|
-| 1 | 4px | `p-1`, `gap-1` | Espaçamento mínimo interno |
-| 2 | 8px | `p-2`, `gap-2` | Espaçamento interno de componentes pequenos |
-| 3 | 12px | `p-3` | Padding de inputs e badges |
-| 4 | 16px | `p-4`, `gap-4` | Padding padrão de cards e seções |
-| 6 | 24px | `p-6`, `gap-6` | Padding de containers principais |
-| 8 | 32px | `p-8` | Espaçamento entre seções |
-| 12 | 48px | `py-12` | Espaçamento de blocos grandes |
-| 16 | 64px | `py-16` | Espaçamento de seções hero |
+| Token | Valor | Referência de uso | Uso típico |
+|-------|-------|------------------|------------|
+| xs / 1 | 4px | `p-1` / `padding: var(--space-xs)` | Espaçamento mínimo interno |
+| sm / 2 | 8px | `p-2` / `padding: var(--space-sm)` | Espaçamento interno de componentes pequenos |
+| md / 3 | 12px | `p-3` / `padding: var(--space-md)` | Padding de inputs e badges |
+| lg / 4 | 16px | `p-4` / `padding: var(--space-lg)` | Padding padrão de cards e seções |
+| xl / 6 | 24px | `p-6` / `padding: var(--space-xl)` | Padding de containers principais |
+| 2xl / 8 | 32px | `p-8` / `padding: var(--space-2xl)` | Espaçamento entre seções |
+| 3xl / 12 | 48px | `py-12` / `padding: var(--space-3xl)` | Espaçamento de blocos grandes |
+| 4xl / 16 | 64px | `py-16` / `padding: var(--space-4xl)` | Espaçamento de seções hero |
+
+> **Nota:** A coluna "Referência de uso" deve refletir a convenção real do projeto — classes Tailwind, CSS custom properties, props de componentes ou outra convenção.
 
 ## Regras de Uso
-- Padding interno de componentes: usar escala 2-4
-- Gap entre elementos de lista: usar escala 2-3
-- Padding de containers/páginas: usar escala 6-8
-- Nunca usar valores arbitrários (ex: `p-[13px]`) — ajustar para o token mais próximo
+- Padding interno de componentes: usar escala xs–lg
+- Gap entre elementos de lista: usar escala xs–sm
+- Padding de containers/páginas: usar escala xl–2xl
+- Nunca usar valores arbitrários — ajustar para o token mais próximo
 
 ## Grade e Layout
-- Container máximo: `max-w-<valor> mx-auto px-<valor>`
-- Colunas: grid com `gap-<valor>` padrão do projeto
+- Container máximo: <valor e convenção do projeto>
+- Colunas: grid com gap padrão do projeto
 ```
 
 **Checklist de qualidade:**
-- [ ] Escala base declarada (padrão Tailwind ou customizada)
-- [ ] Ao menos 8 tokens com valor em px, classe exemplo e uso típico
+- [ ] Escala base declarada — derivada das configurações do projeto (não assumida)
+- [ ] Ao menos 8 tokens com valor em px, referência de uso e uso típico
 - [ ] Regras claras de quando usar cada faixa da escala
 - [ ] Regra explícita contra valores arbitrários
 - [ ] Informações de container e grade do projeto
@@ -180,7 +183,7 @@ O projeto usa a escala padrão do Tailwind (base 4px):
 
 ### components.md
 
-**Propósito:** Especificar todos os componentes base (shadcn/ui) e compostos reutilizáveis — variantes, estados, quando usar cada um.
+**Propósito:** Especificar todos os componentes base (da biblioteca detectada — shadcn/ui, MUI, Radix, etc.) e compostos reutilizáveis — variantes, estados, quando usar cada um.
 
 **Estrutura obrigatória:**
 ```markdown
@@ -189,17 +192,19 @@ O projeto usa a escala padrão do Tailwind (base 4px):
 ## Componentes Base
 
 ### Button
-**Variantes:**
-| Variante | Classe / prop | Quando usar |
-|----------|--------------|-------------|
-| default (primary) | `variant="default"` | Ação principal da tela — máximo 1 por seção |
-| secondary | `variant="secondary"` | Ação secundária, alternativa à principal |
-| destructive | `variant="destructive"` | Ações irreversíveis (deletar, cancelar) |
-| outline | `variant="outline"` | Ação terciária, menor peso visual |
-| ghost | `variant="ghost"` | Ações em toolbars, menus, áreas densas |
-| link | `variant="link"` | Navegação inline no texto |
+> **Nota:** Documente variantes e tamanhos conforme a biblioteca detectada. Exemplos abaixo usam convenção de props (shadcn/ui); adapte para classes CSS, tokens ou props da biblioteca do projeto.
 
-**Tamanhos:** `size="sm"` | `size="default"` | `size="lg"` | `size="icon"`
+**Variantes:**
+| Variante | Referência (prop / classe / token) | Quando usar |
+|----------|-----------------------------------|-------------|
+| primary | ex: `variant="default"` / `.btn-primary` | Ação principal da tela — máximo 1 por seção |
+| secondary | ex: `variant="secondary"` / `.btn-secondary` | Ação secundária, alternativa à principal |
+| destructive | ex: `variant="destructive"` / `.btn-danger` | Ações irreversíveis (deletar, cancelar) |
+| outline | ex: `variant="outline"` / `.btn-outline` | Ação terciária, menor peso visual |
+| ghost | ex: `variant="ghost"` / `.btn-ghost` | Ações em toolbars, menus, áreas densas |
+| link | ex: `variant="link"` / `.btn-link` | Navegação inline no texto |
+
+**Tamanhos:** documentar conforme a biblioteca (ex: `size="sm"` | `size="default"` | `size="lg"` ou classes equivalentes)
 
 **Estados:**
 - Loading: usar `disabled` + spinner interno — nunca desabilitar sem feedback visual
@@ -257,8 +262,8 @@ Usado quando: lista ou resultado de busca está vazio
 ```
 
 **Checklist de qualidade:**
-- [ ] Cada componente shadcn instalado tem entrada no arquivo
-- [ ] Button tem todas as variantes documentadas com quando usar cada uma
+- [ ] Cada componente da biblioteca detectada tem entrada no arquivo
+- [ ] Button (ou equivalente) tem todas as variantes documentadas com quando usar cada uma
 - [ ] Todos os estados de Input estão declarados (default, focus, error, disabled)
 - [ ] Regra de acessibilidade de label está explícita
 - [ ] Componentes compostos têm interface (props), uso e regras declarados
@@ -291,29 +296,27 @@ Usado quando: lista ou resultado de busca está vazio
 | ... | | | |
 
 ## Como Adicionar um Novo Tema
-1. Criar seletor CSS (ex: `.theme-brand`)
-2. Redefinir as variáveis CSS relevantes
-3. Aplicar o seletor no elemento raiz via JavaScript/Next.js
+1. Criar seletor CSS ou mecanismo de ativação (ex: `.theme-brand`, `[data-theme="brand"]`)
+2. Redefinir as variáveis CSS ou tokens relevantes
+3. Aplicar o seletor/mecanismo no elemento raiz conforme a estratégia do projeto
 
-## Implementação no Next.js
-- Usar `next-themes` para gerenciamento de tema
-- Aplicar classe no `<html>` via `ThemeProvider`
-- Evitar flash de tema incorreto com `suppressHydrationWarning`
+## Como o Projeto Ativa/Troca o Tema
+<descrever a estratégia real encontrada no projeto: next-themes, CSS puro, contexto React, atributo data-theme, etc.>
 ```
 
 **Checklist de qualidade:**
 - [ ] Todos os temas disponíveis estão declarados
-- [ ] Tabela de variáveis CSS cobre todos os tokens de `colors.md`
+- [ ] Tabela de variáveis CSS (ou equivalente) cobre todos os tokens de `colors.md`
 - [ ] Instrução de como adicionar novo tema
-- [ ] Implementação específica para Next.js declarada
-- [ ] Derivado do `globals.css` existente — não inventado
+- [ ] Documentado como o projeto ativa/troca o tema (estratégia real encontrada)
+- [ ] Derivado dos arquivos de estilo encontrados — não inventado
 
 ---
 
 ## Regras gerais de formato
 
 - **Idioma:** português para títulos e descrições; nomes de classes, tokens e props em inglês
-- **Sem valores inventados:** tudo derivado do `tailwind.config.ts`, `globals.css` ou padrão shadcn/ui
+- **Sem valores inventados:** tudo derivado das configurações e código encontrados no projeto
 - **Referências cruzadas:** `typography.md` referencia cores de `colors.md`; `components.md` referencia ambos
 - **Exemplos de código:** usar blocos de código para classes Tailwind e props de componentes
 - **Tom:** prescritivo — "usar X para Y", "nunca Z"

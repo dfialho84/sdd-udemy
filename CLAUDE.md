@@ -91,6 +91,7 @@ Para cada feature, siga esta ordem obrigatória. Não inicie a implementação s
 | `/create-reqs`          | Cria requisitos funcionais no formato EARS                       |
 | `/create-nf-reqs`       | Cria requisitos não funcionais                                   |
 | `/create-constitution`  | Cria/atualiza `docs/constitution.md`                             |
+| `/create-design-system` | Cria/atualiza `docs/design-system`                               |
 | `/create-design`        | Cria o documento de design técnico                               |
 | `/create-test-strategy` | Cria a estratégia de testes                                      |
 | `/create-tasks`         | Gera tasks de implementação organizadas por requisito            |
