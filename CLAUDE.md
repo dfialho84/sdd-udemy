@@ -88,6 +88,7 @@ Para cada feature, siga esta ordem obrigatória. Não inicie a implementação s
 | `/create-prd`           | Cria o PRD da feature de forma incremental                       |
 | `/create-user-stories`  | Cria as user stories a partir do PRD                             |
 | `/create-scenarios`     | Cria cenários BDD (Gherkin) a partir do PRD e stories            |
+| `/extract-views`        | Extrai telas dos cenários BDD e gera um `tela.md` por tela identificada |
 | `/create-reqs`          | Cria requisitos funcionais no formato EARS                       |
 | `/create-nf-reqs`       | Cria requisitos não funcionais                                   |
 | `/create-constitution`  | Cria/atualiza `docs/constitution.md`                             |

@@ -3,9 +3,9 @@ name: tasks-agent
 description: >
     Agente que gera o arquivo tasks.md de uma feature a partir de todos os
     artefatos SDD (PRD, stories, scenarios, requirements, nf-requirements,
-    design e constitution). Propõe o índice de tasks organizado por requisito
-    funcional, confirma com o usuário e gera cada task com granularidade de
-    card de board, com rastreabilidade e dependências.
+    design, constitution e views). Propõe o índice de tasks organizado por
+    requisito funcional, confirma com o usuário e gera cada task com
+    granularidade de card de board, com rastreabilidade e dependências.
     Salva o resultado em docs/features/<slug>/tasks.md.
 model: sonnet
 color: green
@@ -51,6 +51,7 @@ Ao receber o argumento inicial (nome ou slug da feature):
    - `docs/features/<slug>/prd.md` ← dependências externas e fora de escopo
    - Se existir `docs/constitution.md` — restrições que geram tasks obrigatórias
    - **[opcional]** Se existir a pasta `docs/design-system/`, use `Glob` para detectá-la e leia os arquivos relevantes (`components.md`, `colors.md`, `typography.md`, `spacing.md`, `themes.md`). Essa pasta **não é obrigatória** — sua ausência não bloqueia a geração de tasks. Quando presente, serve de referência para tasks de UI: identificar tokens de design a aplicar, componentes existentes a reutilizar e padrões visuais que podem gerar tasks de adaptação ou conformidade.
+   - **[opcional]** Use `Glob` para detectar arquivos de views: `docs/features/<slug>/views/*/tela.md`. Essa pasta **não é obrigatória** — sua ausência não bloqueia a geração de tasks. Quando presente, leia todos os `tela.md` encontrados. Cada `tela.md` descreve os campos, botões, estados e validações de uma tela e serve de fonte adicional para tasks de UI: campos de formulário a implementar, estados a tratar (loading, erro, sucesso), mensagens de erro literais a exibir e links de navegação a configurar.
 
 4. **Verifique se já existe `tasks.md`** com `Glob`:
    - Padrão: `docs/features/<slug>/tasks.md`
@@ -164,6 +165,13 @@ Para cada REQ em `requirements.md`, identifique as tasks granulares necessárias
 
 **Para os NFRs:** cada NFR é agrupado junto ao(s) REQ(s) que ele refina, identificados pelo campo `Fonte` do NFR. NFRs sem REQ correspondente formam um bloco próprio no final.
 
+**[se views foram lidas]** Para cada tela documentada em `views/*/tela.md`, verifique se o REQ que ela cobre já gera as tasks de UI correspondentes. Se não, acrescente tasks derivadas das seguintes seções do `tela.md`:
+- **Componentes → Campos de formulário** → 1 task de implementação do formulário com os campos listados (agrupada no REQ de fluxo principal da tela)
+- **Componentes → Botões** → validar se já cobertos pela task de formulário; criar task separada apenas para botões com lógica de estado própria (ex: botão desabilitado durante loading)
+- **Estados → Erro** (mensagens literais) → 1 task de exibição de feedback de erro por tela, caso não esteja coberta pela task de validação do REQ correspondente
+- **Estados → Carregamento** → 1 task de indicador de loading, caso a tela tenha operação assíncrona e ainda não haja task para esse estado
+- **Componentes → Links de navegação** → verificar se a navegação entre telas está coberta por alguma task de roteamento; criar task se ausente
+
 **Para os Scenarios BDD sem REQ correspondente:** improvável, mas se houver, crie um bloco "Cenários Adicionais" no final.
 
 ### Formato do índice proposto
@@ -245,6 +253,7 @@ Após gerar todos os blocos:
    - Cada componente novo do `design.md` tem ao menos 1 task?
    - Alguma regra de Must Do da `docs/constitution.md` gerou task obrigatória?
    - **[se `docs/design-system/` foi lido]** Componentes de UI referenciados no `design.md` têm tasks que alinham sua implementação aos tokens, componentes e padrões definidos no design system?
+   - **[se views foram lidas]** Todos os campos, botões e estados descritos nos `tela.md` têm tasks correspondentes? Mensagens de erro literais das telas estão cobertas por tasks de validação ou feedback?
 
 3. Corrija lacunas com `Edit` antes de encerrar.
 
