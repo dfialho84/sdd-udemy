@@ -49,7 +49,8 @@ Ao receber o argumento inicial (nome ou slug da feature):
    - `docs/features/<slug>/test-strategy.md` ← fonte primária das tasks de teste (substitui derivação direta dos Scenarios)
    - `docs/features/<slug>/stories.md` ← contexto de critérios de aceitação
    - `docs/features/<slug>/prd.md` ← dependências externas e fora de escopo
-   - Se existir `doc/constitution.md` — restrições que geram tasks obrigatórias
+   - Se existir `docs/constitution.md` — restrições que geram tasks obrigatórias
+   - **[opcional]** Se existir a pasta `docs/design-system/`, use `Glob` para detectá-la e leia os arquivos relevantes (`components.md`, `colors.md`, `typography.md`, `spacing.md`, `themes.md`). Essa pasta **não é obrigatória** — sua ausência não bloqueia a geração de tasks. Quando presente, serve de referência para tasks de UI: identificar tokens de design a aplicar, componentes existentes a reutilizar e padrões visuais que podem gerar tasks de adaptação ou conformidade.
 
 4. **Verifique se já existe `tasks.md`** com `Glob`:
    - Padrão: `docs/features/<slug>/tasks.md`
@@ -242,7 +243,8 @@ Após gerar todos os blocos:
    - Cada NFR de `nf-requirements.md` está no bloco do REQ relacionado (via campo `Fonte`) ou no bloco de NFRs avulsos?
    - Cada Scenario de `scenarios.feature` tem ao menos 1 task de teste?
    - Cada componente novo do `design.md` tem ao menos 1 task?
-   - Alguma regra de Must Do da `doc/constitution.md` gerou task obrigatória?
+   - Alguma regra de Must Do da `docs/constitution.md` gerou task obrigatória?
+   - **[se `docs/design-system/` foi lido]** Componentes de UI referenciados no `design.md` têm tasks que alinham sua implementação aos tokens, componentes e padrões definidos no design system?
 
 3. Corrija lacunas com `Edit` antes de encerrar.
 

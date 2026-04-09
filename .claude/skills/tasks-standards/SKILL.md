@@ -26,10 +26,15 @@ tasks necessárias para implementar aquele requisito ficam agrupadas nele.
 ```
 constitution.md → prd.md → stories.md → scenarios.feature
 → requirements.md → nf-requirements.md → design.md → tasks.md
+                                                        ↑
+                                          docs/design-system/ (opcional)
 ```
 
 O `design.md` é a fonte primária das tasks (o que implementar).
 O `requirements.md` define a estrutura do arquivo (como organizar).
+A pasta `docs/design-system/` é **opcional**: quando presente, fornece contexto
+para tasks de UI — tokens de design a aplicar, componentes a reutilizar e padrões
+visuais que podem gerar tasks de adaptação ou conformidade.
 
 ---
 
@@ -120,6 +125,12 @@ O `requirements.md` define a estrutura do arquivo (como organizar).
 - [ ] Tasks de teste E2E dependem do endpoint testado
 - [ ] Tasks de teste unitário dependem do componente de domínio testado
 - [ ] **Nenhuma task de teste é listada como dependência de task de implementação**
+
+### Tasks de UI (somente quando `docs/design-system/` existir)
+> Esta seção é opcional — aplica-se apenas quando a pasta `docs/design-system/` está presente no projeto.
+- [ ] Componentes de UI referenciados no `design.md` têm tasks que mencionam o componente de design system a reutilizar (ex: `Button`, `Input` de `components.md`)
+- [ ] Tokens de cor, tipografia ou espaçamento definidos no design system são referenciados na descrição das tasks de estilo — não valores literais (`color: #fff`)
+- [ ] Se o design system define um tema (ex: light/dark), tasks de suporte a tema são explícitas
 
 ---
 
