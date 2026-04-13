@@ -74,6 +74,7 @@ Para cada feature, siga esta ordem obrigatória. Não inicie a implementação s
 | 3     | `/create-scenarios <slug>`     | `docs/features/<slug>/scenarios.feature`  |
 | 4     | `/create-reqs <slug>`          | `docs/features/<slug>/requirements.md`    |
 | 5     | `/create-nf-reqs <slug>`       | `docs/features/<slug>/nf-requirements.md` |
+| 5     | `/extract-views <slug>`        | `docs/features/<slug>/views`              |
 | 6     | `/create-design <slug>`        | `docs/features/<slug>/design.md`          |
 | 7     | `/create-test-strategy <slug>` | `docs/features/<slug>/test-strategy.md`   |
 | 8     | `/create-tasks <slug>`         | `docs/features/<slug>/tasks.md`           |
@@ -83,21 +84,21 @@ Para cada feature, siga esta ordem obrigatória. Não inicie a implementação s
 
 ### Comandos (slash commands)
 
-| Comando                 | Descrição                                                        |
-| ----------------------- | ---------------------------------------------------------------- |
-| `/create-prd`           | Cria o PRD da feature de forma incremental                       |
-| `/create-user-stories`  | Cria as user stories a partir do PRD                             |
-| `/create-scenarios`     | Cria cenários BDD (Gherkin) a partir do PRD e stories            |
+| Comando                 | Descrição                                                               |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `/create-prd`           | Cria o PRD da feature de forma incremental                              |
+| `/create-user-stories`  | Cria as user stories a partir do PRD                                    |
+| `/create-scenarios`     | Cria cenários BDD (Gherkin) a partir do PRD e stories                   |
 | `/extract-views`        | Extrai telas dos cenários BDD e gera um `tela.md` por tela identificada |
-| `/create-reqs`          | Cria requisitos funcionais no formato EARS                       |
-| `/create-nf-reqs`       | Cria requisitos não funcionais                                   |
-| `/create-constitution`  | Cria/atualiza `docs/constitution.md`                             |
-| `/create-design-system` | Cria/atualiza `docs/design-system`                               |
-| `/create-design`        | Cria o documento de design técnico                               |
-| `/create-test-strategy` | Cria a estratégia de testes                                      |
-| `/create-tasks`         | Gera tasks de implementação organizadas por requisito            |
-| `/implement`            | Implementa tasks de forma incremental (uma por vez)              |
-| `/commit`               | Sugere mensagem de commit no padrão conventional commits (PT-BR) |
+| `/create-reqs`          | Cria requisitos funcionais no formato EARS                              |
+| `/create-nf-reqs`       | Cria requisitos não funcionais                                          |
+| `/create-constitution`  | Cria/atualiza `docs/constitution.md`                                    |
+| `/create-design-system` | Cria/atualiza `docs/design-system`                                      |
+| `/create-design`        | Cria o documento de design técnico                                      |
+| `/create-test-strategy` | Cria a estratégia de testes                                             |
+| `/create-tasks`         | Gera tasks de implementação organizadas por requisito                   |
+| `/implement`            | Implementa tasks de forma incremental (uma por vez)                     |
+| `/commit`               | Sugere mensagem de commit no padrão conventional commits (PT-BR)        |
 
 ### Agentes disponíveis
 
