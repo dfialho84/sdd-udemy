@@ -6,7 +6,7 @@
 
 ### T-01: Criar componente `LoginPage` com formulário de identificador e senha
 
-- [ ] Implementar a página de login em `app/(auth)/login/page.tsx` com os campos `identifier` (text) e `password` (password) conforme a tela especificada em `views/pagina-de-login/tela.md`. Usar React Hook Form para controle do formulário. O botão "Login" é do tipo `submit` com `variant="default"` e `size="lg"` do design system.
+- [x] Implementar a página de login em `app/(auth)/login/page.tsx` com os campos `identifier` (text) e `password` (password) conforme a tela especificada em `views/pagina-de-login/tela.md`. Usar React Hook Form para controle do formulário. O botão "Login" é do tipo `submit` com `variant="default"` e `size="lg"` do design system.
 
 **Rastreabilidade:** REQ-1 · Scenario: "Login bem-sucedido com usuário"
 **Depende de:** —
