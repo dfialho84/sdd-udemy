@@ -2,15 +2,15 @@
 
 ## 1. Testes Unitários
 
-### UT-1: LoginDomain.verifyPassword()
+### UT-1: Argon2PasswordVerifier.verify()
 
-- **O que testa:** Comparação de senha em texto plano contra hash bcrypt
+- **O que testa:** Verificação de senha em texto plano contra hash argon2id via implementação concreta do Port `PasswordVerifier`
 - **Casos cobertos:**
     - Caminho feliz: senha correta retorna `true`
     - Senha incorreta: retorna `false`
-    - Hash inválido ou corrompido: lança erro de autenticação
-- **Mocks necessários:** nenhum — domínio puro (bcrypt é utilitário puro de hash)
-- **Rastreabilidade:** REQ-2 · REQ-5
+    - Hash inválido ou corrompido: lança erro de verificação (não de autenticação — o adapter não conhece regras de negócio)
+- **Mocks necessários:** nenhum — depende apenas da biblioteca `argon2` (operação pura de hashing)
+- **Rastreabilidade:** REQ-2 · REQ-5 · DT-3
 
 ---
 
@@ -67,7 +67,7 @@
 - **O que testa:** Orquestração do fluxo completo de autenticação com credenciais válidas usando username
 - **Casos cobertos:**
     - Caminho feliz: sem bloqueio ativo, usuário encontrado com status `active`, senha correta — retorna objeto de sessão com `{ id, username, email }`
-- **Mocks necessários:** `UserRepository.findByIdentifier` (retorna usuário ativo), `LoginAttemptRepository.findActiveBlock` (retorna `null`), `LoginAttemptRepository.countRecentFailures` (retorna `0`), `LoginAttemptRepository.save`
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna `null`), `UserRepository.findByIdentifier` (retorna usuário ativo), `PasswordVerifier.verify` (retorna `true`), `LoginAttemptRepository.save`
 - **Rastreabilidade:** REQ-2 · REQ-3 · REQ-13
 
 ---
@@ -77,7 +77,7 @@
 - **O que testa:** Autenticação usando endereço de email como identificador
 - **Casos cobertos:**
     - Caminho feliz: `identifier` no formato de email, `UserRepository.findByIdentifier` busca por campo `email` — retorna objeto de sessão
-- **Mocks necessários:** idem UT-6 (com `identifier` = email)
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna `null`), `UserRepository.findByIdentifier` (retorna usuário ativo com `email` correspondente), `PasswordVerifier.verify` (retorna `true`), `LoginAttemptRepository.save`
 - **Rastreabilidade:** REQ-2 · REQ-3
 
 ---
@@ -87,7 +87,7 @@
 - **O que testa:** Rejeição de `identifier` vazio antes de qualquer consulta ao repositório
 - **Casos cobertos:**
     - `identifier = ""`: lança erro de autenticação com mensagem genérica; nenhuma consulta ao `UserRepository` deve ser realizada
-- **Mocks necessários:** `LoginAttemptRepository` e `UserRepository` (verificar que NÃO são chamados)
+- **Mocks necessários:** `LoginAttemptRepository`, `UserRepository` e `PasswordVerifier` (verificar que NÃO são chamados)
 - **Rastreabilidade:** REQ-6 · NFR-6
 
 ---
@@ -97,9 +97,10 @@
 - **O que testa:** Rejeição quando identifier não corresponde a nenhuma conta cadastrada
 - **Casos cobertos:**
     - `UserRepository.findByIdentifier` retorna `null`: lança erro de autenticação genérico
+    - `PasswordVerifier.verify` não deve ser chamado (usuário não encontrado)
     - `EmailNotificationAdapter` não deve ser chamado (conta não existe)
     - `LoginAttemptRepository.save` deve ser chamado com `success: false`
-- **Mocks necessários:** `UserRepository.findByIdentifier` (retorna `null`), `LoginAttemptRepository.findActiveBlock` (retorna `null`), `LoginAttemptRepository.save`, `EmailNotificationAdapter` (verificar que NÃO é chamado)
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna `null`), `UserRepository.findByIdentifier` (retorna `null`), `LoginAttemptRepository.save`, `PasswordVerifier` (verificar que NÃO é chamado), `EmailNotificationAdapter` (verificar que NÃO é chamado)
 - **Rastreabilidade:** REQ-5 · REQ-13 · REQ-14 · NFR-6
 
 ---
@@ -111,7 +112,7 @@
     - Senha incorreta: lança erro de autenticação genérico
     - `EmailNotificationAdapter.sendWarning` deve ser chamado com o email do usuário
     - `LoginAttemptRepository.save` deve ser chamado com `success: false`
-- **Mocks necessários:** `UserRepository.findByIdentifier` (retorna usuário ativo), `LoginAttemptRepository.findActiveBlock` (retorna `null`), `LoginAttemptRepository.save`, `EmailNotificationAdapter.sendWarning` (verificar que É chamado)
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna `null`), `UserRepository.findByIdentifier` (retorna usuário ativo), `PasswordVerifier.verify` (retorna `false`), `LoginAttemptRepository.save`, `EmailNotificationAdapter.sendWarning` (verificar que É chamado)
 - **Rastreabilidade:** REQ-5 · REQ-13 · REQ-14 · NFR-6 · NFR-8
 
 ---
@@ -120,8 +121,8 @@
 
 - **O que testa:** Rejeição imediata quando identifier está bloqueado, sem verificar credenciais
 - **Casos cobertos:**
-    - `LoginAttemptRepository.findActiveBlock` retorna bloqueio com `blocked_until > now`: lança erro `429`; `UserRepository.findByIdentifier` não deve ser chamado
-- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna bloqueio ativo), `UserRepository` (verificar que NÃO é chamado)
+    - `LoginAttemptRepository.findActiveBlock` retorna bloqueio com `blocked_until > now`: lança erro `429`; `UserRepository.findByIdentifier` e `PasswordVerifier.verify` não devem ser chamados
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna bloqueio ativo com `blocked_until > now`), `UserRepository` (verificar que NÃO é chamado), `PasswordVerifier` (verificar que NÃO é chamado)
 - **Rastreabilidade:** REQ-11 · REQ-10 · NFR-3 · NFR-4
 
 ---
@@ -130,8 +131,9 @@
 
 - **O que testa:** Criação de registro de bloqueio quando o contador de falhas atinge o limite na janela de 10 minutos
 - **Casos cobertos:**
-    - `countRecentFailures` retorna `3`: `createBlock` deve ser chamado com `blocked_until = now + 15min`; lança erro de bloqueio após criar o registro
-- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna `null`), `LoginAttemptRepository.countRecentFailures` (retorna `3`), `LoginAttemptRepository.createBlock` (verificar que É chamado com timestamp correto), `UserRepository`
+    - Após salvar tentativa fracassada, `countRecentFailures` retorna `3`: `LoginDomain.shouldActivateBlock()` retorna `true`; `createBlock` deve ser chamado com `blocked_until = now + 15min`; lança erro de bloqueio após criar o registro
+    - `PasswordVerifier.verify` retorna `false` (senha incorreta): o bloqueio é avaliado após a falha de autenticação
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna `null`), `UserRepository.findByIdentifier` (retorna usuário ativo), `PasswordVerifier.verify` (retorna `false`), `LoginAttemptRepository.save`, `LoginAttemptRepository.countRecentFailures` (retorna `3`), `LoginAttemptRepository.createBlock` (verificar que É chamado com timestamp correto)
 - **Rastreabilidade:** REQ-8 · REQ-9 · NFR-3 · NFR-4
 
 ---
@@ -140,9 +142,9 @@
 
 - **O que testa:** Remoção do bloqueio expirado e reset do contador de falhas antes de prosseguir com autenticação
 - **Casos cobertos:**
-    - `findActiveBlock` retorna bloqueio com `blocked_until < now`: `removeBlock` e `resetFailureCount` são chamados; fluxo continua como login normal
-- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna bloqueio expirado), `LoginAttemptRepository.removeBlock` (verificar que É chamado), `LoginAttemptRepository.resetFailureCount` (verificar que É chamado), `UserRepository`
-- **Rastreabilidade:** REQ-12 · NFR-4
+    - `findActiveBlock` retorna bloqueio com `blocked_until < now`: `removeBlock` e `resetFailureCount` são chamados; fluxo continua como login normal com senha válida — retorna objeto de sessão
+- **Mocks necessários:** `LoginAttemptRepository.findActiveBlock` (retorna bloqueio com `blocked_until < now`), `LoginAttemptRepository.removeBlock` (verificar que É chamado), `LoginAttemptRepository.resetFailureCount` (verificar que É chamado), `UserRepository.findByIdentifier` (retorna usuário ativo), `PasswordVerifier.verify` (retorna `true`), `LoginAttemptRepository.save`
+- **Rastreabilidade:** REQ-12 · REQ-2 · REQ-3 · NFR-4
 
 ---
 
@@ -219,9 +221,23 @@
 - **Dependências reais usadas:** Mailhog (SMTP de teste)
 - **Casos cobertos:**
     - `sendWarning` com email válido: email entregue ao Mailhog e verificável via API REST do Mailhog (`GET /api/v2/messages`)
-    - SMTP indisponível: falha é capturada e logada sem propagar exceção para o caller (comportamento fire-and-forget — DT-3)
+    - SMTP indisponível: falha é capturada e logada sem propagar exceção para o caller (comportamento fire-and-forget — DT-4)
 - **Setup necessário:** Mailhog rodando via Docker Compose no ambiente de teste; limpar inbox (`DELETE /api/v1/messages`) antes de cada execução
 - **Rastreabilidade:** REQ-14 · NFR-8
+
+---
+
+### IT-7: Argon2PasswordVerifier — verify()
+
+- **O que testa:** Verificação de senha contra hash argon2id com os parâmetros definidos em DT-3 (64 MB de memória, 3 iterações, paralelismo 2) usando a biblioteca `argon2` real
+- **Dependências reais usadas:** biblioteca `argon2` (Node.js) — sem banco de dados
+- **Casos cobertos:**
+    - Senha correta verificada contra hash gerado com os mesmos parâmetros argon2id: retorna `true`
+    - Senha incorreta verificada contra hash válido: retorna `false`
+    - Hash gerado com parâmetros diferentes (ex: iterações distintas): retorna `false` (parâmetros incompatíveis)
+    - Compatibilidade com hashes gerados pela feature `register-user` (mesmo conjunto de parâmetros argon2id — DT-3): retorna `true` para senha correta
+- **Setup necessário:** gerar hash argon2id com os parâmetros corretos durante setup do teste; nenhum banco de dados necessário
+- **Rastreabilidade:** REQ-2 · REQ-5 · DT-3
 
 ---
 
@@ -389,7 +405,7 @@
 - **O que mede:** Tempo entre a tentativa de login com senha incorreta (resposta HTTP retornada) e a entrega do email de aviso no servidor SMTP (Mailhog)
 - **Threshold:** email entregue em até 5 minutos após a tentativa fracassada
 - **Método de medição:** medição em CI — registrar timestamp da requisição de login; consultar Mailhog API (`GET /api/v2/messages`) em intervalos de 30 segundos até receber o email ou atingir 5 minutos
-- **Número de execuções:** 10 execuções para garantir consistência do comportamento fire-and-forget (DT-3)
+- **Número de execuções:** 10 execuções para garantir consistência do comportamento fire-and-forget (DT-4)
 - **Rastreabilidade:** NFR-8
 
 ---
@@ -424,11 +440,11 @@
 ### ST-3: Timing attack — tempo de resposta uniforme entre falhas
 
 - **O que verifica:** O tempo de resposta para tentativas fracassadas não varia de forma estatisticamente significativa entre `identifier` existente e inexistente — impedindo inferência de existência de conta por análise de latência
-- **Vetor de ataque simulado:** timing attack — medição do tempo de resposta do endpoint para inferir se o `identifier` existe (usuário existente realiza bcrypt; inexistente retorna mais rápido)
+- **Vetor de ataque simulado:** timing attack — medição do tempo de resposta do endpoint para inferir se o `identifier` existe (usuário existente realiza verificação argon2id via `Argon2PasswordVerifier`; identificador inexistente retorna mais rápido sem invocar `PasswordVerifier.verify`)
 - **Casos cobertos:**
     - Média e p95 de latência para `identifier` inexistente vs existente com senha incorreta: diferença deve ser ≤ 100ms na média (ou o sistema deve aplicar delay constante para equalizar)
     - Executar 50 requisições de cada tipo e comparar distribuições
-- **Rastreabilidade:** NFR-6 · Risco "Exposição de dados sensíveis" (PRD)
+- **Rastreabilidade:** NFR-6 · DT-3 · Risco "Exposição de dados sensíveis" (PRD)
 
 ---
 
@@ -459,27 +475,27 @@
 
 ## Resumo de Cobertura
 
-| Requisito | Unitário         | Integração       | E2E Gherkin       | Performance | Segurança |
-| --------- | ---------------- | ---------------- | ----------------- | ----------- | --------- |
-| REQ-1     | —                | —                | GH-1              | —           | —         |
-| REQ-2     | UT-6, UT-7       | IT-1, IT-2       | GH-1, GH-2, GH-8  | —           | —         |
-| REQ-3     | UT-6, UT-7       | —                | GH-1, GH-2, GH-8  | —           | ST-4      |
-| REQ-4     | UT-6, UT-7       | —                | GH-1, GH-2, GH-8  | PT-2        | —         |
-| REQ-5     | UT-9, UT-10      | IT-1             | GH-4, GH-5, GH-9  | —           | ST-2      |
-| REQ-6     | UT-8             | —                | GH-3              | —           | ST-2      |
-| REQ-7     | —                | —                | GH-3, GH-4, GH-5  | —           | —         |
-| REQ-8     | UT-3, UT-12      | IT-4             | GH-6              | —           | ST-1      |
-| REQ-9     | UT-4, UT-12      | IT-5             | GH-6              | —           | ST-1      |
-| REQ-10    | UT-11, UT-12     | IT-5             | GH-6, GH-7        | —           | ST-1      |
-| REQ-11    | UT-2, UT-11      | IT-5             | GH-7              | —           | ST-1      |
-| REQ-12    | UT-13            | IT-5             | GH-8              | —           | —         |
-| REQ-13    | UT-6, UT-9, UT-10 | IT-3            | —                 | —           | ST-5      |
-| REQ-14    | UT-5, UT-9, UT-10 | IT-6            | GH-9              | PT-3        | —         |
-| NFR-1     | —                | —                | —                 | PT-1        | —         |
-| NFR-2     | —                | —                | —                 | PT-2        | —         |
-| NFR-3     | UT-3, UT-12      | IT-4             | GH-6              | —           | ST-1      |
-| NFR-4     | UT-4, UT-11, UT-13 | IT-5           | GH-6, GH-7, GH-8  | —           | ST-1      |
-| NFR-5     | —                | —                | —                 | —           | ST-4      |
-| NFR-6     | UT-8, UT-9, UT-10 | —               | GH-3, GH-4, GH-5  | —           | ST-2, ST-3 |
-| NFR-7     | —                | IT-3             | —                 | —           | ST-5      |
-| NFR-8     | UT-5, UT-10      | IT-6             | GH-9              | PT-3        | —         |
+| Requisito | Unitário              | Integração       | E2E Gherkin       | Performance | Segurança  |
+| --------- | --------------------- | ---------------- | ----------------- | ----------- | ---------- |
+| REQ-1     | —                     | —                | GH-1              | —           | —          |
+| REQ-2     | UT-1, UT-6, UT-7      | IT-1, IT-2, IT-7 | GH-1, GH-2, GH-8  | —           | —          |
+| REQ-3     | UT-6, UT-7, UT-13     | —                | GH-1, GH-2, GH-8  | —           | ST-4       |
+| REQ-4     | UT-6, UT-7            | —                | GH-1, GH-2, GH-8  | PT-2        | —          |
+| REQ-5     | UT-1, UT-9, UT-10     | IT-1, IT-7       | GH-4, GH-5, GH-9  | —           | ST-2       |
+| REQ-6     | UT-8                  | —                | GH-3              | —           | ST-2       |
+| REQ-7     | —                     | —                | GH-3, GH-4, GH-5  | —           | —          |
+| REQ-8     | UT-3, UT-12           | IT-4             | GH-6              | —           | ST-1       |
+| REQ-9     | UT-4, UT-12           | IT-5             | GH-6              | —           | ST-1       |
+| REQ-10    | UT-11, UT-12          | IT-5             | GH-6, GH-7        | —           | ST-1       |
+| REQ-11    | UT-2, UT-11           | IT-5             | GH-7              | —           | ST-1       |
+| REQ-12    | UT-13                 | IT-5             | GH-8              | —           | —          |
+| REQ-13    | UT-6, UT-9, UT-10     | IT-3             | —                 | —           | ST-5       |
+| REQ-14    | UT-5, UT-9, UT-10     | IT-6             | GH-9              | PT-3        | —          |
+| NFR-1     | —                     | —                | —                 | PT-1        | —          |
+| NFR-2     | —                     | —                | —                 | PT-2        | —          |
+| NFR-3     | UT-3, UT-12           | IT-4             | GH-6              | —           | ST-1       |
+| NFR-4     | UT-4, UT-11, UT-13    | IT-5             | GH-6, GH-7, GH-8  | —           | ST-1       |
+| NFR-5     | —                     | —                | —                 | —           | ST-4       |
+| NFR-6     | UT-8, UT-9, UT-10     | —                | GH-3, GH-4, GH-5  | —           | ST-2, ST-3 |
+| NFR-7     | —                     | IT-3             | —                 | —           | ST-5       |
+| NFR-8     | UT-5, UT-10           | IT-6             | GH-9              | PT-3        | —          |

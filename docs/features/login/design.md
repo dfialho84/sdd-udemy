@@ -2,7 +2,7 @@
 
 ## Visão Geral Técnica
 
-A autenticação de usuários usa next-auth para gerenciamento de sessão, com verificação de credenciais implementada no Domain via comparação de hash bcrypt. O controle de força bruta é implementado com contadores de tentativas persistidos em MySQL, usando janela deslizante de 10 minutos e bloqueio automático de 15 minutos por identificador (REQ-8, REQ-9). Notificações de falha de autenticação são enviadas por email via adaptador de infraestrutura isolado (Mailhog em desenvolvimento), e todas as tentativas geram log estruturado JSON via OpenTelemetry conforme exigido pela constitution.md.
+A autenticação de usuários usa next-auth para gerenciamento de sessão, com verificação de credenciais implementada no Domain via comparação de hash argon2id. O controle de força bruta é implementado com contadores de tentativas persistidos em MySQL, usando janela deslizante de 10 minutos e bloqueio automático de 15 minutos por identificador (REQ-8, REQ-9). Notificações de falha de autenticação são enviadas por email via adaptador de infraestrutura isolado (Mailhog em desenvolvimento), e todas as tentativas geram log estruturado JSON via OpenTelemetry conforme exigido pela constitution.md.
 
 ---
 
@@ -20,13 +20,18 @@ A autenticação de usuários usa next-auth para gerenciamento de sessão, com v
 
 ### AuthenticateUserUseCase
 - **Camada:** domain (caso de uso)
-- **Responsabilidade:** Orquestrar o fluxo de autenticação: verificar bloqueio, buscar usuário, comparar senha, registrar tentativa, emitir notificação de email quando aplicável; não depende de frameworks
-- **Depende de:** `UserRepository` (Port outbound), `LoginAttemptRepository` (Port outbound), `EmailNotificationPort` (Port outbound)
+- **Responsabilidade:** Orquestrar o fluxo de autenticação: verificar bloqueio, buscar usuário, comparar senha via Port, registrar tentativa, emitir notificação de email quando aplicável; não depende de frameworks
+- **Depende de:** `UserRepository` (Port outbound), `LoginAttemptRepository` (Port outbound), `PasswordVerifier` (Port outbound), `EmailNotificationPort` (Port outbound)
 
 ### LoginDomain
 - **Camada:** domain (regras de negócio)
 - **Responsabilidade:** Encapsular regras de negócio: validação de bloqueio por janela deslizante (10 min / 3 tentativas), cálculo de expiração do bloqueio (15 min), determinação se notificação de email deve ser enviada
 - **Depende de:** — (sem dependências externas)
+
+### PasswordVerifier (port outbound)
+- **Camada:** domain
+- **Responsabilidade:** Interface para verificação de senha contra hash armazenado; abstrai o algoritmo concreto (argon2id) do domínio. Método principal: `verify(password: string, hash: string): Promise<boolean>`
+- **Depende de:** —
 
 ### UserRepository
 - **Camada:** infrastructure (adapter de persistência)
@@ -48,6 +53,11 @@ A autenticação de usuários usa next-auth para gerenciamento de sessão, com v
 - **Responsabilidade:** Integrar com next-auth para criação e gestão de sessão autenticada após credenciais válidas (REQ-3)
 - **Depende de:** next-auth
 
+### Argon2PasswordVerifier (adapter outbound) — _novo_
+- **Camada:** infrastructure
+- **Responsabilidade:** Implementação concreta de `PasswordVerifier` usando argon2id com os mesmos parâmetros definidos na feature registrar-usuario: 64 MB de memória, 3 iterações, paralelismo 2 (DT-3). Utiliza a biblioteca `argon2` para Node.js
+- **Depende de:** `PasswordVerifier`
+
 ---
 
 ## Modelo de Dados
@@ -58,7 +68,7 @@ A autenticação de usuários usa next-auth para gerenciamento de sessão, com v
 | id | UUID | Identificador único do usuário |
 | username | string | Nome de usuário para autenticação |
 | email | string | Email para autenticação |
-| password_hash | string | Hash bcrypt da senha |
+| password_hash | string | Hash argon2id da senha |
 | status | enum | `active` \| `pending` — apenas `active` pode autenticar |
 | created_at | timestamp | Data de criação da conta |
 
@@ -121,7 +131,7 @@ A autenticação de usuários usa next-auth para gerenciamento de sessão, com v
 5. **LoginRouteHandler** invoca `AuthenticateUserUseCase.execute({ identifier, password })`
 6. **AuthenticateUserUseCase** chama `LoginAttemptRepository.findActiveBlock(identifier)` — nenhum bloqueio ativo
 7. **AuthenticateUserUseCase** chama `UserRepository.findByIdentifier("alice")` — retorna usuario com status `active`
-8. **AuthenticateUserUseCase** chama `LoginDomain.verifyPassword(password, user.password_hash)` via bcrypt — senha confere
+8. **AuthenticateUserUseCase** chama `PasswordVerifier.verify(password, user.password_hash)` — `Argon2PasswordVerifier` compara com argon2id (64 MB, 3 iterações, paralelismo 2) — senha confere
 9. **AuthenticateUserUseCase** chama `LoginAttemptRepository.save({ identifier, success: true, created_at: now })` (REQ-13, NFR-7)
 10. **AuthenticateUserUseCase** retorna objeto de sessao com `{ id, username, email }` para o next-auth `authorize` callback
 11. **NextAuthSessionAdapter** cria sessao autenticada com os dados do usuario (REQ-3)
@@ -151,7 +161,7 @@ Identico ao fluxo anterior, com `identifier = "alice@example.com"`. No passo 7, 
 2. **LoginRouteHandler** valida payload (nao vazio) e invoca `AuthenticateUserUseCase.execute({ identifier, password })`
 3. **AuthenticateUserUseCase** chama `LoginAttemptRepository.findActiveBlock("alice")` — sem bloqueio
 4. **AuthenticateUserUseCase** chama `UserRepository.findByIdentifier("alice")` — usuario encontrado com status `active`
-5. **AuthenticateUserUseCase** chama `LoginDomain.verifyPassword(password, user.password_hash)` — senha nao confere
+5. **AuthenticateUserUseCase** chama `PasswordVerifier.verify(password, user.password_hash)` — `Argon2PasswordVerifier` compara com argon2id (64 MB, 3 iterações, paralelismo 2) — senha não confere
 6. **AuthenticateUserUseCase** chama `LoginAttemptRepository.save({ identifier: "alice", success: false, created_at: now })` (REQ-13)
 7. **AuthenticateUserUseCase** chama `EmailNotificationAdapter.sendWarning(user.email)` — usuario existe e senha incorreta (REQ-14, NFR-8)
 8. **AuthenticateUserUseCase** lanca erro de autenticacao
@@ -241,7 +251,16 @@ Identico ao fluxo anterior, com `identifier = "alice@example.com"`. No passo 7, 
 - **Justificativa:** A constitution.md proibe logica de negocio em adapters de transporte (regra 3). O `authorize` callback valida apenas o formato do payload (identifier nao vazio) e delega toda logica ao `AuthenticateUserUseCase`. Trade-off: indireto adicional sem impacto em performance; ganho em testabilidade do Domain de forma isolada.
 - **Requisito relacionado:** REQ-2, REQ-3, constitution.md regras 3 e 14
 
-### DT-3: Envio de email de aviso — síncrono vs assíncrono
+### DT-3: Algoritmo de verificação de senha — argon2id vs bcrypt
+- **Problema:** Definir qual algoritmo usar para verificar o hash da senha durante autenticação (REQ-2). A escolha impacta resistência a ataques de força bruta com hardware especializado (GPU/ASIC) e deve ser consistente com o algoritmo usado no registro (feature registrar-usuario).
+- **Alternativas consideradas:**
+  - (a) bcrypt — amplamente adotado, suporte nativo em muitas bibliotecas Node.js; resistente a GPU por natureza sequencial, mas sem proteção de memória
+  - (b) argon2id — vencedor do Password Hashing Competition (2015); combina resistência a GPU (argon2d) e resistência a ataques de canal lateral (argon2i); parametrizável em memória, tempo e paralelismo
+- **Decisão:** argon2id com 64 MB de memória, 3 iterações e paralelismo 2 — mesmos parâmetros definidos na feature registrar-usuario (DT-1 daquela feature)
+- **Justificativa:** argon2id oferece maior resistência a ataques de força bruta com hardware moderno graças ao custo de memória configurável, tornando ataques em GPU/ASIC economicamente inviáveis. bcrypt não tem parâmetro de memória, o que o torna mais vulnerável a hardware especializado. A consistência de parâmetros com o registro é obrigatória: o hash gerado no cadastro usa esses parâmetros e a verificação deve ser compatível. A verificação é encapsulada no `Argon2PasswordVerifier` (adapter de infraestrutura), mantendo o Domain desacoplado da biblioteca `argon2` via Port `PasswordVerifier`. Trade-off: argon2id exige mais memória por operação (64 MB), mas é aplicado apenas na comparação — sem impacto no SLA de 2 segundos (NFR-1) em condições normais.
+- **Requisito relacionado:** REQ-2, NFR-6 (segurança das credenciais)
+
+### DT-4: Envio de email de aviso — síncrono vs assíncrono
 - **Problema:** O NFR-8 exige envio de email em ate 5 minutos apos tentativa falha. O envio sincrono pode degradar a latência da resposta HTTP (NFR-1: 2 segundos para 95% dos casos)
 - **Alternativas consideradas:**
   - (a) Síncrono — `EmailNotificationAdapter.sendWarning()` aguardado dentro do fluxo de autenticacao; simples, sem dependência de fila
