@@ -16,7 +16,7 @@
 
 ### T-02: Criar schema Zod de validação do payload de login
 
-- [ ] Definir um schema Zod para o payload de login com os campos `identifier` (string, não vazio) e `password` (string, não vazio). O schema é usado pelo `LoginRouteHandler` para validar a entrada antes de delegar ao Domain.
+- [x] Definir um schema Zod para o payload de login com os campos `identifier` (string, não vazio) e `password` (string, não vazio). O schema é usado pelo `LoginRouteHandler` para validar a entrada antes de delegar ao Domain.
 
 **Rastreabilidade:** REQ-1 · REQ-6
 **Depende de:** —
