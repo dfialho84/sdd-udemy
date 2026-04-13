@@ -3,7 +3,7 @@
 // Pagina de login — adapter de apresentacao (UI)
 // Renderiza o formulario de login com campos identifier e password.
 // Sem logica de negocio — delega autenticacao ao next-auth via signIn.
-// Rastreabilidade: T-01 · REQ-1 · Scenario: "Login bem-sucedido com usuario"
+// Rastreabilidade: T-01 · T-03 · REQ-1 · NFR-1 · Scenario: "Login bem-sucedido com usuario"
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -93,16 +93,45 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Botao de Submit */}
+          {/* Botao de Submit — estado Loading: spinner interno + desabilitado (T-03 · NFR-1) */}
           <Button
             type="submit"
             variant="default"
             size="lg"
             disabled={isLoading}
+            aria-busy={isLoading}
             className="w-full bg-blue-600 text-white hover:bg-blue-700"
             data-testid="submit-button"
           >
-            {isLoading ? "Entrando..." : "Login"}
+            {isLoading ? (
+              <>
+                <svg
+                  aria-hidden="true"
+                  className="mr-2 inline-block h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  data-testid="loading-spinner"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+                Entrando...
+              </>
+            ) : (
+              "Login"
+            )}
           </Button>
         </form>
       </div>

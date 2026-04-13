@@ -26,7 +26,7 @@
 
 ### T-03: Implementar estado de loading no botão de submit da `LoginPage`
 
-- [ ] Após o submit do formulário, o botão "Login" deve exibir estado de loading (spinner interno, desabilitado) enquanto aguarda resposta do servidor. Usar o estado `Loading` do componente `Button` do design system.
+- [x] Após o submit do formulário, o botão "Login" deve exibir estado de loading (spinner interno, desabilitado) enquanto aguarda resposta do servidor. Usar o estado `Loading` do componente `Button` do design system.
 
 **Rastreabilidade:** REQ-1 · NFR-1
 **Depende de:** T-01
