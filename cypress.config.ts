@@ -13,7 +13,7 @@ const users = mysqlTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   birthDate: date("birth_date").notNull(),
-  avatarUrl: varchar("avatar_url", { length: 2048 }),
+  avatarKey: varchar("avatar_key", { length: 500 }),
   status: mysqlEnum("status", ["pending", "active"]).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
