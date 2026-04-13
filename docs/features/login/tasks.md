@@ -50,7 +50,7 @@
 
 ### T-05: Criar interface `PasswordVerifier` (Port outbound)
 
-- [ ] Definir a interface `PasswordVerifier` na camada Domain com o método `verify(password: string, hash: string): Promise<boolean>`. A interface abstrai o algoritmo de verificação concreto, mantendo o Domain desacoplado da biblioteca argon2.
+- [x] Definir a interface `PasswordVerifier` na camada Domain com o método `verify(password: string, hash: string): Promise<boolean>`. A interface abstrai o algoritmo de verificação concreto, mantendo o Domain desacoplado da biblioteca argon2.
 
 **Rastreabilidade:** REQ-2
 **Depende de:** —
