@@ -3,11 +3,19 @@
 // Pagina de login — adapter de apresentacao (UI)
 // Renderiza o formulario de login com campos identifier e password.
 // Sem logica de negocio — delega autenticacao ao next-auth via signIn.
-// Rastreabilidade: T-01 · T-03 · REQ-1 · NFR-1 · Scenario: "Login bem-sucedido com usuario"
+// Rastreabilidade: T-01 · T-03 · T-04 · REQ-1 · REQ-5 · REQ-6 · REQ-7 · REQ-10 · REQ-11 · NFR-1 · NFR-6
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+
+// Mapeamento de codigos de erro do next-auth para mensagens exibidas ao usuario (NFR-6)
+const ERROR_MESSAGES: Record<string, string> = {
+  CredentialsSignin: "Usuário ou senha incorretos",
+  auth_failed: "Usuário ou senha incorretos",
+  account_blocked: "Muitas tentativas fracassadas. Tente novamente em 15 minutos",
+};
 
 interface LoginFormValues {
   identifier: string;
@@ -16,6 +24,19 @@ interface LoginFormValues {
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Le o parametro ?error= da URL — mecanismo padrao do next-auth para erros de autenticacao (T-04)
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      const message =
+        ERROR_MESSAGES[errorParam] ?? "Usuário ou senha incorretos";
+      setErrorMessage(message);
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -30,6 +51,7 @@ export default function LoginPage() {
 
   async function onSubmit(_: LoginFormValues) {
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       // Delegacao ao next-auth sera implementada em T-13
       // Por ora, apenas simula o estado de loading
@@ -47,6 +69,18 @@ export default function LoginPage() {
         <p className="mb-6 text-center text-sm text-gray-600">
           gerencie seus projetos de forma pratica e gratuita
         </p>
+
+        {/* Area de exibicao de mensagem de erro — T-04 · REQ-5 · REQ-7 · REQ-10 · REQ-11 · NFR-6 */}
+        {errorMessage && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700"
+            data-testid="error-message"
+          >
+            {errorMessage}
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit(onSubmit)}

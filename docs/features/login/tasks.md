@@ -36,7 +36,7 @@
 
 ### T-04: Exibir mensagem de erro genérica na `LoginPage`
 
-- [ ] Implementar a área de exibição de mensagem de erro na `LoginPage`. Quando next-auth retorna erro de autenticação, exibir a mensagem recebida (ex: "Usuário ou senha incorretos"). Quando o identificador está bloqueado, exibir "Muitas tentativas fracassadas. Tente novamente em 15 minutos".
+- [x] Implementar a área de exibição de mensagem de erro na `LoginPage`. Quando next-auth retorna erro de autenticação, exibir a mensagem recebida (ex: "Usuário ou senha incorretos"). Quando o identificador está bloqueado, exibir "Muitas tentativas fracassadas. Tente novamente em 15 minutos".
 
 **Rastreabilidade:** REQ-5 · REQ-6 · REQ-7 · REQ-10 · REQ-11 · NFR-6
 **Depende de:** T-01
