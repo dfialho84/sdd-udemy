@@ -60,7 +60,7 @@
 
 ### T-06: Implementar `Argon2PasswordVerifier` (adapter concreto argon2id)
 
-- [ ] Implementar o adapter `Argon2PasswordVerifier` na camada de infraestrutura, concretizando a interface `PasswordVerifier`. Usar a biblioteca `argon2` com parâmetros: 64 MB de memória, 3 iterações, paralelismo 2 — idênticos aos usados na feature `register-user` (DT-3).
+- [x] Implementar o adapter `Argon2PasswordVerifier` na camada de infraestrutura, concretizando a interface `PasswordVerifier`. Usar a biblioteca `argon2` com parâmetros: 64 MB de memória, 3 iterações, paralelismo 2 — idênticos aos usados na feature `register-user` (DT-3).
 
 **Rastreabilidade:** REQ-2 · NFR-6
 **Depende de:** T-05
