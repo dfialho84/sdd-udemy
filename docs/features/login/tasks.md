@@ -80,7 +80,7 @@
 
 ### T-08: Criar interface `UserRepository` (Port outbound)
 
-- [ ] Definir a interface `UserRepository` na camada Domain com o método `findByIdentifier(identifier: string): Promise<User | null>`. O método busca por `username` ou `email`, retornando apenas usuários com `status: active`.
+- [x] Definir a interface `UserRepository` na camada Domain com o método `findByIdentifier(identifier: string): Promise<User | null>`. O método busca por `username` ou `email`, retornando apenas usuários com `status: active`.
 
 **Rastreabilidade:** REQ-2
 **Depende de:** T-07
