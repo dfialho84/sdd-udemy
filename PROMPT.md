@@ -7,7 +7,7 @@ A ideia é que o usuario já cadastrado acesse a página inicial e clique em um 
 Em seguida será apresentada um formulário de login com usuario e senha.
 O usuario entra com os valores e submete o formulario.
 O sistema verifica se os dados estão corretos.
-Caso afirmativo, ele será autenticado e será redirecionado para uma area proprioa para seu usuario /users/<id-do-usuaio>
+Caso afirmativo, ele será autenticado e será redirecionado para uma area proprioa para seu usuario /users/<usuario>
 Caso os dados estejam incorretos uma mensagem genérica será apresentada. (É importante apresentar uma mensagem bem genérica para não expor possíveis ataques)
 
 A velocidade de resposta é importante.
