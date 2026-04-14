@@ -5,7 +5,7 @@
 - **Nome:** Pagina de Cadastro
 - **Slug:** pagina-de-cadastro
 - **URL:** /register
-- **Objetivo:** Permitir que um visitante crie uma nova conta informando seus dados pessoais e credenciais de acesso.
+- **Objetivo:** Permitir que um visitante crie uma nova conta informando seus dados pessoais e credenciais de acesso, incluindo um nome de usuario unico na plataforma.
 - **Scenarios relacionados:**
   - Acessar formulario de cadastro via link na home
   - Cadastro realizado com dados validos
@@ -18,6 +18,7 @@
 | Campo | Tipo | Obrigatorio | Descricao |
 |---|---|---|---|
 | Nome | text | Sim | Nome completo do visitante |
+| Username | text | Sim | Nome de usuario unico na plataforma, escolhido pelo visitante |
 | Email | email | Sim | Endereco de email para login e confirmacao |
 | Senha | password | Sim | Senha de acesso — minimo 8 caracteres com maiusculas, minusculas, numeros e caracteres especiais |
 | Confirmacao de senha | password | Sim | Repeticao da senha para verificacao |
@@ -40,6 +41,7 @@
 
 - Titulo da pagina — a confirmar com design
 - Instrucao sobre requisitos de senha (derivada da mensagem de erro: minimo 8 caracteres com maiusculas, minusculas, numeros e caracteres especiais)
+- Instrucao sobre unicidade do username — a confirmar com design
 
 ## Estados
 
@@ -55,10 +57,12 @@ Exibido apos o visitante submeter o formulario com dados validos, enquanto o sis
 
 | Causa | Mensagem exibida |
 |---|---|
+| Username ja associado a uma conta existente | `Este username ja esta cadastrado. Escolha outro.` |
 | Email ja associado a uma conta existente | `Este email ja esta cadastrado. Tente fazer login ou use outro endereco.` |
 | Senha sem caractere especial | `A senha deve ter no minimo 8 caracteres, incluindo maiusculas, minusculas, numeros e caracteres especiais.` |
 | Confirmacao de senha diferente da senha informada | `As senhas nao coincidem.` |
 | Nome em branco | `O campo nome e obrigatorio.` |
+| Username em branco | `O campo username e obrigatorio.` |
 | Data de nascimento em branco | `O campo data de nascimento e obrigatorio.` |
 | Email com formato invalido | `Informe um endereco de email valido.` |
 
@@ -71,6 +75,7 @@ O visitante e levado para a tela de email enviado, que informa que um link de co
 ### Validacoes
 
 - **Nome:** campo obrigatorio; nao pode estar em branco
+- **Username:** campo obrigatorio; nao pode estar em branco; deve ser unico entre todos os usuarios cadastrados na plataforma
 - **Email:** formato valido de endereco de email; nao pode estar ja cadastrado no sistema
 - **Senha:** minimo 8 caracteres, incluindo letras maiusculas, minusculas, numeros e caracteres especiais
 - **Confirmacao de senha:** deve ser identica ao campo senha

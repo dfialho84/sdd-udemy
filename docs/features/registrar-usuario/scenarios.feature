@@ -4,11 +4,11 @@ Feature: Registrar Usuario
     Given que o visitante esta na pagina inicial
     When o visitante clica no link de registro
     Then o visitante e levado para a pagina de cadastro
-    And o sistema exibe um formulario com os campos nome, email, senha, confirmacao de senha, data de nascimento e foto de perfil
+    And o sistema exibe um formulario com os campos nome, username, email, senha, confirmacao de senha, data de nascimento e foto de perfil
 
   Scenario: Cadastro realizado com dados validos
     Given que o visitante esta na pagina de cadastro
-    When o visitante preenche todos os campos obrigatorios com dados validos e envia o formulario
+    When o visitante preenche todos os campos obrigatorios com dados validos (incluindo username unico) e envia o formulario
     Then o visitante ve uma tela informando que um link de confirmacao foi enviado ao seu email
     And o sistema envia um email de confirmacao ao endereco informado
 
@@ -21,10 +21,12 @@ Feature: Registrar Usuario
 
     Examples:
       | situacao                                          | mensagem_de_erro                                                                                          |
+      | username ja associado a uma conta existente       | Este username ja esta cadastrado. Escolha outro.                                                          |
       | email ja associado a uma conta existente          | Este email ja esta cadastrado. Tente fazer login ou use outro endereco.                                   |
       | senha sem caractere especial                      | A senha deve ter no minimo 8 caracteres, incluindo maiusculas, minusculas, numeros e caracteres especiais. |
       | confirmacao de senha diferente da senha informada | As senhas nao coincidem.                                                                                  |
       | nome em branco                                    | O campo nome e obrigatorio.                                                                               |
+      | username em branco                                | O campo username e obrigatorio.                                                                           |
       | data de nascimento em branco                      | O campo data de nascimento e obrigatorio.                                                                 |
       | email com formato invalido                        | Informe um endereco de email valido.                                                                      |
 
