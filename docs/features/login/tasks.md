@@ -68,13 +68,14 @@
 
 ---
 
-### T-07: Criar tipo `User` no Domain
+### T-07: Criar tipo `LoginUser` no Domain
 
-- [x] Definir o tipo `User` no Domain com os campos `id`, `username`, `email`, `password_hash` e `status` (`active` | `pending`). Apenas usuários com `status: active` podem autenticar. Sem dependência de Drizzle ou Next.js.
+- [x] Definir o tipo `LoginUser` no Domain com os campos `id`, `username`, `email`, `passwordHash` e `status` (`active` | `pending`). Apenas usuários com `status: active` podem autenticar. Sem dependência de Drizzle ou Next.js.
 
 **Rastreabilidade:** REQ-2
 **Depende de:** —
 **Concluída quando:** O tipo existe no Domain sem importações externas e representa fielmente a entidade `users` do modelo de dados.
+**Implementado em:** `src/domain/entities/login-user.ts`
 
 ---
 
