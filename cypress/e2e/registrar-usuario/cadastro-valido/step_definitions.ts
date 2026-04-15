@@ -3,8 +3,9 @@
 
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 
-// Email unico por execucao para evitar colisao com outros testes
+// Email e username unicos por execucao para evitar colisao com outros testes
 const testEmail = `gh1-${Date.now()}@example.com`;
+const testUsername = `gh1user${Date.now()}`;
 
 Given("que o visitante esta na pagina de cadastro", () => {
   // Intercepta o POST de registro e injeta IP único para evitar rate limiting entre execuções
@@ -20,6 +21,7 @@ When(
   "o visitante preenche todos os campos obrigatorios com dados validos e envia o formulario",
   () => {
     cy.get('[data-testid="input-name"]').type("Visitante Teste GH1");
+    cy.get('[data-testid="input-username"]').type(testUsername);
     cy.get('[data-testid="input-email"]').type(testEmail);
     cy.get('[data-testid="input-password"]').type("Senha@1234");
     cy.get('[data-testid="input-password-confirmation"]').type("Senha@1234");

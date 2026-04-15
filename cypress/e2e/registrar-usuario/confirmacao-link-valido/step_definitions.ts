@@ -7,9 +7,10 @@
 
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 
-// Email e IP unicos por execucao para evitar colisao com outros testes
+// Email, username e IP unicos por execucao para evitar colisao com outros testes
 // e contornar o rate limiter (3 tentativas por IP em 15 minutos)
 const testEmail = `gh3-${Date.now()}@example.com`;
+const testUsername = `gh3user${Date.now()}`;
 const testIp = `10.3.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
 
 // Token extraido do Mailhog apos o registro
@@ -34,6 +35,7 @@ Given(
     cy.window().then((win) => {
       const formData = new win.FormData();
       formData.append("name", "Visitante GH3");
+      formData.append("username", testUsername);
       formData.append("email", testEmail);
       formData.append("password", "Senha@1234");
       formData.append("passwordConfirmation", "Senha@1234");

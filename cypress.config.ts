@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   birthDate: date("birth_date").notNull(),
@@ -65,6 +66,7 @@ export default defineConfig({
           await db.insert(users).values({
             id: userId,
             name: "Visitante GH4",
+            username: email.split("@")[0],
             email,
             passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
             birthDate: new Date("1990-01-01"),
@@ -126,6 +128,7 @@ export default defineConfig({
           await db.insert(users).values({
             id: userId,
             name: "Visitante GH5",
+            username: email.split("@")[0],
             email,
             passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
             birthDate: new Date("1990-01-01"),

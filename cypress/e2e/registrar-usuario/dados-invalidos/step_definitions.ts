@@ -3,12 +3,14 @@
 
 import { Given, When, Then, Before } from "@badeball/cypress-cucumber-preprocessor";
 
-// Email pre-cadastrado para testar o caso de email duplicado
+// Email e username pre-cadastrados para testar o caso de email duplicado
 const existingEmail = `gh2-existing-${Date.now()}@example.com`;
+const existingUsername = `gh2e${Date.now()}`;
 
 // Dados validos de base — usados como ponto de partida para cada caso invalido
 const baseValidData = {
   name: "Visitante Teste GH2",
+  username: `gh2v${Date.now()}`,
   email: `gh2-valid-${Date.now()}@example.com`,
   password: "Senha@1234",
   passwordConfirmation: "Senha@1234",
@@ -52,6 +54,7 @@ Before({ tags: "@email-duplicado" }, () => {
   registerViaFormData(
     {
       name: "Usuario Existente",
+      username: existingUsername,
       email: existingEmail,
       password: "Senha@1234",
       passwordConfirmation: "Senha@1234",
@@ -64,6 +67,7 @@ Before({ tags: "@email-duplicado" }, () => {
 // Mapa de situacoes invalidas para os dados de formulario correspondentes
 function getFormDataForSituacao(situacao: string): {
   name: string;
+  username: string;
   email: string;
   password: string;
   passwordConfirmation: string;
@@ -107,6 +111,10 @@ When("o visitante preenche o formulario com {string}", (situacao: string) => {
 
   if (currentFormData.name) {
     cy.get('[data-testid="input-name"]').type(currentFormData.name);
+  }
+
+  if (currentFormData.username) {
+    cy.get('[data-testid="input-username"]').type(currentFormData.username);
   }
 
   if (currentFormData.email) {
@@ -157,6 +165,7 @@ Then("nenhum cadastro e criado", () => {
     registerViaFormData(
       {
         name: "Tentativa Duplicada",
+        username: `gh2dup${Date.now()}`,
         email: existingEmail,
         password: "Senha@1234",
         passwordConfirmation: "Senha@1234",
