@@ -426,7 +426,7 @@ _(REQ-5 é coberto pela task T-76, que implementa a `RegisterPage` com o comport
 
 ### T-81: Cobrir PT-4 — verificação de unicidade de username com índice UNIQUE sob carga (performance)
 
-- [ ] Implementar o teste de carga PT-4 com k6 executando chamadas diretas ao endpoint `POST /api/auth/register` com usernames únicos distintos por VU. Medir a latência da query de unicidade via tracing (OpenTelemetry/Jaeger) ou medição no banco de teste com `EXPLAIN ANALYZE`. O teste deve usar 50 usuários virtuais simultâneos por 60 segundos com pelo menos 200 verificações de unicidade; falhar se o p95 por consulta isolada de `findByUsername` exceder 50 ms.
+- [x] Implementar o teste de carga PT-4 com k6 executando chamadas diretas ao endpoint `POST /api/auth/register` com usernames únicos distintos por VU. Medir a latência da query de unicidade via tracing (OpenTelemetry/Jaeger) ou medição no banco de teste com `EXPLAIN ANALYZE`. O teste deve usar 50 usuários virtuais simultâneos por 60 segundos com pelo menos 200 verificações de unicidade; falhar se o p95 por consulta isolada de `findByUsername` exceder 50 ms.
 
 **Rastreabilidade:** NFR-6 · DT-10
 **Depende de:** T-80 · T-20
