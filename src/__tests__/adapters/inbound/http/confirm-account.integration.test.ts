@@ -34,6 +34,7 @@ async function insertTestUser(
   await db.insert(users).values({
     id,
     name: "IT7 Teste",
+    username: `it7_user_${id.slice(0, 8)}`,
     email,
     passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
     birthDate: new Date("1990-01-01"),

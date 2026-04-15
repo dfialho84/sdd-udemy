@@ -14,6 +14,10 @@ export const registerUserSchema = z
       .string({ error: "O campo nome completo é obrigatório." })
       .trim()
       .min(1, "O campo nome completo é obrigatório."),
+    username: z
+      .string({ error: "O campo username é obrigatório." })
+      .trim()
+      .min(1, "O campo username é obrigatório."),
     email: z
       .string({ error: "O campo email é obrigatório." })
       .trim()

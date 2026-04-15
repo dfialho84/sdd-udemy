@@ -71,6 +71,7 @@ function makeFormRequestWithAvatar(
 
 const validFields = {
   name: "Integração Teste",
+  username: "it6testuser",
   email: "it6-valid@example.com",
   password: "Senha@1234",
   passwordConfirmation: "Senha@1234",
@@ -233,10 +234,11 @@ describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)",
   // -----------------------------------------------------------------------
   describe("HTTP 400 — campo obrigatório ausente (REQ-2 · REQ-7)", () => {
     const missingFieldCases: Array<[string, Partial<typeof validFields>, RegExp]> = [
-      ["name ausente", { email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /nome/i],
-      ["email ausente", { name: "Teste", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /email/i],
-      ["password ausente", { name: "Teste", email: "it6-err@example.com", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /senha/i],
-      ["birthDate ausente", { name: "Teste", email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234" }, /nascimento/i],
+      ["name ausente", { username: "it6erruser", email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /nome/i],
+      ["username ausente", { name: "Teste", email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /username/i],
+      ["email ausente", { name: "Teste", username: "it6erruser2", password: "Senha@1234", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /email/i],
+      ["password ausente", { name: "Teste", username: "it6erruser3", email: "it6-err@example.com", passwordConfirmation: "Senha@1234", birthDate: "1990-01-01" }, /senha/i],
+      ["birthDate ausente", { name: "Teste", username: "it6erruser4", email: "it6-err@example.com", password: "Senha@1234", passwordConfirmation: "Senha@1234" }, /nascimento/i],
     ];
 
     it.each(missingFieldCases)(

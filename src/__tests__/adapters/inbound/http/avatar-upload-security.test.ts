@@ -30,6 +30,7 @@ const mockAvatarStorage: AvatarStoragePort = {
 const mockUserCreate = jest.fn();
 const mockUserRepository: UserRepository = {
   create: mockUserCreate,
+  findByUsername: jest.fn().mockResolvedValue(null),
   findByEmail: jest.fn().mockResolvedValue(null),
   findById: jest.fn().mockResolvedValue(null),
   delete: jest.fn(),
@@ -67,6 +68,7 @@ const testDeps: RegisterHandlerDeps = {
 
 const validFields = {
   name: "Test User",
+  username: "testuser",
   email: "st4-test@example.com",
   password: "Senha@1234",
   passwordConfirmation: "Senha@1234",

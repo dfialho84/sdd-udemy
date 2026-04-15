@@ -44,6 +44,7 @@ function makeFormRequest(
 
 const validFields = {
   name: "Maria Silva",
+  username: "mariasilva",
   email: "maria@example.com",
   password: "Senha@123",
   passwordConfirmation: "Senha@123",

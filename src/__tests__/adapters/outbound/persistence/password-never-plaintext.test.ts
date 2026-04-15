@@ -28,6 +28,7 @@ describe("ST-3: Senhas nunca persistidas em texto simples", () => {
     await repo.create({
       id,
       name: "Teste Segurança",
+      username: "st3-testuser",
       email: "st3-test@example.com",
       passwordHash,
       birthDate: new Date("1995-03-20"),

@@ -36,6 +36,7 @@ function makeUser(overrides: Partial<ConstructorParameters<typeof User>[0]> = {}
   return new User({
     id: "owner-user-id",
     name: "João Proprietário",
+    username: "joao_proprietario",
     email: "joao@example.com",
     passwordHash: "$argon2id$hash",
     birthDate: new Date("1990-01-01"),
@@ -62,6 +63,7 @@ function makeDeps(
 ): AvatarAccessHandlerDeps {
   const userRepository: jest.Mocked<UserRepository> = {
     create: jest.fn(),
+    findByUsername: jest.fn(),
     findByEmail: jest.fn().mockResolvedValue(null),
     findById: jest.fn().mockResolvedValue(makeUser()),
     delete: jest.fn(),

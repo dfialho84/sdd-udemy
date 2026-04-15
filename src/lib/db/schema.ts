@@ -1,6 +1,6 @@
 // Schemas do banco de dados — adicionados por feature.
 // Cada tabela deve corresponder a uma entidade em src/domain/entities/.
-// Rastreabilidade: T-02 · REQ-1 · REQ-2 · REQ-8 · T-25 · REQ-9 · NFR-3
+// Rastreabilidade: T-02 · REQ-1 · REQ-2 · REQ-7 · REQ-8 · T-25 · REQ-9 · NFR-3 · NFR-6 · T-85
 
 import {
   mysqlTable,
@@ -14,6 +14,8 @@ import {
 export const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  /** Username unico na plataforma — indice UNIQUE no banco (REQ-7, NFR-6) */
+  username: varchar("username", { length: 50 }).notNull().unique(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   birthDate: date("birth_date").notNull(),

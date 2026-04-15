@@ -166,6 +166,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
   it("NFR-6a: emite log JSON com timestamp, requestId, email mascarado e tipoEvento na criação de cadastro", async () => {
     await POST(makeRegisterRequest({
       name: "T54 Usuario",
+      username: "t54logcreate",
       email: "t54-log-create@example.com",
       password: "Senha@1234",
       passwordConfirmation: "Senha@1234",
@@ -216,6 +217,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
 
     await POST(makeRegisterRequest({
       name: "T54 Falha Email",
+      username: "t54emailfail",
       email: "t54-email-fail@example.com",
       password: "Senha@1234",
       passwordConfirmation: "Senha@1234",
@@ -259,6 +261,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
     await db.insert(users).values({
       id: userId,
       name: "T54 Confirm OK",
+      username: `t54_confirm_ok_${userId.slice(0, 8)}`,
       email: "t54-confirm-ok@example.com",
       passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
       birthDate: new Date("1990-01-01"),
@@ -302,6 +305,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
     await db.insert(users).values({
       id: userId,
       name: "T54 Expired",
+      username: `t54_expired_${userId.slice(0, 8)}`,
       email: "t54-expired@example.com",
       passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
       birthDate: new Date("1990-01-01"),
@@ -344,6 +348,7 @@ describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos 
     await db.insert(users).values({
       id: userId,
       name: "T54 Used Token",
+      username: `t54_used_token_${userId.slice(0, 8)}`,
       email: "t54-used-token@example.com",
       passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
       birthDate: new Date("1990-01-01"),

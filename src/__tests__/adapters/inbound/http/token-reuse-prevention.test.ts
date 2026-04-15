@@ -29,6 +29,7 @@ async function insertTestUser(id: string, email: string): Promise<void> {
   await db.insert(users).values({
     id,
     name: "ST2 Teste",
+    username: `st2-user-${id}`,
     email,
     passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
     birthDate: new Date("1990-01-01"),

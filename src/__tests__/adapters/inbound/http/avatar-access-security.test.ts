@@ -34,6 +34,7 @@ function makeUser(overrides: Partial<ConstructorParameters<typeof User>[0]> = {}
   return new User({
     id: "target-owner-id",
     name: "Proprietário Alvo",
+    username: "proprietario_alvo",
     email: "alvo@example.com",
     passwordHash: "$argon2id$hash",
     birthDate: new Date("1990-01-01"),
@@ -58,6 +59,7 @@ const mockPresignedUrl = "https://minio.example.com/avatars/uuid-st6.jpg?sig=xyz
 function makeDeps(): AvatarAccessHandlerDeps {
   const userRepository: jest.Mocked<UserRepository> = {
     create: jest.fn(),
+    findByUsername: jest.fn(),
     findByEmail: jest.fn(),
     findById: jest.fn().mockResolvedValue(makeUser()),
     delete: jest.fn(),

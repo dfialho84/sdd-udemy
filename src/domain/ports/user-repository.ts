@@ -1,5 +1,5 @@
 // Port outbound — UserRepository
-// Rastreabilidade: REQ-3 · REQ-8 · REQ-10 · REQ-12 · T-05
+// Rastreabilidade: REQ-3 · REQ-7 · REQ-8 · REQ-10 · REQ-12 · T-05 · T-85
 
 import type { User } from "../entities/user";
 import type { UserProps } from "../entities/user";
@@ -13,6 +13,12 @@ export interface UserRepository {
    * Lança erro com código de constraint UNIQUE se o email já existir.
    */
   create(input: CreateUserInput): Promise<User>;
+
+  /**
+   * Retorna o User cujo username corresponde ao argumento, ou null se não encontrado.
+   * Utilizado para verificar unicidade de username antes de criar um novo usuário (REQ-7, DT-10).
+   */
+  findByUsername(username: string): Promise<User | null>;
 
   /**
    * Retorna o User cujo email corresponde ao argumento, ou null se não encontrado.

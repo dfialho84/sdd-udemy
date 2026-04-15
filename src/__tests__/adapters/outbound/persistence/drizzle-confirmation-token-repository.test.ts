@@ -19,6 +19,7 @@ async function createTestUser(): Promise<string> {
   await db.insert(users).values({
     id: userId,
     name: "Usuário Teste Token",
+    username: `token-user-${userId}`,
     email: `token-test-${userId}@example.com`,
     passwordHash: "$argon2id$v=19$token-test",
     birthDate: new Date("1990-01-01"),

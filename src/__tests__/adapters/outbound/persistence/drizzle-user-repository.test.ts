@@ -17,6 +17,7 @@ function makeCreateInput(overrides: Partial<CreateUserInput> = {}): CreateUserIn
   return {
     id: randomUUID(),
     name: "Teste Integração",
+    username: `testuser-${randomUUID()}`,
     email: `test-${randomUUID()}@example.com`,
     passwordHash: "$argon2id$v=19$test",
     birthDate: new Date("1990-06-15"),

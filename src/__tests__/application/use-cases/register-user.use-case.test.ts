@@ -21,6 +21,7 @@ function makeUser(overrides: Partial<ConstructorParameters<typeof User>[0]> = {}
   return new User({
     id: "user-id-1",
     name: "João Silva",
+    username: "joaosilva",
     email: "joao@example.com",
     passwordHash: "$argon2id$hash",
     birthDate: new Date("1990-01-01"),
@@ -47,6 +48,7 @@ function makeDeps(overrides: Partial<RegisterUserUseCaseDeps> = {}): RegisterUse
   const userRepository: jest.Mocked<UserRepository> = {
     create: jest.fn().mockResolvedValue(makeUser()),
     findByEmail: jest.fn().mockResolvedValue(null),
+    findByUsername: jest.fn().mockResolvedValue(null),
     findById: jest.fn().mockResolvedValue(null),
     delete: jest.fn().mockResolvedValue(undefined),
     activate: jest.fn().mockResolvedValue(undefined),
@@ -90,6 +92,7 @@ function makeDeps(overrides: Partial<RegisterUserUseCaseDeps> = {}): RegisterUse
 function makeInput(overrides: Partial<RegisterUserInput> = {}): RegisterUserInput {
   return {
     name: "João Silva",
+    username: "joaosilva",
     email: "joao@example.com",
     password: "Senha@123",
     birthDate: new Date("1990-01-01"),

@@ -85,6 +85,7 @@ beforeAll(async () => {
     {
       id: ACTIVE_USER_ID,
       name: "IT8 Active Com Avatar",
+      username: "it8_active_avatar",
       email: "it8-active@example.com",
       passwordHash: "$argon2id$it8-test",
       birthDate: new Date("1990-01-01"),
@@ -94,6 +95,7 @@ beforeAll(async () => {
     {
       id: ACTIVE_NO_AVATAR_USER_ID,
       name: "IT8 Active Sem Avatar",
+      username: "it8_active_noavatar",
       email: "it8-active-noavatar@example.com",
       passwordHash: "$argon2id$it8-test",
       birthDate: new Date("1990-01-01"),
@@ -103,6 +105,7 @@ beforeAll(async () => {
     {
       id: PENDING_USER_ID,
       name: "IT8 Pending",
+      username: "it8_pending",
       email: "it8-pending@example.com",
       passwordHash: "$argon2id$it8-test",
       birthDate: new Date("1990-01-01"),

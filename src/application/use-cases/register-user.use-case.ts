@@ -10,6 +10,7 @@ import type { ConfirmationTokenRepository } from "@/domain/ports/confirmation-to
 
 export interface RegisterUserInput {
   name: string;
+  username: string;
   email: string;
   password: string;
   birthDate: Date;
@@ -78,7 +79,7 @@ export class RegisterUserUseCase {
       logger,
     } = this.deps;
 
-    const { name, email, password, birthDate, avatarKey, requestId } = input;
+    const { name, username, email, password, birthDate, avatarKey, requestId } = input;
 
     // 1. Verificar unicidade do email (REQ-3)
     const existing = await userRepository.findByEmail(email);
@@ -86,6 +87,15 @@ export class RegisterUserUseCase {
       throw new RegisterUserUseCaseError({
         codigo: 409,
         mensagem: "Este email já está cadastrado. Tente fazer login ou use outro endereço.",
+      });
+    }
+
+    // 1b. Verificar unicidade do username (REQ-7)
+    const existingByUsername = await userRepository.findByUsername(username);
+    if (existingByUsername !== null) {
+      throw new RegisterUserUseCaseError({
+        codigo: 409,
+        mensagem: "Este username já está em uso. Escolha outro.",
       });
     }
 
@@ -97,6 +107,7 @@ export class RegisterUserUseCase {
     const user = await userRepository.create({
       id: userId,
       name,
+      username,
       email,
       passwordHash,
       birthDate,

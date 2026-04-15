@@ -376,7 +376,7 @@ _(REQ-5 é coberto pela task T-76, que implementa a `RegisterPage` com o comport
 
 ### T-85: Criar migration para adicionar campo `username` com índice UNIQUE na tabela `users`
 
-- [ ] Criar a migration Drizzle para adicionar o campo `username` (VARCHAR 50, NOT NULL, UNIQUE) à tabela `users`. Atualizar o schema em `src/lib/db/schema.ts` para incluir o campo `username` com `.unique()`. Rodar `drizzle-kit generate` para gerar o arquivo SQL da migration e garantir que ela aplica sem erros em banco limpo e em banco existente (campo adicionado como `NOT NULL` requer `DEFAULT ''` temporário se houver dados).
+- [x] Criar a migration Drizzle para adicionar o campo `username` (VARCHAR 50, NOT NULL, UNIQUE) à tabela `users`. Atualizar o schema em `src/lib/db/schema.ts` para incluir o campo `username` com `.unique()`. Rodar `drizzle-kit generate` para gerar o arquivo SQL da migration e garantir que ela aplica sem erros em banco limpo e em banco existente (campo adicionado como `NOT NULL` requer `DEFAULT ''` temporário se houver dados).
 
 **Rastreabilidade:** REQ-2 · REQ-7 · NFR-6 · DT-10
 **Depende de:** T-02

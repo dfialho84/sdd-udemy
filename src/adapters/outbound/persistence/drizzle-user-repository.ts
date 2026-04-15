@@ -1,6 +1,6 @@
 // DrizzleUserRepository — adapter outbound de persistência
 // Implementação concreta de UserRepository usando Drizzle ORM sobre MySQL.
-// Rastreabilidade: T-08 · REQ-3 · REQ-8 · T-37
+// Rastreabilidade: T-08 · REQ-3 · REQ-7 · REQ-8 · T-37 · T-85 · T-80
 
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -17,6 +17,7 @@ export class DrizzleUserRepository implements UserRepository {
     await db.insert(users).values({
       id: input.id,
       name: input.name,
+      username: input.username,
       email: input.email,
       passwordHash: input.passwordHash,
       birthDate: input.birthDate,
@@ -33,6 +34,17 @@ export class DrizzleUserRepository implements UserRepository {
     }
 
     return this.toEntity(record);
+  }
+
+  /**
+   * Busca um usuário pelo username usando o indice UNIQUE.
+   * Retorna null se não encontrado.
+   * Rastreabilidade: T-80 · REQ-7 · NFR-6 · DT-10
+   */
+  async findByUsername(username: string): Promise<User | null> {
+    const rows = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    if (rows.length === 0) return null;
+    return this.toEntity(rows[0]!);
   }
 
   /**
@@ -79,6 +91,7 @@ export class DrizzleUserRepository implements UserRepository {
     return new User({
       id: record.id,
       name: record.name,
+      username: record.username,
       email: record.email,
       passwordHash: record.passwordHash,
       birthDate: record.birthDate instanceof Date ? record.birthDate : new Date(record.birthDate),

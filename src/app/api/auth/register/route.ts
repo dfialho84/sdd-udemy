@@ -121,6 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // --- Extrai campos textuais do formData para validação ---
   const rawData: Record<string, unknown> = {
     name: formData.get("name"),
+    username: formData.get("username"),
     email: formData.get("email"),
     password: formData.get("password"),
     passwordConfirmation: formData.get("passwordConfirmation"),
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const result = await useCase.execute({
       name: parsed.data.name,
+      username: parsed.data.username,
       email: parsed.data.email,
       password: parsed.data.password,
       birthDate: new Date(parsed.data.birthDate),

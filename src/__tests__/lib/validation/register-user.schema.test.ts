@@ -5,6 +5,7 @@ import { registerUserSchema } from "@/lib/validation/register-user.schema";
 
 const validInput = {
   name: "Maria Silva",
+  username: "mariasilva",
   email: "maria@example.com",
   password: "Senha@123",
   passwordConfirmation: "Senha@123",

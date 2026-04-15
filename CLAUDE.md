@@ -61,6 +61,9 @@ k6 run <script.js>
 
 # Lint
 npm run lint
+
+# Banco de dados — apagar todas as tabelas (inclusive migrations), sem apagar o banco
+node scripts/drop-all-tables.js
 ```
 
 ## Metodologia SDD — Sequência de Desenvolvimento
