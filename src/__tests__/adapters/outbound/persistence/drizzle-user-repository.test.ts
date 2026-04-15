@@ -1,5 +1,5 @@
 // Testes de integração — DrizzleUserRepository
-// IT-1: Rastreabilidade: REQ-3 · REQ-8 · T-08 · T-10
+// IT-1: Rastreabilidade: REQ-3 · REQ-7 · REQ-8 · NFR-6 · T-08 · T-80
 // IT-2: Rastreabilidade: REQ-10 · REQ-12 · T-37 · T-41
 //
 // Pré-requisito: banco MySQL de teste rodando com migration aplicada.
@@ -32,7 +32,7 @@ afterAll(async () => {
   await (db.$client as { end?: () => Promise<void> }).end?.();
 });
 
-describe("IT-1: DrizzleUserRepository — create() e findByEmail()", () => {
+describe("IT-1: DrizzleUserRepository — create(), findByEmail() e findByUsername()", () => {
   const repo = new DrizzleUserRepository();
 
   // Limpa registros de email duplicado criados pelo caso específico
@@ -100,6 +100,47 @@ describe("IT-1: DrizzleUserRepository — create() e findByEmail()", () => {
       const duplicateInput = makeCreateInput({ email: "duplicate@example.com" });
 
       await expect(repo.create(duplicateInput)).rejects.toThrow();
+    });
+  });
+
+  describe("findByUsername() — REQ-7 · NFR-6 · DT-10 · T-80", () => {
+    it("retorna o usuário correto quando o username existe", async () => {
+      // Username com máx 50 chars: prefixo 3 + hífen + 8 chars do UUID = 12 chars
+      const shortId = randomUUID().replace(/-/g, "").slice(0, 8);
+      const input = makeCreateInput({
+        username: `usr-${shortId}`,
+        name: "Carlos Teste",
+        avatarKey: "avatars/abc123.webp",
+      });
+      await repo.create(input);
+
+      const found = await repo.findByUsername(input.username);
+
+      expect(found).not.toBeNull();
+      expect(found!.id).toBe(input.id);
+      expect(found!.username).toBe(input.username);
+      expect(found!.name).toBe("Carlos Teste");
+      expect(found!.avatarKey).toBe("avatars/abc123.webp");
+    });
+
+    it("retorna o usuário com avatarKey null quando username existe e sem avatar", async () => {
+      const shortId = randomUUID().replace(/-/g, "").slice(0, 8);
+      const input = makeCreateInput({
+        username: `na-${shortId}`,
+        avatarKey: null,
+      });
+      await repo.create(input);
+
+      const found = await repo.findByUsername(input.username);
+
+      expect(found).not.toBeNull();
+      expect(found!.username).toBe(input.username);
+      expect(found!.avatarKey).toBeNull();
+    });
+
+    it("retorna null quando o username não existe", async () => {
+      const result = await repo.findByUsername("nao-existe-xyz");
+      expect(result).toBeNull();
     });
   });
 });

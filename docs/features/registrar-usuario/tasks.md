@@ -386,7 +386,7 @@ _(REQ-5 é coberto pela task T-76, que implementa a `RegisterPage` com o comport
 
 ### T-80: Implementar `DrizzleUserRepository` — método `findByUsername`
 
-- [ ] Implementar o método `findByUsername` na classe `DrizzleUserRepository`. A busca deve utilizar o índice `UNIQUE(username)` da tabela `users`. Retornar a entidade `User` correspondente quando encontrado, ou `null` quando o username não existir no banco.
+- [x] Implementar o método `findByUsername` na classe `DrizzleUserRepository`. A busca deve utilizar o índice `UNIQUE(username)` da tabela `users`. Retornar a entidade `User` correspondente quando encontrado, ou `null` quando o username não existir no banco.
 
 **Rastreabilidade:** REQ-7 · NFR-6 · DT-10
 **Depende de:** T-08 · T-85
