@@ -460,7 +460,7 @@ _(REQ-5 é coberto pela task T-76, que implementa a `RegisterPage` com o comport
 
 ### T-83: Implementar handler de erro HTTP 409 para email duplicado no `RegisterUserHandler`
 
-- [ ] No `RegisterUserHandler`, capturar o erro de email duplicado lançado pelo `RegisterUserUseCase` e retornar HTTP 409 com a mensagem "Este email ja esta cadastrado. Tente fazer login ou use outro endereco." na estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
+- [x] No `RegisterUserHandler`, capturar o erro de email duplicado lançado pelo `RegisterUserUseCase` e retornar HTTP 409 com a mensagem "Este email ja esta cadastrado. Tente fazer login ou use outro endereco." na estrutura padronizada `{ codigo, mensagem, requestId, timestamp }`.
 
 **Rastreabilidade:** REQ-8
 **Depende de:** T-06
@@ -762,7 +762,7 @@ _(REQ-19 é coberto pelas mesmas tasks de REQ-18: T-36, T-38, T-40, T-43, T-46, 
 
 ### T-84: Verificar cobertura de unicidade de username no lado do cliente (UI)
 
-- [ ] Garantir que a `RegisterPage` (T-76) exibe a mensagem de erro "Este username ja esta cadastrado. Escolha outro." ao receber HTTP 409 do endpoint com mensagem de username duplicado. A exibição deve ser acessível via `aria-live` ou `role="alert"`. Nenhuma lógica de verificação assíncrona de username fora do submit está prevista no design — a validação ocorre no envio do formulário.
+- [x] Garantir que a `RegisterPage` (T-76) exibe a mensagem de erro "Este username ja esta cadastrado. Escolha outro." ao receber HTTP 409 do endpoint com mensagem de username duplicado. A exibição deve ser acessível via `aria-live` ou `role="alert"`. Nenhuma lógica de verificação assíncrona de username fora do submit está prevista no design — a validação ocorre no envio do formulário.
 
 **Rastreabilidade:** NFR-6 · REQ-7
 **Depende de:** T-76 · T-07

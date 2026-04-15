@@ -3,7 +3,7 @@
 // Pagina de cadastro de usuario — /register
 // Adapter de transporte inbound (UI): formulario que envia multipart/form-data para POST /api/auth/register.
 // Implementacao com react-hook-forms e validacao Zod (STACK CLAUDE.md).
-// Rastreabilidade: T-22 · REQ-1 · REQ-2 · REQ-4 · REQ-5 · REQ-6 · GH-1 · GH-2
+// Rastreabilidade: T-22 · REQ-1 · REQ-2 · REQ-4 · REQ-5 · REQ-6 · REQ-7 · GH-1 · GH-2
 
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,10 @@ type FormValues = Omit<RegisterUserInput, "passwordConfirmation"> & {
   passwordConfirmation: string;
 };
 
+// Mensagem de erro de username duplicado (REQ-7) — deve corresponder exatamente ao retorno da API
+const USERNAME_DUPLICADO_MENSAGEM =
+  "Este username ja esta cadastrado. Escolha outro.";
+
 export default function RegisterPage() {
   const avatarRef = useRef<HTMLInputElement>(null);
 
@@ -33,11 +37,13 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(registerUserSchema),
     defaultValues: {
       name: "",
+      username: "",
       email: "",
       password: "",
       passwordConfirmation: "",
@@ -61,6 +67,7 @@ export default function RegisterPage() {
       // Monta o FormData para envio como multipart/form-data (REQ-1 · DT-6)
       const formData = new FormData();
       formData.append("name", data.name);
+      formData.append("username", data.username);
       formData.append("email", data.email);
       formData.append("password", data.password);
       formData.append("passwordConfirmation", data.passwordConfirmation);
@@ -82,7 +89,14 @@ export default function RegisterPage() {
         setSuccessMessage(result.message);
       } else {
         const errorData = (await res.json()) as ApiError;
-        setErrorMessage(errorData.mensagem ?? "Erro ao realizar cadastro.");
+        const mensagem = errorData.mensagem ?? "Erro ao realizar cadastro.";
+
+        // HTTP 409 com mensagem de username duplicado (REQ-7) — erro no campo username
+        if (res.status === 409 && mensagem === USERNAME_DUPLICADO_MENSAGEM) {
+          setError("username", { message: mensagem });
+        } else {
+          setErrorMessage(mensagem);
+        }
       }
     } catch {
       setErrorMessage("Erro de rede. Tente novamente.");
@@ -140,6 +154,32 @@ export default function RegisterPage() {
             {errors.name && (
               <p className="mt-1 text-xs text-red-600" data-testid="error-name">
                 {errors.name.message}
+              </p>
+            )}
+          </div>
+
+          {/* Campo Username */}
+          <div>
+            <label htmlFor="username" className="mb-1 block text-sm font-medium">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              {...register("username")}
+              className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                errors.username ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+              }`}
+              data-testid="input-username"
+            />
+            {errors.username && (
+              <p
+                role="alert"
+                aria-live="polite"
+                className="mt-1 text-xs text-red-600"
+                data-testid="error-username"
+              >
+                {errors.username.message}
               </p>
             )}
           </div>
