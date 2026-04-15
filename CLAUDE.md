@@ -8,63 +8,15 @@ Aplicação de quadros Kanban para gerenciamento de sprints, desenvolvida com a 
 
 ## Stack
 
-- **Framework**: Next.js com TypeScript
-- **UI**: Tailwind CSS + shadcn/ui (use componentes já existentes em `.claude/` — não instalar `next-sdd` nem outras libs não listadas)
-- **Autenticação**: next-auth
-- **ORM**: Drizzle
-- **Validação de Fomulários**: zod
-- **Forms**: react hook form
-- **Banco**: MySQL
-- **Repositório de arquivos**: MinIO
-- **Testes unitários/integração**: Jest
-- **Testes E2E**: Cypress + Cucumber
-- **Testes de carga**: k6
-- **Email (dev)**: Mailhog
-- **Observabilidade**: OpenTelemetry → Jaeger (tracing) · Prometheus (métricas) · Grafana Loki (logs) · Grafana (dashboards)
-- **Infra local**: Docker Compose (serviços de ambiente de teste — comente a inclusão de cada serviço ao adicioná-lo)
+As informações da stack de tecnologias estão em `docs/stack.md`.
 
 ## Arquitetura Hexagonal
 
-```
-Domain         → lógica de negócio pura; sem dependência de frameworks, transporte ou persistência
-Ports          → interfaces inbound (casos de uso) e outbound (repositórios, serviços externos)
-Adapters       → implementações concretas das Ports (HTTP handlers, Drizzle repositories, email, etc.)
-```
-
-Regras críticas (ver `docs/constitution.md` para a lista completa):
-
-- Lógica de negócio **só** no Domain.
-- Drizzle **nunca** é importado em entidades Domain ou casos de uso.
-- Route Handlers (`app/api/**/route.ts`), Server Actions e componentes React são adapters de transporte — sem lógica de negócio.
-- Domain depende **apenas** de tipos próprios e das Ports — nunca de tipos Next.js, Drizzle ou React.
-- Toda entrada externa é validada no adapter HTTP inbound antes de chegar ao Domain.
+As informações de arquitetura estão em `docs/arquitetura.md`.
 
 ## Comandos do Projeto
 
-```bash
-# Desenvolvimento
-npm run dev
-
-# Build
-npm run build
-
-# Testes unitários/integração
-npm run test
-npm run test -- --testPathPattern=<caminho>  # teste único
-
-# Testes E2E
-npx cypress run
-npx cypress open
-
-# Testes de carga
-k6 run <script.js>
-
-# Lint
-npm run lint
-
-# Banco de dados — apagar todas as tabelas (inclusive migrations), sem apagar o banco
-node scripts/drop-all-tables.js
-```
+Os comandos do projeto estão documentados em `docs/comandos.md`.
 
 ## Metodologia SDD — Sequência de Desenvolvimento
 
@@ -109,9 +61,4 @@ Os comandos acima delegam para agentes especializados em `.claude/agents/`. Cada
 
 ## Regras de Implementação
 
-- Testes são escritos **antes** do código de produção (TDD red→green).
-- Toda task deve ter rastreabilidade a um requisito funcional, story ou cenário BDD em `docs/`.
-- Erros propagados com estrutura padronizada: `{ código, mensagem, requestId, timestamp }`.
-- Operações que alteram estado: log estruturado (JSON) obrigatório.
-- Imagens Docker: sempre fixar versão estável — nunca usar tag `latest`.
-- Se qualquer artefato SDD (`prd.md`, `stories.md`, `scenarios.feature`, `requirements.md`, `nf-requirements.md`, `design.md`, `test-strategy.md`, `tasks.md`) estiver incompleto, bloquear implementação.
+As regras estão em `docs/consitution.md`;
