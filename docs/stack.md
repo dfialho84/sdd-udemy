@@ -1,7 +1,7 @@
 ## Stack
 
 - **Framework**: Next.js com TypeScript
-- **UI**: Tailwind CSS + shadcn/ui (use componentes já existentes em `.claude/` — não instalar `next-sdd` nem outras libs não listadas)
+- **UI**: Tailwind CSS + shadcn/ui
 - **Autenticação**: next-auth
 - **ORM**: Drizzle
 - **Validação de Fomulários**: zod
