@@ -95,7 +95,7 @@ export class RegisterUserUseCase {
     if (existingByUsername !== null) {
       throw new RegisterUserUseCaseError({
         codigo: 409,
-        mensagem: "Este username já está em uso. Escolha outro.",
+        mensagem: "Este username ja esta cadastrado. Escolha outro.",
       });
     }
 

@@ -436,7 +436,7 @@ _(REQ-5 é coberto pela task T-76, que implementa a `RegisterPage` com o comport
 
 ### T-82: Cobrir ST-7 — prevenção de enumeração de usernames (segurança)
 
-- [ ] Implementar o teste ST-7 verificando: (a) resposta HTTP 409 para username duplicado retorna mensagem "Este username ja esta cadastrado. Escolha outro." sem revelar dados do usuário existente (email, nome ou status); (b) o tempo de resposta para username duplicado não é significativamente mais rápido que para username inédito com email já cadastrado, de forma que o tempo sozinho não revele o resultado; (c) nenhum campo do usuário existente é incluído na resposta de erro 409.
+- [x] Implementar o teste ST-7 verificando: (a) resposta HTTP 409 para username duplicado retorna mensagem "Este username ja esta cadastrado. Escolha outro." sem revelar dados do usuário existente (email, nome ou status); (b) o tempo de resposta para username duplicado não é significativamente mais rápido que para username inédito com email já cadastrado, de forma que o tempo sozinho não revele o resultado; (c) nenhum campo do usuário existente é incluído na resposta de erro 409.
 
 **Rastreabilidade:** REQ-7 · NFR-6 · DT-10
 **Depende de:** T-07
