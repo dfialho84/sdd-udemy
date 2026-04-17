@@ -91,7 +91,7 @@
 
 ### T-09: Implementar `DrizzleUserRepository` com `findByIdentifier`
 
-- [ ] Implementar o adapter `DrizzleUserRepository` na camada de infraestrutura, concretizando `UserRepository`. O método `findByIdentifier` busca na tabela `users` por `username` OU `email` com `status = 'active'`, usando Drizzle + MySQL.
+- [x] Implementar o adapter `DrizzleUserRepository` na camada de infraestrutura, concretizando `UserRepository`. O método `findByIdentifier` busca na tabela `users` por `username` OU `email` com `status = 'active'`, usando Drizzle + MySQL.
 
 **Rastreabilidade:** REQ-2
 **Depende de:** T-08
