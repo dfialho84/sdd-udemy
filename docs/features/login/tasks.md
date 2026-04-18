@@ -125,7 +125,7 @@
 
 ### T-12: Implementar `AuthenticateUserUseCase` — fluxo de autenticação bem-sucedida
 
-- [ ] Implementar o caso de uso `AuthenticateUserUseCase.execute({ identifier, password })` na camada Domain. O fluxo deve: (1) verificar bloqueio ativo via `LoginAttemptRepository`, (2) buscar usuário via `UserRepository`, (3) verificar senha via `PasswordVerifier`, (4) registrar tentativa bem-sucedida via `LoginAttemptRepository.save`, (5) retornar `{ id, username, email }` para o adapter de sessão. Sem lógica de negócio fora do Domain.
+- [x] Implementar o caso de uso `AuthenticateUserUseCase.execute({ identifier, password })` na camada Domain. O fluxo deve: (1) verificar bloqueio ativo via `LoginAttemptRepository`, (2) buscar usuário via `UserRepository`, (3) verificar senha via `PasswordVerifier`, (4) registrar tentativa bem-sucedida via `LoginAttemptRepository.save`, (5) retornar `{ id, username, email }` para o adapter de sessão. Sem lógica de negócio fora do Domain.
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-13 · NFR-7
 **Depende de:** T-05 · T-07 · T-08 · T-25
@@ -270,7 +270,7 @@
 
 ### T-24: Criar tipos `LoginAttempt` e `LoginBlock` no Domain
 
-- [ ] Definir os tipos `LoginAttempt` (id, identifier, success, created_at) e `LoginBlock` (id, identifier, blocked_until, created_at) no Domain, sem dependência de Drizzle ou Next.js. Esses tipos representam o modelo de dados das tabelas `login_attempts` e `login_blocks`.
+- [x] Definir os tipos `LoginAttempt` (id, identifier, success, created_at) e `LoginBlock` (id, identifier, blocked_until, created_at) no Domain, sem dependência de Drizzle ou Next.js. Esses tipos representam o modelo de dados das tabelas `login_attempts` e `login_blocks`.
 
 **Rastreabilidade:** REQ-8 · REQ-9 · REQ-13
 **Depende de:** —
@@ -280,7 +280,7 @@
 
 ### T-25: Criar interface `LoginAttemptRepository` (Port outbound)
 
-- [ ] Definir a interface `LoginAttemptRepository` no Domain com os métodos: `save(attempt)`, `countRecentFailures(identifier, windowMinutes)`, `findActiveBlock(identifier)`, `createBlock(identifier, blockedUntil)`, `removeBlock(identifier)` e `resetFailureCount(identifier)`. Cada método representa uma operação distinta.
+- [x] Definir a interface `LoginAttemptRepository` no Domain com os métodos: `save(attempt)`, `countRecentFailures(identifier, windowMinutes)`, `findActiveBlock(identifier)`, `createBlock(identifier, blockedUntil)`, `removeBlock(identifier)` e `resetFailureCount(identifier)`. Cada método representa uma operação distinta.
 
 **Rastreabilidade:** REQ-8 · REQ-9 · REQ-12 · REQ-13
 **Depende de:** T-24
