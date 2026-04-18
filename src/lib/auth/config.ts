@@ -5,13 +5,8 @@
 
 import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
-import { randomUUID } from "crypto";
-import { loginPayloadSchema } from "@/lib/validation/login-payload.schema";
-import {
-  AuthenticateUserUseCase,
-  AuthenticationError,
-  AccountBlockedError,
-} from "@/application/use-cases/authenticate-user.use-case";
+import { AuthenticationError, AccountBlockedError } from "@/application/use-cases/authenticate-user.use-case";
+import { authorizeCredentials } from "./authorize";
 import { getAuthDepsFactory } from "./deps";
 
 export const authConfig: NextAuthConfig = {
@@ -31,33 +26,15 @@ export const authConfig: NextAuthConfig = {
        * 4. Retornar null em caso de falha (next-auth produzira 401)
        */
       async authorize(credentials) {
-        const requestId = randomUUID();
-
-        // 1. Validacao de entrada na borda do sistema (constitution.md regra 4)
-        const parsed = loginPayloadSchema.safeParse(credentials);
-        if (!parsed.success) {
-          // identifier vazio ou password vazio — rejeita sem chamar o Domain (REQ-6)
-          return null;
-        }
-
-        const { identifier, password } = parsed.data;
-
-        // 2. Delegar ao AuthenticateUserUseCase (constitution.md regra 3)
-        const useCase = new AuthenticateUserUseCase(getAuthDepsFactory()());
-
         try {
-          const result = await useCase.execute({ identifier, password, requestId });
-
-          // 3. Retornar objeto de usuario para o next-auth (REQ-3)
-          return {
-            id: result.id,
-            name: result.username,
-            email: result.email,
-          };
+          // Delega para modulo puro testavel sem dependencia de next-auth (T-22)
+          return await authorizeCredentials(
+            credentials as Record<string, unknown>,
+            getAuthDepsFactory(),
+          );
         } catch (err) {
           if (err instanceof AuthenticationError || err instanceof AccountBlockedError) {
-            // Propaga o erro como string para o next-auth repassar ao cliente (REQ-5, REQ-10)
-            // next-auth expoe a mensagem via query param ?error= na pagina de login
+            // Propaga o erro para o next-auth repassar ao cliente via ?error= (REQ-5, REQ-10)
             throw err;
           }
           // Erro inesperado — relanca para nao silenciar (constitution.md regra 17)

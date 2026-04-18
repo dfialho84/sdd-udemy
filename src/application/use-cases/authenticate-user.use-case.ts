@@ -2,12 +2,14 @@
 // Orquestra o fluxo de autenticacao: verificar bloqueio, buscar usuario,
 // comparar senha, registrar tentativa, retornar dados da sessao.
 // Sem dependencias de Drizzle, Next.js, next-auth ou React (constitution.md regras 13, 16, 18).
-// Rastreabilidade: T-12 · REQ-2 · REQ-3 · REQ-13 · NFR-7
+// Rastreabilidade: T-12 · T-32 · T-44 · REQ-2 · REQ-3 · REQ-8 · REQ-9 · REQ-12 · REQ-13 · NFR-3 · NFR-4 · NFR-7
 
 import { randomUUID } from "crypto";
 import type { LoginUserRepository } from "@/domain/ports/login-user-repository";
 import type { PasswordVerifier } from "@/domain/ports/password-verifier";
 import type { LoginAttemptRepository } from "@/domain/ports/login-attempt-repository";
+import { LoginDomain } from "@/domain/entities/login-domain";
+import type { EmailNotificationPort } from "@/domain/ports/email-notification.port";
 
 // ─── Input / Output ────────────────────────────────────────────────────────
 
@@ -55,6 +57,8 @@ export interface AuthenticateUserUseCaseDeps {
   userRepository: LoginUserRepository;
   passwordVerifier: PasswordVerifier;
   loginAttemptRepository: LoginAttemptRepository;
+  /** Port de notificacao de email — opcional, fire-and-forget (REQ-14, NFR-8, DT-4) */
+  emailNotificationPort?: EmailNotificationPort;
   /** Logger estruturado — deve aceitar objetos JSON (NFR-7, constitution.md regra 6) */
   logger: {
     info: (obj: object, msg?: string) => void;
@@ -72,19 +76,20 @@ export interface AuthenticateUserUseCaseDeps {
  * 4. Registra a tentativa (bem-sucedida ou fracassada) (REQ-13, NFR-7)
  * 5. Retorna dados do usuario para criacao de sessao (REQ-3)
  *
- * Logica de ativacao de bloqueio apos 3 falhas: implementada em T-32.
- * Logica de desbloqueio automatico: implementada em T-44.
- * Envio de email de aviso: implementado em T-52.
+ * Logica de ativacao de bloqueio apos 3 falhas: T-32 (REQ-8, REQ-9).
+ * Logica de desbloqueio automatico: T-44 (REQ-12) — ja implementada no fluxo.
+ * Envio de email de aviso: implementado em T-52 (REQ-14).
  */
 export class AuthenticateUserUseCase {
   private readonly deps: AuthenticateUserUseCaseDeps;
+  private readonly loginDomain = new LoginDomain();
 
   constructor(deps: AuthenticateUserUseCaseDeps) {
     this.deps = deps;
   }
 
   async execute(input: AuthenticateUserInput): Promise<AuthenticateUserOutput> {
-    const { userRepository, passwordVerifier, loginAttemptRepository, logger } = this.deps;
+    const { userRepository, passwordVerifier, loginAttemptRepository, emailNotificationPort, logger } = this.deps;
     const { identifier, password, requestId } = input;
     const now = new Date();
 
@@ -132,6 +137,14 @@ export class AuthenticateUserUseCase {
         "Tentativa de login: usuario nao encontrado",
       );
 
+      // Verificar se deve ativar bloqueio mesmo para identificador inexistente (REQ-8)
+      const failureCountUnknown = await loginAttemptRepository.countRecentFailures(identifier, 10);
+      if (this.loginDomain.shouldActivateBlock(failureCountUnknown)) {
+        const blockedUntil = this.loginDomain.calculateBlockExpiration(now);
+        await loginAttemptRepository.createBlock(identifier, blockedUntil);
+        throw new AccountBlockedError();
+      }
+
       throw new AuthenticationError();
     }
 
@@ -157,8 +170,43 @@ export class AuthenticateUserUseCase {
         "Tentativa de login: senha incorreta",
       );
 
-      // T-32 adicionara: verificar countRecentFailures e ativar bloqueio se necessario
-      // T-52 adicionara: enviar email de aviso quando usuario existe e senha incorreta
+      // T-32: verificar contagem de falhas e ativar bloqueio se necessario (REQ-8, REQ-9)
+      const failureCount = await loginAttemptRepository.countRecentFailures(identifier, 10);
+      if (this.loginDomain.shouldActivateBlock(failureCount)) {
+        const blockedUntil = this.loginDomain.calculateBlockExpiration(now);
+        await loginAttemptRepository.createBlock(identifier, blockedUntil);
+
+        logger.info(
+          {
+            timestamp: now.toISOString(),
+            requestId,
+            identifier,
+            success: false,
+            tipoEvento: "bloqueio_ativado",
+            blockedUntil: blockedUntil.toISOString(),
+          },
+          "Bloqueio ativado apos excesso de tentativas",
+        );
+
+        throw new AccountBlockedError();
+      }
+
+      // T-52: envio fire-and-forget de email de aviso quando conta existe e senha incorreta (REQ-14, NFR-8, DT-4)
+      if (this.loginDomain.shouldSendEmailWarning(true, false) && emailNotificationPort) {
+        emailNotificationPort.sendLoginWarning(user.email).catch((err: unknown) => {
+          // Falha no envio de email: logar mas nao propagar — nao bloqueia resposta HTTP (DT-4)
+          logger.error(
+            {
+              timestamp: now.toISOString(),
+              requestId,
+              identifier,
+              tipoEvento: "falha_envio_email_aviso",
+              erro: err instanceof Error ? err.message : String(err),
+            },
+            "Falha ao enviar email de aviso de login",
+          );
+        });
+      }
 
       throw new AuthenticationError();
     }

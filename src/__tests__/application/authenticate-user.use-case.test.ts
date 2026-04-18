@@ -1,7 +1,7 @@
 // Testes unitarios do AuthenticateUserUseCase
 // Cobre UT-9 (T-18), UT-10 (T-19), UT-6 (T-57), UT-7 (T-58), UT-8 (T-22),
-// UT-11 (T-36), UT-12 (T-37), UT-13 (T-45)
-// Rastreabilidade: REQ-2 · REQ-3 · REQ-5 · REQ-6 · REQ-11 · REQ-12 · REQ-13 · NFR-6
+// UT-11 (T-36), UT-12 (T-37), UT-13 (T-45), UT-6-email (T-54)
+// Rastreabilidade: REQ-2 · REQ-3 · REQ-5 · REQ-6 · REQ-11 · REQ-12 · REQ-13 · REQ-14 · NFR-6 · NFR-8
 
 import {
   AuthenticateUserUseCase,
@@ -14,6 +14,7 @@ import type { PasswordVerifier } from "@/domain/ports/password-verifier";
 import type { LoginAttemptRepository } from "@/domain/ports/login-attempt-repository";
 import type { LoginUser } from "@/domain/entities/login-user";
 import type { LoginBlock } from "@/domain/entities/login-attempt";
+import type { EmailNotificationPort } from "@/domain/ports/email-notification.port";
 
 // ─── Fixtures ──────────────────────────────────────────────────────────────
 
@@ -41,6 +42,7 @@ function makeMocks(overrides: {
   createBlock?: jest.Mock;
   removeBlock?: jest.Mock;
   resetFailureCount?: jest.Mock;
+  sendLoginWarning?: jest.Mock;
 } = {}): AuthenticateUserUseCaseDeps {
   const userRepository: LoginUserRepository = {
     findByIdentifier: overrides.findByIdentifier ?? jest.fn().mockResolvedValue(ACTIVE_USER),
@@ -59,12 +61,16 @@ function makeMocks(overrides: {
     resetFailureCount: overrides.resetFailureCount ?? jest.fn().mockResolvedValue(undefined),
   };
 
+  const emailNotificationPort: EmailNotificationPort = {
+    sendLoginWarning: overrides.sendLoginWarning ?? jest.fn().mockResolvedValue(undefined),
+  };
+
   const logger = {
     info: jest.fn(),
     error: jest.fn(),
   };
 
-  return { userRepository, passwordVerifier, loginAttemptRepository, logger };
+  return { userRepository, passwordVerifier, loginAttemptRepository, emailNotificationPort, logger };
 }
 
 // ─── UT-6: Login bem-sucedido por username (T-57) ─────────────────────────
@@ -269,9 +275,52 @@ describe("UT-11: AuthenticateUserUseCase.execute() — bloqueio ativo", () => {
   });
 });
 
-// ─── UT-12: Ativar bloqueio apos 3 falhas (T-37) — implementado em T-32 ──
+// ─── UT-12: Ativar bloqueio apos 3 falhas (T-37) ─────────────────────────
 
-// UT-12 sera coberto em T-37 apos implementacao de T-32 (logica de bloqueio no use case)
+describe("UT-12: AuthenticateUserUseCase.execute() — ativar bloqueio apos 3 falhas", () => {
+  it("countRecentFailures retorna 3: cria bloqueio com blocked_until = now + 15min e lanca AccountBlockedError", async () => {
+    const createBlock = jest.fn().mockResolvedValue(undefined);
+
+    const deps = makeMocks({
+      verify: jest.fn().mockResolvedValue(false),
+      countRecentFailures: jest.fn().mockResolvedValue(3),
+      createBlock,
+    });
+    const useCase = new AuthenticateUserUseCase(deps);
+
+    const before = new Date();
+    await expect(
+      useCase.execute({ identifier: "alice", password: "SenhaErrada!", requestId: "req-013" }),
+    ).rejects.toThrow(AccountBlockedError);
+    const after = new Date();
+
+    expect(createBlock).toHaveBeenCalledTimes(1);
+    const [calledIdentifier, calledBlockedUntil] = (createBlock as jest.Mock).mock.calls[0] as [string, Date];
+    expect(calledIdentifier).toBe("alice");
+    // blocked_until deve ser ~15 min no futuro
+    const expectedMin = before.getTime() + 15 * 60 * 1000;
+    const expectedMax = after.getTime() + 15 * 60 * 1000;
+    expect(calledBlockedUntil.getTime()).toBeGreaterThanOrEqual(expectedMin);
+    expect(calledBlockedUntil.getTime()).toBeLessThanOrEqual(expectedMax);
+  });
+
+  it("countRecentFailures retorna 2: nao cria bloqueio e lanca AuthenticationError (REQ-8)", async () => {
+    const createBlock = jest.fn().mockResolvedValue(undefined);
+
+    const deps = makeMocks({
+      verify: jest.fn().mockResolvedValue(false),
+      countRecentFailures: jest.fn().mockResolvedValue(2),
+      createBlock,
+    });
+    const useCase = new AuthenticateUserUseCase(deps);
+
+    await expect(
+      useCase.execute({ identifier: "alice", password: "SenhaErrada!", requestId: "req-014" }),
+    ).rejects.toThrow(AuthenticationError);
+
+    expect(createBlock).not.toHaveBeenCalled();
+  });
+});
 
 // ─── UT-13: Bloqueio expirado (T-45) ─────────────────────────────────────
 
@@ -304,5 +353,56 @@ describe("UT-13: AuthenticateUserUseCase.execute() — bloqueio expirado", () =>
     expect(removeBlock).toHaveBeenCalledWith("alice");
     expect(resetFailureCount).toHaveBeenCalledWith("alice");
     expect(result.username).toBe("alice");
+  });
+});
+
+// ─── UT-6-email: envio de email de aviso (T-54) ───────────────────────────
+
+describe("UT-6 (T-54): AuthenticateUserUseCase.execute() — envio de email de aviso", () => {
+  it("(a) sendLoginWarning e chamado quando usuario existe e senha incorreta (REQ-14)", async () => {
+    const sendLoginWarning = jest.fn().mockResolvedValue(undefined);
+    const deps = makeMocks({
+      verify: jest.fn().mockResolvedValue(false),
+      sendLoginWarning,
+    });
+    const useCase = new AuthenticateUserUseCase(deps);
+
+    await expect(
+      useCase.execute({ identifier: "alice", password: "SenhaErrada!", requestId: "req-email-1" }),
+    ).rejects.toThrow(AuthenticationError);
+
+    // fire-and-forget: aguardar microtasks para o .catch ser registrado
+    await Promise.resolve();
+    expect(sendLoginWarning).toHaveBeenCalledWith(ACTIVE_USER.email);
+  });
+
+  it("(b) sendLoginWarning NAO e chamado quando usuario nao existe (REQ-14)", async () => {
+    const sendLoginWarning = jest.fn().mockResolvedValue(undefined);
+    const deps = makeMocks({
+      findByIdentifier: jest.fn().mockResolvedValue(null),
+      sendLoginWarning,
+    });
+    const useCase = new AuthenticateUserUseCase(deps);
+
+    await expect(
+      useCase.execute({ identifier: "inexistente", password: "qualquer", requestId: "req-email-2" }),
+    ).rejects.toThrow(AuthenticationError);
+
+    await Promise.resolve();
+    expect(sendLoginWarning).not.toHaveBeenCalled();
+  });
+
+  it("(c) falha no envio de email nao bloqueia resposta HTTP — lanca AuthenticationError mesmo com erro de email (DT-4)", async () => {
+    const sendLoginWarning = jest.fn().mockRejectedValue(new Error("SMTP timeout"));
+    const deps = makeMocks({
+      verify: jest.fn().mockResolvedValue(false),
+      sendLoginWarning,
+    });
+    const useCase = new AuthenticateUserUseCase(deps);
+
+    // Deve lancar AuthenticationError normalmente — falha de email nao propaga
+    await expect(
+      useCase.execute({ identifier: "alice", password: "SenhaErrada!", requestId: "req-email-3" }),
+    ).rejects.toThrow(AuthenticationError);
   });
 });

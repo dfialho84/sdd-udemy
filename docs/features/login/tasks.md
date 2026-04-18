@@ -227,7 +227,7 @@
 
 ### T-21: Implementar rejeição de `identifier` vazio no `LoginRouteHandler`
 
-- [ ] No `LoginRouteHandler` (adapter), usar o schema Zod de validação (T-02) para detectar `identifier` vazio antes de invocar o `AuthenticateUserUseCase`. Retornar HTTP 401 com mensagem "Usuário ou senha incorretos" sem chegar ao Domain.
+- [x] No `LoginRouteHandler` (adapter), usar o schema Zod de validação (T-02) para detectar `identifier` vazio antes de invocar o `AuthenticateUserUseCase`. Retornar HTTP 401 com mensagem "Usuário ou senha incorretos" sem chegar ao Domain.
 
 **Rastreabilidade:** REQ-6 · NFR-6
 **Depende de:** T-02 · T-14
@@ -237,7 +237,7 @@
 
 ### T-22: Cobrir UT-8 — `authorize` callback com `identifier` vazio
 
-- [ ] Escrever teste unitário para o `authorize` callback garantindo que `identifier` vazio resulta em retorno `null` ao next-auth (que produzirá 401) sem invocar `AuthenticateUserUseCase`.
+- [x] Escrever teste unitário para o `authorize` callback garantindo que `identifier` vazio resulta em retorno `null` ao next-auth (que produzirá 401) sem invocar `AuthenticateUserUseCase`.
 
 **Rastreabilidade:** REQ-6 · NFR-6 · Scenario: "Login com identificador vazio"
 **Depende de:** —
@@ -290,7 +290,7 @@
 
 ### T-26: Criar migration das tabelas `login_attempts` e `login_blocks`
 
-- [ ] Criar a migration Drizzle que cria as tabelas `login_attempts` (id UUID, identifier string, success boolean, created_at timestamp) e `login_blocks` (id UUID, identifier string, blocked_until timestamp, created_at timestamp). Adicionar índice em `identifier` em ambas as tabelas para performance das consultas de janela deslizante (NFR-1).
+- [x] Criar a migration Drizzle que cria as tabelas `login_attempts` (id UUID, identifier string, success boolean, created_at timestamp) e `login_blocks` (id UUID, identifier string, blocked_until timestamp, created_at timestamp). Adicionar índice em `identifier` em ambas as tabelas para performance das consultas de janela deslizante (NFR-1).
 
 **Rastreabilidade:** REQ-8 · REQ-9 · NFR-1
 **Depende de:** T-24
@@ -300,7 +300,7 @@
 
 ### T-27: Implementar `DrizzleLoginAttemptRepository.save`
 
-- [ ] Implementar o método `save` no adapter `DrizzleLoginAttemptRepository`: persiste uma tentativa de autenticação (identifier, success, created_at) na tabela `login_attempts` via Drizzle + MySQL.
+- [x] Implementar o método `save` no adapter `DrizzleLoginAttemptRepository`: persiste uma tentativa de autenticação (identifier, success, created_at) na tabela `login_attempts` via Drizzle + MySQL.
 
 **Rastreabilidade:** REQ-13 · NFR-7
 **Depende de:** T-25 · T-26
@@ -310,7 +310,7 @@
 
 ### T-28: Implementar `DrizzleLoginAttemptRepository.countRecentFailures`
 
-- [ ] Implementar o método `countRecentFailures(identifier, windowMinutes)` no adapter `DrizzleLoginAttemptRepository`: consulta a tabela `login_attempts` contando registros com `success = false` para o `identifier` nos últimos `windowMinutes` minutos (janela deslizante).
+- [x] Implementar o método `countRecentFailures(identifier, windowMinutes)` no adapter `DrizzleLoginAttemptRepository`: consulta a tabela `login_attempts` contando registros com `success = false` para o `identifier` nos últimos `windowMinutes` minutos (janela deslizante).
 
 **Rastreabilidade:** REQ-8 · NFR-3
 **Depende de:** T-25 · T-26
@@ -320,7 +320,7 @@
 
 ### T-29: Implementar `DrizzleLoginAttemptRepository.findActiveBlock`
 
-- [ ] Implementar o método `findActiveBlock(identifier)` no adapter `DrizzleLoginAttemptRepository`: consulta a tabela `login_blocks` retornando o registro de bloqueio ativo (com `blocked_until > now`) para o `identifier`, ou `null` se não houver bloqueio.
+- [x] Implementar o método `findActiveBlock(identifier)` no adapter `DrizzleLoginAttemptRepository`: consulta a tabela `login_blocks` retornando o registro de bloqueio ativo (com `blocked_until > now`) para o `identifier`, ou `null` se não houver bloqueio.
 
 **Rastreabilidade:** REQ-9 · REQ-11 · NFR-4
 **Depende de:** T-25 · T-26
@@ -330,7 +330,7 @@
 
 ### T-30: Implementar `DrizzleLoginAttemptRepository.createBlock`
 
-- [ ] Implementar o método `createBlock(identifier, blockedUntil)` no adapter `DrizzleLoginAttemptRepository`: insere registro na tabela `login_blocks` com `blocked_until = now + 15 minutos`.
+- [x] Implementar o método `createBlock(identifier, blockedUntil)` no adapter `DrizzleLoginAttemptRepository`: insere registro na tabela `login_blocks` com `blocked_until = now + 15 minutos`.
 
 **Rastreabilidade:** REQ-9 · NFR-4
 **Depende de:** T-25 · T-26
@@ -340,7 +340,7 @@
 
 ### T-31: Implementar regras de domínio em `LoginDomain`
 
-- [ ] Implementar a classe `LoginDomain` com os métodos: `isBlocked(block: LoginBlock | null): boolean` (verifica se `blocked_until > now`), `shouldActivateBlock(failureCount: number): boolean` (retorna `true` quando `failureCount >= 3`), e `calculateBlockExpiration(from: Date): Date` (retorna `from + 15 minutos`). Sem dependências externas.
+- [x] Implementar a classe `LoginDomain` com os métodos: `isBlocked(block: LoginBlock | null): boolean` (verifica se `blocked_until > now`), `shouldActivateBlock(failureCount: number): boolean` (retorna `true` quando `failureCount >= 3`), e `calculateBlockExpiration(from: Date): Date` (retorna `from + 15 minutos`). Sem dependências externas.
 
 **Rastreabilidade:** REQ-8 · REQ-9 · REQ-11 · REQ-12
 **Depende de:** T-24
@@ -350,7 +350,7 @@
 
 ### T-32: Integrar lógica de bloqueio no `AuthenticateUserUseCase`
 
-- [ ] Expandir `AuthenticateUserUseCase.execute()` para: após falha de autenticação, chamar `LoginAttemptRepository.countRecentFailures` e, se `LoginDomain.shouldActivateBlock` retornar `true`, chamar `LoginAttemptRepository.createBlock` com expiração calculada por `LoginDomain.calculateBlockExpiration`. Lançar erro de bloqueio (429) em vez de 401.
+- [x] Expandir `AuthenticateUserUseCase.execute()` para: após falha de autenticação, chamar `LoginAttemptRepository.countRecentFailures` e, se `LoginDomain.shouldActivateBlock` retornar `true`, chamar `LoginAttemptRepository.createBlock` com expiração calculada por `LoginDomain.calculateBlockExpiration`. Lançar erro de bloqueio (429) em vez de 401.
 
 **Rastreabilidade:** REQ-8 · REQ-9 · NFR-3 · NFR-4
 **Depende de:** T-12 · T-25 · T-31
@@ -360,7 +360,7 @@
 
 ### T-33: Cobrir UT-2 — `LoginDomain.isBlocked()`
 
-- [ ] Escrever testes unitários para `LoginDomain.isBlocked()`: (a) retorna `true` quando `blocked_until > now`, (b) retorna `false` quando `blocked_until < now`, (c) retorna `false` quando `block` é `null`.
+- [x] Escrever testes unitários para `LoginDomain.isBlocked()`: (a) retorna `true` quando `blocked_until > now`, (b) retorna `false` quando `blocked_until < now`, (c) retorna `false` quando `block` é `null`.
 
 **Rastreabilidade:** REQ-9 · REQ-11 · REQ-12
 **Depende de:** —
@@ -370,7 +370,7 @@
 
 ### T-34: Cobrir UT-3 — `LoginDomain.shouldActivateBlock()`
 
-- [ ] Escrever testes unitários para `LoginDomain.shouldActivateBlock()`: (a) retorna `true` quando `failureCount = 3`, (b) retorna `true` quando `failureCount > 3`, (c) retorna `false` quando `failureCount < 3`.
+- [x] Escrever testes unitários para `LoginDomain.shouldActivateBlock()`: (a) retorna `true` quando `failureCount = 3`, (b) retorna `true` quando `failureCount > 3`, (c) retorna `false` quando `failureCount < 3`.
 
 **Rastreabilidade:** REQ-8 · NFR-3
 **Depende de:** —
@@ -380,7 +380,7 @@
 
 ### T-35: Cobrir UT-4 — `LoginDomain.calculateBlockExpiration()`
 
-- [ ] Escrever teste unitário para `LoginDomain.calculateBlockExpiration(from)`: verificar que retorna exatamente `from + 15 minutos`.
+- [x] Escrever teste unitário para `LoginDomain.calculateBlockExpiration(from)`: verificar que retorna exatamente `from + 15 minutos`.
 
 **Rastreabilidade:** REQ-9 · NFR-4
 **Depende de:** —
@@ -400,7 +400,7 @@
 
 ### T-37: Cobrir UT-12 — `execute()` ativa bloqueio após 3 falhas
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `countRecentFailures` retorna 3: verificar que o use case chama `createBlock` com o `blocked_until` correto e lança erro de bloqueio.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `countRecentFailures` retorna 3: verificar que o use case chama `createBlock` com o `blocked_until` correto e lança erro de bloqueio.
 
 **Rastreabilidade:** REQ-9 · NFR-4 · Scenario: "Bloquear após 3 tentativas erradas em 10 minutos"
 **Depende de:** —
@@ -466,7 +466,7 @@
 
 ### T-42: Implementar `DrizzleLoginAttemptRepository.removeBlock`
 
-- [ ] Implementar o método `removeBlock(identifier)` no adapter `DrizzleLoginAttemptRepository`: remove o registro de bloqueio da tabela `login_blocks` para o `identifier` informado.
+- [x] Implementar o método `removeBlock(identifier)` no adapter `DrizzleLoginAttemptRepository`: remove o registro de bloqueio da tabela `login_blocks` para o `identifier` informado.
 
 **Rastreabilidade:** REQ-12
 **Depende de:** T-25 · T-26
@@ -476,7 +476,7 @@
 
 ### T-43: Implementar `DrizzleLoginAttemptRepository.resetFailureCount`
 
-- [ ] Implementar o método `resetFailureCount(identifier)` no adapter `DrizzleLoginAttemptRepository`: remove os registros de tentativas falhas na tabela `login_attempts` para o `identifier` informado, zerando o contador efetivo da janela deslizante.
+- [x] Implementar o método `resetFailureCount(identifier)` no adapter `DrizzleLoginAttemptRepository`: remove os registros de tentativas falhas na tabela `login_attempts` para o `identifier` informado, zerando o contador efetivo da janela deslizante.
 
 **Rastreabilidade:** REQ-12
 **Depende de:** T-25 · T-26
@@ -486,7 +486,7 @@
 
 ### T-44: Implementar remoção de bloqueio expirado no `AuthenticateUserUseCase`
 
-- [ ] Expandir `AuthenticateUserUseCase.execute()` para: quando `findActiveBlock` retorna um bloqueio mas `LoginDomain.isBlocked` retorna `false` (expirado), chamar `removeBlock` e `resetFailureCount` antes de prosseguir com o fluxo normal de autenticação.
+- [x] Expandir `AuthenticateUserUseCase.execute()` para: quando `findActiveBlock` retorna um bloqueio mas `LoginDomain.isBlocked` retorna `false` (expirado), chamar `removeBlock` e `resetFailureCount` antes de prosseguir com o fluxo normal de autenticação.
 
 **Rastreabilidade:** REQ-12
 **Depende de:** T-12 · T-31 · T-42 · T-43
@@ -544,7 +544,7 @@
 
 ### T-49: Criar interface `EmailNotificationPort` (Port outbound)
 
-- [ ] Definir a interface `EmailNotificationPort` na camada Domain com o método `sendLoginWarning(toEmail: string): Promise<void>`. A interface abstrai o mecanismo de envio concreto, mantendo o Domain desacoplado do Nodemailer/SMTP.
+- [x] Definir a interface `EmailNotificationPort` na camada Domain com o método `sendLoginWarning(toEmail: string): Promise<void>`. A interface abstrai o mecanismo de envio concreto, mantendo o Domain desacoplado do Nodemailer/SMTP.
 
 **Rastreabilidade:** REQ-14 · NFR-8
 **Depende de:** —
@@ -554,7 +554,7 @@
 
 ### T-50: Implementar `EmailNotificationAdapter` com `sendLoginWarning` via Nodemailer/Mailhog
 
-- [ ] Implementar o adapter `EmailNotificationAdapter` na camada de infraestrutura, concretizando `EmailNotificationPort`. O método `sendLoginWarning` envia email de aviso de tentativa falha via Nodemailer com SMTP configurado para Mailhog em desenvolvimento. O envio é fire-and-forget (assíncrono sem await no caller) conforme DT-4.
+- [x] Implementar o adapter `EmailNotificationAdapter` na camada de infraestrutura, concretizando `EmailNotificationPort`. O método `sendLoginWarning` envia email de aviso de tentativa falha via Nodemailer com SMTP configurado para Mailhog em desenvolvimento. O envio é fire-and-forget (assíncrono sem await no caller) conforme DT-4.
 
 **Rastreabilidade:** REQ-14 · NFR-8
 **Depende de:** T-49
@@ -564,7 +564,7 @@
 
 ### T-51: Implementar `LoginDomain.shouldSendEmailWarning`
 
-- [ ] Implementar o método `shouldSendEmailWarning(userExists: boolean, passwordCorrect: boolean): boolean` em `LoginDomain`: retorna `true` somente quando `userExists = true` AND `passwordCorrect = false`. Sem dependências externas.
+- [x] Implementar o método `shouldSendEmailWarning(userExists: boolean, passwordCorrect: boolean): boolean` em `LoginDomain`: retorna `true` somente quando `userExists = true` AND `passwordCorrect = false`. Sem dependências externas.
 
 **Rastreabilidade:** REQ-14 · NFR-8
 **Depende de:** T-31
@@ -574,7 +574,7 @@
 
 ### T-52: Integrar envio de email no `AuthenticateUserUseCase`
 
-- [ ] Expandir `AuthenticateUserUseCase.execute()` para: quando a senha estiver incorreta e o usuário existir (`LoginDomain.shouldSendEmailWarning` retornar `true`), chamar `EmailNotificationPort.sendLoginWarning(user.email)` de forma fire-and-forget. Falhas no envio devem ser logadas mas não propagadas como erro (DT-4).
+- [x] Expandir `AuthenticateUserUseCase.execute()` para: quando a senha estiver incorreta e o usuário existir (`LoginDomain.shouldSendEmailWarning` retornar `true`), chamar `EmailNotificationPort.sendLoginWarning(user.email)` de forma fire-and-forget. Falhas no envio devem ser logadas mas não propagadas como erro (DT-4).
 
 **Rastreabilidade:** REQ-14 · NFR-8
 **Depende de:** T-12 · T-49 · T-51
@@ -584,7 +584,7 @@
 
 ### T-53: Cobrir UT-5 — `LoginDomain.shouldSendEmailWarning()`
 
-- [ ] Escrever testes unitários para `LoginDomain.shouldSendEmailWarning()`: (a) retorna `true` quando usuário existe e senha incorreta, (b) retorna `false` quando usuário não existe, (c) retorna `false` quando senha correta.
+- [x] Escrever testes unitários para `LoginDomain.shouldSendEmailWarning()`: (a) retorna `true` quando usuário existe e senha incorreta, (b) retorna `false` quando usuário não existe, (c) retorna `false` quando senha correta.
 
 **Rastreabilidade:** REQ-14 · NFR-8
 **Depende de:** —
@@ -594,7 +594,7 @@
 
 ### T-54: Cobrir UT-6 — `execute()` dispara email apenas para conta existente com senha incorreta
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()`: (a) verificar que `EmailNotificationPort.sendLoginWarning` é chamado quando usuário existe e senha incorreta; (b) verificar que não é chamado quando usuário não existe; (c) verificar que não bloqueia a resposta HTTP mesmo se o adapter lançar exceção.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()`: (a) verificar que `EmailNotificationPort.sendLoginWarning` é chamado quando usuário existe e senha incorreta; (b) verificar que não é chamado quando usuário não existe; (c) verificar que não bloqueia a resposta HTTP mesmo se o adapter lançar exceção.
 
 **Rastreabilidade:** REQ-14 · NFR-8 · Scenario: "Email de aviso para senha incorreta"
 **Depende de:** —
