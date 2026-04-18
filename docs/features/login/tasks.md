@@ -101,7 +101,7 @@
 
 ### T-10: Cobrir UT-1 — `Argon2PasswordVerifier.verify()`
 
-- [ ] Escrever testes unitários para `Argon2PasswordVerifier.verify()`: (a) retorna `true` para senha correta, (b) retorna `false` para senha incorreta, (c) não lança exceção para hash malformado.
+- [x] Escrever testes unitários para `Argon2PasswordVerifier.verify()`: (a) retorna `true` para senha correta, (b) retorna `false` para senha incorreta, (c) não lança exceção para hash malformado.
 
 **Rastreabilidade:** REQ-2 · NFR-6 · Scenario: "Login bem-sucedido com usuário"
 **Depende de:** —
@@ -111,7 +111,7 @@
 
 ### T-11: Cobrir IT-7 — Integração `Argon2PasswordVerifier` com hash real
 
-- [ ] Escrever teste de integração que gera um hash argon2id com os parâmetros definidos (64 MB, 3 iterações, paralelismo 2) e verifica que `Argon2PasswordVerifier.verify()` retorna `true` para a senha original e `false` para outra senha.
+- [x] Escrever teste de integração que gera um hash argon2id com os parâmetros definidos (64 MB, 3 iterações, paralelismo 2) e verifica que `Argon2PasswordVerifier.verify()` retorna `true` para a senha original e `false` para outra senha.
 
 **Rastreabilidade:** REQ-2 · NFR-6
 **Depende de:** —
