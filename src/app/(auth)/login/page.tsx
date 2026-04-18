@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { signIn, getSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 // Mapeamento de codigos de erro do next-auth para mensagens exibidas ao usuario (NFR-6)
@@ -49,13 +50,34 @@ export default function LoginPage() {
     },
   });
 
-  async function onSubmit(_: LoginFormValues) {
+  async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      // Delegacao ao next-auth sera implementada em T-13
-      // Por ora, apenas simula o estado de loading
-    } finally {
+      // Delega ao next-auth que invoca o authorize callback (T-13).
+      // callbackUrl sera /users/<id> — o redirect callback do next-auth (T-15)
+      // redireciona para a URL correta apos sessao criada.
+      const result = await signIn("credentials", {
+        identifier: data.identifier,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (!result || result.error) {
+        const errorCode = result?.error ?? "CredentialsSignin";
+        const message =
+          ERROR_MESSAGES[errorCode] ?? "Usuário ou senha incorretos";
+        setErrorMessage(message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Autenticacao bem-sucedida — le a sessao para obter o id e redireciona (REQ-4, T-15, NFR-2)
+      const session = await getSession();
+      const userId = session?.user?.id;
+      window.location.href = userId ? `/users/${userId}` : "/";
+    } catch {
+      setErrorMessage("Usuário ou senha incorretos");
       setIsLoading(false);
     }
   }

@@ -135,7 +135,7 @@
 
 ### T-13: Implementar `NextAuthSessionAdapter` e configurar `authorize` callback
 
-- [ ] Configurar o `authorize` callback do next-auth em `app/api/auth/[...nextauth]/route.ts` como adapter fino: validar apenas que `identifier` não está vazio (schema Zod), delegar integralmente ao `AuthenticateUserUseCase` via Port, e retornar o objeto de usuário ao next-auth para criação da sessão. Nenhuma regra de negócio no callback.
+- [x] Configurar o `authorize` callback do next-auth em `app/api/auth/[...nextauth]/route.ts` como adapter fino: validar apenas que `identifier` não está vazio (schema Zod), delegar integralmente ao `AuthenticateUserUseCase` via Port, e retornar o objeto de usuário ao next-auth para criação da sessão. Nenhuma regra de negócio no callback.
 
 **Rastreabilidade:** REQ-3 · REQ-6
 **Depende de:** T-02 · T-12
@@ -145,7 +145,7 @@
 
 ### T-14: Criar `LoginRouteHandler` para o endpoint `POST /api/auth/callback/credentials`
 
-- [ ] Configurar o `LoginRouteHandler` em `app/api/auth/[...nextauth]/route.ts` exportando o handler do next-auth. Garantir que erros de autenticação (401) e bloqueio (429) seguem a estrutura padronizada `{ código, mensagem, requestId, timestamp }` conforme constitution.md regra 5.
+- [x] Configurar o `LoginRouteHandler` em `app/api/auth/[...nextauth]/route.ts` exportando o handler do next-auth. Garantir que erros de autenticação (401) e bloqueio (429) seguem a estrutura padronizada `{ código, mensagem, requestId, timestamp }` conforme constitution.md regra 5.
 
 **Rastreabilidade:** REQ-3 · REQ-5 · REQ-10
 **Depende de:** T-13
@@ -159,7 +159,7 @@
 
 ### T-15: Configurar redirecionamento pós-autenticação para `/users/<id>`
 
-- [ ] Configurar o `callbackUrl` do next-auth para redirecionar o usuário autenticado para `/users/<id>` após login bem-sucedido. A configuração fica em `NextAuthOptions` no `LoginRouteHandler`.
+- [x] Configurar o `callbackUrl` do next-auth para redirecionar o usuário autenticado para `/users/<id>` após login bem-sucedido. A configuração fica em `NextAuthOptions` no `LoginRouteHandler`.
 
 **Rastreabilidade:** REQ-4 · NFR-2
 **Depende de:** T-13
@@ -183,7 +183,7 @@
 
 ### T-17: Implementar tratamento de erro de autenticação no `AuthenticateUserUseCase`
 
-- [ ] No `AuthenticateUserUseCase`, implementar o comportamento quando o usuário não existe (retorno `null` do `UserRepository`) ou a senha não confere (retorno `false` do `PasswordVerifier`): em ambos os casos, registrar tentativa como `success: false` via `LoginAttemptRepository.save` e lançar erro de autenticação genérico sem diferenciar os casos (NFR-6).
+- [x] No `AuthenticateUserUseCase`, implementar o comportamento quando o usuário não existe (retorno `null` do `UserRepository`) ou a senha não confere (retorno `false` do `PasswordVerifier`): em ambos os casos, registrar tentativa como `success: false` via `LoginAttemptRepository.save` e lançar erro de autenticação genérico sem diferenciar os casos (NFR-6).
 
 **Rastreabilidade:** REQ-5 · NFR-6 · REQ-13
 **Depende de:** T-12
@@ -193,7 +193,7 @@
 
 ### T-18: Cobrir UT-9 — `execute()` com usuário inexistente
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `UserRepository.findByIdentifier` retorna `null`: verificar que o use case registra a tentativa com `success: false`, não chama `PasswordVerifier`, e lança erro de autenticação.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `UserRepository.findByIdentifier` retorna `null`: verificar que o use case registra a tentativa com `success: false`, não chama `PasswordVerifier`, e lança erro de autenticação.
 
 **Rastreabilidade:** REQ-5 · NFR-6 · Scenario: "Login com usuário inexistente"
 **Depende de:** —
@@ -203,7 +203,7 @@
 
 ### T-19: Cobrir UT-10 — `execute()` com senha incorreta
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `PasswordVerifier.verify` retorna `false`: verificar que o use case registra a tentativa com `success: false` e lança erro de autenticação genérico.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `PasswordVerifier.verify` retorna `false`: verificar que o use case registra a tentativa com `success: false` e lança erro de autenticação genérico.
 
 **Rastreabilidade:** REQ-5 · NFR-6 · Scenario: "Login com senha incorreta"
 **Depende de:** —
@@ -390,7 +390,7 @@
 
 ### T-36: Cobrir UT-11 — `execute()` com bloqueio ativo
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `LoginAttemptRepository.findActiveBlock` retorna bloqueio vigente: verificar que o use case lança erro de bloqueio sem chamar `UserRepository` ou `PasswordVerifier`.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `LoginAttemptRepository.findActiveBlock` retorna bloqueio vigente: verificar que o use case lança erro de bloqueio sem chamar `UserRepository` ou `PasswordVerifier`.
 
 **Rastreabilidade:** REQ-11 · NFR-4 · Scenario: "Tentar login durante período de bloqueio"
 **Depende de:** —
@@ -496,7 +496,7 @@
 
 ### T-45: Cobrir UT-13 — `execute()` com bloqueio expirado
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `findActiveBlock` retorna bloqueio com `blocked_until < now`: verificar que o use case chama `removeBlock` e `resetFailureCount` antes de prosseguir com autenticação.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` quando `findActiveBlock` retorna bloqueio com `blocked_until < now`: verificar que o use case chama `removeBlock` e `resetFailureCount` antes de prosseguir com autenticação.
 
 **Rastreabilidade:** REQ-12 · Scenario: "Desbloquear automaticamente após 15 minutos"
 **Depende de:** —
@@ -520,7 +520,7 @@
 
 ### T-47: Implementar log estruturado JSON em todas as tentativas de autenticação
 
-- [ ] No `AuthenticateUserUseCase`, após cada tentativa de autenticação (bem-sucedida ou falha), emitir log estruturado em JSON via OpenTelemetry/Loki com os campos: `timestamp`, `identifier`, `success` (boolean), `requestId`. Obrigatório conforme constitution.md regra 6.
+- [x] No `AuthenticateUserUseCase`, após cada tentativa de autenticação (bem-sucedida ou falha), emitir log estruturado em JSON via OpenTelemetry/Loki com os campos: `timestamp`, `identifier`, `success` (boolean), `requestId`. Obrigatório conforme constitution.md regra 6.
 
 **Rastreabilidade:** REQ-13 · NFR-7
 **Depende de:** T-12
@@ -626,7 +626,7 @@
 
 ### T-57: Cobrir UT-6 — `execute()` login bem-sucedido por username
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` no caminho feliz com username: sem bloqueio ativo, usuário encontrado com status `active`, senha correta — verificar que o use case retorna `{ id, username, email }`.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` no caminho feliz com username: sem bloqueio ativo, usuário encontrado com status `active`, senha correta — verificar que o use case retorna `{ id, username, email }`.
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-13
 **Depende de:** —
@@ -636,7 +636,7 @@
 
 ### T-58: Cobrir UT-7 — `execute()` login bem-sucedido por email
 
-- [ ] Escrever teste unitário para `AuthenticateUserUseCase.execute()` usando endereço de email como `identifier`: `UserRepository.findByIdentifier` busca pelo campo `email` — verificar que o use case retorna `{ id, username, email }`.
+- [x] Escrever teste unitário para `AuthenticateUserUseCase.execute()` usando endereço de email como `identifier`: `UserRepository.findByIdentifier` busca pelo campo `email` — verificar que o use case retorna `{ id, username, email }`.
 
 **Rastreabilidade:** REQ-2 · REQ-3
 **Depende de:** —
