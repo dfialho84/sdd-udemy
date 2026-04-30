@@ -700,7 +700,7 @@
 
 ### T-64: Cobrir ST-1 a ST-5 — Testes de segurança
 
-- [ ] Implementar os 5 testes de segurança descritos na `test-strategy.md`: ST-1 (bloqueio após 3 falhas), ST-2 (mensagem genérica uniforme), ST-3 (timing attack — latência similar para conta existente e inexistente), ST-4 (sessão inválida rejeitada), ST-5 (log estruturado em todas as tentativas). Cada caso pode ser implementado como teste de integração ou E2E conforme a natureza da verificação.
+- [x] Implementar os 5 testes de segurança descritos na `test-strategy.md`: ST-1 (bloqueio após 3 falhas), ST-2 (mensagem genérica uniforme), ST-3 (timing attack — latência similar para conta existente e inexistente), ST-4 (sessão inválida rejeitada), ST-5 (log estruturado em todas as tentativas). Cada caso pode ser implementado como teste de integração ou E2E conforme a natureza da verificação.
 
 **Rastreabilidade:** NFR-3 · NFR-4 · NFR-5 · NFR-6 · NFR-7
 **Depende de:** T-14 · T-32 · T-47
