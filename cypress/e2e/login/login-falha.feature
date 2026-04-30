@@ -1,5 +1,14 @@
 Feature: Login — Credenciais inválidas
 
+  # GH-3 — Login com identificador vazio
+  # Rastreabilidade: T-23 · REQ-6 · REQ-7 · NFR-6 · Scenario: "Login com identificador vazio"
+
+  Scenario: Login com identificador vazio
+    When o usuário tenta fazer login sem preencher o campo de identificador
+    And clica no botão de login
+    Then o sistema exibe mensagem de erro genérica "Usuário ou senha incorretos"
+    And o usuário permanece na página de login
+
   # GH-4 — Login com senha incorreta
   # Rastreabilidade: T-20 · REQ-5 · REQ-7 · NFR-6 · Scenario: "Login com senha incorreta"
 

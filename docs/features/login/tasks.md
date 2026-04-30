@@ -247,7 +247,7 @@
 
 ### T-23: Cobrir E2E — Scenario "Login com identificador vazio"
 
-- [ ] Implementar steps Cypress/Cucumber para o scenario GH-3: submeter formulário sem preencher o campo de identificador, verificar que a mensagem "Usuário ou senha incorretos" é exibida e o usuário permanece na página de login.
+- [x] Implementar steps Cypress/Cucumber para o scenario GH-3: submeter formulário sem preencher o campo de identificador, verificar que a mensagem "Usuário ou senha incorretos" é exibida e o usuário permanece na página de login.
 
 **Rastreabilidade:** REQ-6 · REQ-7 · NFR-6 · Scenario: "Login com identificador vazio"
 **Depende de:** T-14

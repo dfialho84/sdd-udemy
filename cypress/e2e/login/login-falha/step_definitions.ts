@@ -1,11 +1,25 @@
-// Step Definitions — GH-4 + GH-5: Login com senha incorreta e usuario inexistente
-// Rastreabilidade: T-20 · REQ-5 · REQ-7 · NFR-6 · Scenario: "Login com senha incorreta" · Scenario: "Login com usuário inexistente"
+// Step Definitions — GH-3 + GH-4 + GH-5: Login com identificador vazio, senha incorreta e usuario inexistente
+// Rastreabilidade: T-20 · T-23 · REQ-5 · REQ-6 · REQ-7 · NFR-6
+// Scenario: "Login com identificador vazio" · Scenario: "Login com senha incorreta" · Scenario: "Login com usuário inexistente"
 
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 
 // Senha de teste compartilhada — nao usada no fluxo de falha, mas mantida para seed
 const TEST_PASSWORD = "Senha@1234";
 const TEST_PREFIX = `t20-${Date.now()}`;
+
+// ─── GH-3: When tenta login sem preencher o identificador ──────────────────────
+
+When(
+  "o usuário tenta fazer login sem preencher o campo de identificador",
+  () => {
+    cy.visit("/login");
+    cy.get('[data-testid="login-form"]').should("be.visible");
+
+    // Deixa o campo identifier vazio e preenche apenas a senha
+    cy.get('[data-testid="input-password"]').type("Senha@1234");
+  },
+);
 
 // ─── GH-4: Given que o usuário "alice" existe ───────────────────────────────────
 
