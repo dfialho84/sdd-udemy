@@ -248,7 +248,7 @@
 
 ### T-16: Criar interface IRateLimitService (Port de saida)
 
-- [ ] Criar interface `IRateLimitService` na camada Domain com metodo `check(key: string): Promise<{ allowed: boolean; remaining: number; resetAt: Date }>`. O metodo verifica se a chave (ex: IP) excedeu o limite de tentativas configurado.
+- [x] Criar interface `IRateLimitService` na camada Domain com metodo `check(key: string): Promise<{ allowed: boolean; remaining: number; resetAt: Date }>`. O metodo verifica se a chave (ex: IP) excedeu o limite de tentativas configurado.
 
 **Rastreabilidade:** REQ-16
 **Depende de:** --
