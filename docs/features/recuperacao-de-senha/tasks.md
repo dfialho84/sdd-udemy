@@ -290,7 +290,7 @@
 
 ### T-19: Criar endpoint POST /api/auth/password-reset/confirm
 
-- [ ] Criar route handler em `app/api/auth/password-reset/confirm/route.ts` para POST. Validar presenca de token, password e passwordConfirm no body. Validar coincidencia de senhas (T-13) — se divergirem, retornar 400 com `PASSWORDS_MISMATCH`. Delegar a `ResetPasswordUseCase.execute(token, password)`. Mapear erros: 400 para senha fraca (`WEAK_PASSWORD`), 404 para token nao encontrado (`TOKEN_INVALID`), 410 para token expirado (`TOKEN_EXPIRED`). Retornar 200 com `{ message: "Senha redefinida com sucesso" }` em caso de sucesso.
+- [x] Criar route handler em `app/api/auth/password-reset/confirm/route.ts` para POST. Validar presenca de token, password e passwordConfirm no body. Validar coincidencia de senhas (T-13) — se divergirem, retornar 400 com `PASSWORDS_MISMATCH`. Delegar a `ResetPasswordUseCase.execute(token, password)`. Mapear erros: 400 para senha fraca (`WEAK_PASSWORD`), 404 para token nao encontrado (`TOKEN_INVALID`), 410 para token expirado (`TOKEN_EXPIRED`). Retornar 200 com `{ message: "Senha redefinida com sucesso" }` em caso de sucesso.
 
 **Rastreabilidade:** REQ-8 · REQ-9 · REQ-10 · REQ-11 · REQ-12 · REQ-13
 **Depende de:** T-12, T-13
@@ -302,7 +302,7 @@
 
 ### T-20: Implementar AuditLogger para registro estruturado das operacoes de recuperacao
 
-- [ ] Criar `AuditLogger` na camada de infraestrutura com metodo `log(event: AuditEvent)` que registra log estruturado (JSON) via OpenTelemetry/Loki. Eventos obrigatorios: solicitacao bem-sucedida (timestamp + IP), tentativa com email inexistente (timestamp + IP), bloqueio por rate limit (timestamp + IP + contagem), redefinicao concluida (timestamp + IP + userId). Token em texto plano nunca deve aparecer em logs (NFR-3). Logs devem ser retidos por minimo 1 ano (NFR-6).
+- [x] Criar `AuditLogger` na camada de infraestrutura com metodo `log(event: AuditEvent)` que registra log estruturado (JSON) via OpenTelemetry/Loki. Eventos obrigatorios: solicitacao bem-sucedida (timestamp + IP), tentativa com email inexistente (timestamp + IP), bloqueio por rate limit (timestamp + IP + contagem), redefinicao concluida (timestamp + IP + userId). Token em texto plano nunca deve aparecer em logs (NFR-3). Logs devem ser retidos por minimo 1 ano (NFR-6).
 
 **Rastreabilidade:** NFR-6 · REQ-16
 **Depende de:** --
