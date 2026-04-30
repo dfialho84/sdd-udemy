@@ -478,6 +478,71 @@ export default defineConfig({
           return null;
         },
 
+        // T-32: Insere usuario ativo + token valido (GH-3)
+        async seedActiveUserAndPasswordResetToken({
+          userId,
+          username,
+          email,
+          tokenValue,
+        }: {
+          userId: string;
+          username: string;
+          email: string;
+          tokenValue: string;
+        }) {
+          // Remove dados pre-existentes
+          await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+          await db.delete(users).where(eq(users.id, userId));
+          await db.delete(users).where(eq(users.username, username));
+          await db.delete(users).where(eq(users.email, email));
+
+          // Insere usuario active
+          await db.insert(users).values({
+            id: userId,
+            name: `Usuario GH3 Password Reset`,
+            username,
+            email,
+            passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
+            birthDate: new Date("1990-01-01"),
+            status: "active",
+          });
+
+          // Insere token valido (nao expirado, nao usado)
+          const tokenHash = crypto.createHash("sha256").update(tokenValue).digest("hex");
+          const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000); // +12h (REQ-4)
+          const tokenId = crypto.randomUUID();
+
+          await db.insert(passwordResetTokens).values({
+            id: tokenId,
+            userId,
+            tokenHash,
+            expiresAt,
+            usedAt: null,
+          });
+
+          return { userId, tokenId, tokenHash };
+        },
+
+        // T-32: Verifica se senha foi atualizada apos redefinicao (GH-3)
+        async getUserPasswordHash({ userId }: { userId: string }) {
+          const rows = await db
+            .select({ passwordHash: users.passwordHash })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+          return rows[0]?.passwordHash ?? null;
+        },
+
+        // T-32: Verifica se token foi marcado como usado (GH-3)
+        async findTokenUsedAtByUserId({ userId }: { userId: string }) {
+          const rows = await db
+            .select({ usedAt: passwordResetTokens.usedAt })
+            .from(passwordResetTokens)
+            .where(eq(passwordResetTokens.userId, userId))
+            .limit(1);
+          return rows[0]?.usedAt ?? null;
+        },
+
         // T-31: Busca token_hash do password_reset_token pelo user_id (GH-2)
         async findPasswordResetTokenByUserId({ userId }: { userId: string }) {
           const rows = await db

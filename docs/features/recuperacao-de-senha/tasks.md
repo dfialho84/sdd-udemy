@@ -428,7 +428,7 @@
 
 ### T-32: Implementar teste E2E para GH-3 "Redefinir senha com link valido"
 
-- [ ] Implementar step definitions para o cenario GH-3: criar token valido no banco, chamar GET /validate com sucesso, submeter POST /confirm com senha forte e confirmacao, verificar resposta 200 e mensagem de sucesso, verificar redirecionamento para login. Setup: usuario ativo; token valido inserido diretamente no banco.
+- [x] Implementar step definitions para o cenario GH-3: criar token valido no banco, chamar GET /validate com sucesso, submeter POST /confirm com senha forte e confirmacao, verificar resposta 200 e mensagem de sucesso, verificar redirecionamento para login. Setup: usuario ativo; token valido inserido diretamente no banco.
 
 **Rastreabilidade:** Scenario: "Redefinir senha com link valido" · REQ-7 · REQ-8 · REQ-10 · REQ-11
 **Depende de:** --
