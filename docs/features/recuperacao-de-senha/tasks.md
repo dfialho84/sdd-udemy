@@ -86,7 +86,7 @@
 
 ### T-07: Implementar caso de uso RequestPasswordResetUseCase.execute
 
-- [ ] Implementar metodo `execute(email: string)` no caso de uso. Consultar `IUserRepository.findByEmail`: se email existir e conta ativa, gerar token com `crypto.randomBytes(32)` (256 bits), calcular hash SHA-256, definir `expires_at = now + 12h`, persistir via `IPasswordResetTokenRepository.create`, disparar `IEmailService.sendPasswordReset` de forma assincrona (fire-and-forget, DT-3). Se email nao existir, executar o mesmo caminho sem gerar token nem enviar email (anti-enumeracao, REQ-14). Registrar operacao via AuditLogger. Retornar mensagem generica independente do resultado.
+- [x] Implementar metodo `execute(email: string)` no caso de uso. Consultar `IUserRepository.findByEmail`: se email existir e conta ativa, gerar token com `crypto.randomBytes(32)` (256 bits), calcular hash SHA-256, definir `expires_at = now + 12h`, persistir via `IPasswordResetTokenRepository.create`, disparar `IEmailService.sendPasswordReset` de forma assincrona (fire-and-forget, DT-3). Se email nao existir, executar o mesmo caminho sem gerar token nem enviar email (anti-enumeracao, REQ-14). Registrar operacao via AuditLogger. Retornar mensagem generica independente do resultado.
 
 **Rastreabilidade:** REQ-4 · REQ-5 · REQ-14 · REQ-2 · NFR-3
 **Depende de:** T-05, T-08, T-20
