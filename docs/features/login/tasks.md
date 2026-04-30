@@ -670,7 +670,7 @@
 
 ### T-61: Cobrir PT-1 — Latência de autenticação bem-sucedida (k6)
 
-- [ ] Criar script k6 que envia 100 req/s de `POST /api/auth/callback/credentials` com credenciais válidas durante 60 segundos e verifica que p95 da latência é menor ou igual a 2000 ms.
+- [x] Criar script k6 que envia 100 req/s de `POST /api/auth/callback/credentials` com credenciais válidas durante 60 segundos e verifica que p95 da latência é menor ou igual a 2000 ms.
 
 **Rastreabilidade:** NFR-1
 **Depende de:** T-14
