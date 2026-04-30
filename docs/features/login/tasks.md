@@ -680,7 +680,7 @@
 
 ### T-62: Cobrir PT-2 — Latência de redirecionamento pós-autenticação (k6)
 
-- [ ] Criar script k6 que mede o tempo entre a resposta de autenticação bem-sucedida e o recebimento do redirect para `/users/<id>` e verifica que p95 é menor ou igual a 500 ms.
+- [x] Criar script k6 que mede o tempo entre a resposta de autenticação bem-sucedida e o recebimento do redirect para `/users/<id>` e verifica que p95 é menor ou igual a 500 ms.
 
 **Rastreabilidade:** NFR-2
 **Depende de:** T-14 · T-15
