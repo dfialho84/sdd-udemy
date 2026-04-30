@@ -110,7 +110,7 @@
 
 ### T-09: Implementar adapter EmailServiceAdapter com envio assincrono
 
-- [ ] Implementar `EmailServiceAdapter` que implementa `IEmailService`. Montar link `https://<host>/auth/password-reset?token=<token>` e enviar via SMTP ou Resend. Envio deve ser assincrono (fire-and-forget, DT-3) — nao bloquear a resposta HTTP. Token nunca deve aparecer em logs (NFR-3). Usar configuracao via variaveis de ambiente para provedor de email. Falhas de envio devem ser capturadas e registradas via AuditLogger sem propagar ao usuario.
+- [x] Implementar `EmailServiceAdapter` que implementa `IEmailService`. Montar link `https://<host>/auth/password-reset?token=<token>` e enviar via SMTP ou Resend. Envio deve ser assincrono (fire-and-forget, DT-3) — nao bloquear a resposta HTTP. Token nunca deve aparecer em logs (NFR-3). Usar configuracao via variaveis de ambiente para provedor de email. Falhas de envio devem ser capturadas e registradas via AuditLogger sem propagar ao usuario.
 
 **Rastreabilidade:** REQ-5 · NFR-1 · NFR-3
 **Depende de:** T-08
