@@ -188,7 +188,7 @@
 
 ### T-12: Implementar caso de uso ResetPasswordUseCase.execute
 
-- [ ] Implementar metodo `execute(token: string, password: string)` no caso de uso. Calcular hash SHA-256 do token. Consultar `IPasswordResetTokenRepository.findByHash`. Validar token: se nao encontrado retornar `TOKEN_INVALID`; se expirado retornar `TOKEN_EXPIRED`; se ja usado retornar `TOKEN_INVALID`. Validar forca da senha (tamanho minimo, caracteres especiais, maiusculas, minusculas, numeros) — se nao atender, retornar `WEAK_PASSWORD` com criterios nao atendidos. Gerar hash da nova senha (bcrypt). Atualizar `users.password_hash` via `IUserRepository.updatePassword`. Invalidar todas as sessoes via `IUserRepository.invalidateAllSessions`. Invalidar token via `IPasswordResetTokenRepository.markAsUsed`. Registrar via AuditLogger.
+- [x] Implementar metodo `execute(token: string, password: string)` no caso de uso. Calcular hash SHA-256 do token. Consultar `IPasswordResetTokenRepository.findByHash`. Validar token: se nao encontrado retornar `TOKEN_INVALID`; se expirado retornar `TOKEN_EXPIRED`; se ja usado retornar `TOKEN_INVALID`. Validar forca da senha (tamanho minimo, caracteres especiais, maiusculas, minusculas, numeros) — se nao atender, retornar `WEAK_PASSWORD` com criterios nao atendidos. Gerar hash da nova senha (bcrypt). Atualizar `users.password_hash` via `IUserRepository.updatePassword`. Invalidar todas as sessoes via `IUserRepository.invalidateAllSessions`. Invalidar token via `IPasswordResetTokenRepository.markAsUsed`. Registrar via AuditLogger.
 
 **Rastreabilidade:** REQ-10 · REQ-8 · REQ-6 · NFR-4
 **Depende de:** T-05, T-06

@@ -41,4 +41,18 @@ export interface UserRepository {
    * Utilizado após confirmação bem-sucedida do token (REQ-10).
    */
   activate(id: string): Promise<void>;
+
+  /**
+   * Atualiza o password_hash do usuário.
+   * Utilizado apos redefinicao de senha bem-sucedida (REQ-10).
+   * Rastreabilidade: REQ-10 · T-12
+   */
+  updatePassword(userId: string, passwordHash: string): Promise<void>;
+
+  /**
+   * Invalida todas as sessoes ativas do usuario.
+   * Utilizado apos redefinicao de senha (REQ-10).
+   * Rastreabilidade: REQ-10 · T-12
+   */
+  invalidateAllSessions(userId: string): Promise<void>;
 }

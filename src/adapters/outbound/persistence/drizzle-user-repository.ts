@@ -4,7 +4,7 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, confirmationTokens } from "@/lib/db/schema";
+import { users, confirmationTokens, passwordResetTokens } from "@/lib/db/schema";
 import { User } from "@/domain/entities/user";
 import type { UserRepository, CreateUserInput } from "@/domain/ports/user-repository";
 
@@ -84,6 +84,30 @@ export class DrizzleUserRepository implements UserRepository {
    */
   async activate(id: string): Promise<void> {
     await db.update(users).set({ status: "active" }).where(eq(users.id, id));
+  }
+
+  /**
+   * Atualiza o password_hash do usuario.
+   * Rastreabilidade: REQ-10 · T-12
+   */
+  async updatePassword(userId: string, passwordHash: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, userId));
+  }
+
+  /**
+   * Invalida todas as sessoes ativas do usuario removendo tokens de recuperacao.
+   * Para JWT sessions (strategy: "jwt"), nao ha tabela de sessoes para deletar.
+   * Quando a strategy for alterada para "database", implementar delecao da tabela sessions.
+   * Rastreabilidade: REQ-10 · T-12 · DT-4
+   */
+  async invalidateAllSessions(userId: string): Promise<void> {
+    // Remove tokens de recuperacao associados ao usuario (medida de seguranca adicional)
+    await db
+      .delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.userId, userId));
   }
 
   /** Converte o registro do banco na entidade de domínio. */
