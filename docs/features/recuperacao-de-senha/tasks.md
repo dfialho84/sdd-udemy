@@ -152,7 +152,7 @@
 
 ### T-14: Criar componente de UI da pagina de redefinicao de senha
 
-- [ ] Criar pagina em `app/(auth)/redefinir-senha/page.tsx` com formulario contendo campos de nova senha e confirmacao, e botao "Redefinir senha" (`variant="default"`). Exibir mensagens de erro inline para senhas nao coincidentes e senha fraca. Utilizar Input do design-system com `type="password"`. Exibir criterios de forca da senha validados em tempo real.
+- [x] Criar pagina em `app/(auth)/redefinir-senha/page.tsx` com formulario contendo campos de nova senha e confirmacao, e botao "Redefinir senha" (`variant="default"`). Exibir mensagens de erro inline para senhas nao coincidentes e senha fraca. Utilizar Input do design-system com `type="password"`. Exibir criterios de forca da senha validados em tempo real.
 
 **Rastreabilidade:** REQ-7 · REQ-9
 **Depende de:** --
