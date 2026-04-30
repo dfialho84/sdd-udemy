@@ -16,7 +16,7 @@
 
 ### T-02: Criar schema de validacao de formato de email (Zod)
 
-- [ ] Criar schema Zod `emailSchema` que valida formato de email seguindo RFC 5322 simplificado. O schema deve rejeitar strings sem `@`, sem dominio, ou com caracteres invalidos. Exportar para uso no route handler e no formulario React.
+- [x] Criar schema Zod `emailSchema` que valida formato de email seguindo RFC 5322 simplificado. O schema deve rejeitar strings sem `@`, sem dominio, ou com caracteres invalidos. Exportar para uso no route handler e no formulario React.
 
 **Rastreabilidade:** REQ-3
 **Depende de:** --
