@@ -477,6 +477,30 @@ export default defineConfig({
           await db.delete(users).where(eq(users.id, userId));
           return null;
         },
+
+        // T-31: Busca token_hash do password_reset_token pelo user_id (GH-2)
+        async findPasswordResetTokenByUserId({ userId }: { userId: string }) {
+          const rows = await db
+            .select({ tokenHash: passwordResetTokens.tokenHash })
+            .from(passwordResetTokens)
+            .where(eq(passwordResetTokens.userId, userId))
+            .limit(1);
+          return rows[0]?.tokenHash ?? null;
+        },
+
+        // T-31: Busca dados completos do token pelo user_id (GH-2 — verificacao de expiracao)
+        async findPasswordResetTokenByUserIdWithTimestamps({ userId }: { userId: string }) {
+          const rows = await db
+            .select({
+              tokenHash: passwordResetTokens.tokenHash,
+              expiresAt: passwordResetTokens.expiresAt,
+              createdAt: passwordResetTokens.createdAt,
+            })
+            .from(passwordResetTokens)
+            .where(eq(passwordResetTokens.userId, userId))
+            .limit(1);
+          return rows[0] ?? null;
+        },
       });
 
       return config;
