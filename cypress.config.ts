@@ -304,6 +304,22 @@ export default defineConfig({
           return { userId, username, email };
         },
 
+        // T-41: Cria bloqueio ativo para um identificador (GH-7 — bloqueio durante periodo de bloqueio)
+        async createLoginBlock({ identifier }: { identifier: string }) {
+          const blockedUntil = new Date(Date.now() + 15 * 60 * 1000); // +15 min
+
+          // Remove bloqueio pre-existente para o mesmo identificador (evita duplicata)
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, identifier));
+
+          await db.insert(loginBlocks).values({
+            id: crypto.randomUUID(),
+            identifier,
+            blockedUntil,
+          });
+
+          return { blockedUntil: blockedUntil.toISOString() };
+        },
+
         // T-40: Consulta bloqueio ativo para um identificador (GH-6, GH-7, GH-8)
         async getLoginBlockForIdentifier({ identifier }: { identifier: string }) {
           const rows = await db

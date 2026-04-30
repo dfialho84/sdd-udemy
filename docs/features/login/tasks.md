@@ -452,7 +452,7 @@
 
 ### T-41: Cobrir E2E — Scenario "Tentar login durante período de bloqueio"
 
-- [ ] Implementar steps Cypress/Cucumber para o scenario GH-7: dado que o identificador "alice" está bloqueado, tentar login e verificar que a mensagem de bloqueio é exibida independentemente das credenciais informadas.
+- [x] Implementar steps Cypress/Cucumber para o scenario GH-7: dado que o identificador "alice" está bloqueado, tentar login e verificar que a mensagem de bloqueio é exibida independentemente das credenciais informadas.
 
 **Rastreabilidade:** REQ-11 · REQ-10 · NFR-4 · Scenario: "Tentar login durante período de bloqueio"
 **Depende de:** T-14 · T-32
