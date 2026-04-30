@@ -410,7 +410,7 @@
 
 ### T-38: Cobrir IT-4 — `LoginAttemptRepository.countRecentFailures`
 
-- [ ] Escrever teste de integração para `DrizzleLoginAttemptRepository.countRecentFailures`: inserir 3 tentativas falhas nos últimos 10 minutos e 1 tentativa falha há mais de 10 minutos, verificar que o método retorna 3 (não 4).
+- [x] Escrever teste de integração para `DrizzleLoginAttemptRepository.countRecentFailures`: inserir 3 tentativas falhas nos últimos 10 minutos e 1 tentativa falha há mais de 10 minutos, verificar que o método retorna 3 (não 4).
 
 **Rastreabilidade:** REQ-8 · NFR-3
 **Depende de:** —
