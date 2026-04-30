@@ -2,6 +2,9 @@
 // IT-1: findByIdentifier por username — Rastreabilidade: REQ-2 · REQ-5
 // IT-2: findByIdentifier por email    — Rastreabilidade: REQ-2
 //
+// T-59: IT-1 coberto
+// T-60: IT-2 coberto
+//
 // Pré-requisito: banco MySQL de teste rodando com migration aplicada.
 // DATABASE_URL deve apontar para o banco de teste.
 
@@ -77,6 +80,52 @@ describe("IT-1: DrizzleLoginUserRepository — findByIdentifier por username", (
 
   it("retorna null quando usuário existe mas status = pending", async () => {
     const result = await repo.findByIdentifier(pendingUsername);
+
+    expect(result).toBeNull();
+  });
+});
+
+// ───── IT-2: findByIdentifier por email ─────
+
+describe("IT-2: DrizzleLoginUserRepository — findByIdentifier por email", () => {
+  const repo = new DrizzleLoginUserRepository();
+
+  const activeEmail = `login-it2-active-${randomUUID().slice(0, 8)}@example.com`;
+  const activeUsername = `login-it2-active-${randomUUID().slice(0, 8)}`;
+  let activeUserId: string;
+
+  beforeAll(async () => {
+    // Insere usuário active para busca por email
+    activeUserId = randomUUID();
+    await db.insert(users).values({
+      id: activeUserId,
+      name: "Login IT2 Active User",
+      username: activeUsername,
+      email: activeEmail,
+      passwordHash: "$argon2id$v=19$it2-login-test",
+      birthDate: new Date("1990-01-01"),
+      avatarKey: null,
+      status: "active",
+    });
+  });
+
+  afterAll(async () => {
+    await db.delete(users).where(eq(users.passwordHash, "$argon2id$v=19$it2-login-test"));
+  });
+
+  it("retorna LoginUser com id, username, email e passwordHash quando email existe e status = active", async () => {
+    const result = await repo.findByIdentifier(activeEmail);
+
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe(activeUserId);
+    expect(result!.username).toBe(activeUsername);
+    expect(result!.email).toBe(activeEmail);
+    expect(result!.passwordHash).toBe("$argon2id$v=19$it2-login-test");
+    expect(result!.status).toBe("active");
+  });
+
+  it("retorna null quando email não existe", async () => {
+    const result = await repo.findByIdentifier("email-inexistente-xyz@example.com");
 
     expect(result).toBeNull();
   });

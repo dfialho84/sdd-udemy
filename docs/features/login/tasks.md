@@ -658,7 +658,7 @@
 
 ### T-60: Cobrir IT-2 — `UserRepository.findByIdentifier` por email
 
-- [ ] Escrever teste de integração para `DrizzleUserRepository.findByIdentifier` por email: (a) usuário `active` encontrado pelo campo `email` retornado corretamente, (b) email inexistente retorna `null`.
+- [x] Escrever teste de integração para `DrizzleUserRepository.findByIdentifier` por email: (a) usuário `active` encontrado pelo campo `email` retornado corretamente, (b) email inexistente retorna `null`.
 
 **Rastreabilidade:** REQ-2
 **Depende de:** —
