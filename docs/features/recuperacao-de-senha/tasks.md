@@ -142,7 +142,7 @@
 
 ### T-11: Criar endpoint GET /api/auth/password-reset/validate
 
-- [ ] Criar route handler em `app/api/auth/password-reset/validate/route.ts` para GET. Extrair token da query string. Validar formato basico do token (nao vazio, tamanho minimo) — se malformado, retornar 400 com `{ code: "TOKEN_INVALID" }`. Delegar a `ValidateResetTokenUseCase.execute`. Mapear erros: 404 para token nao encontrado, 410 para token expirado, 200 com `{ valid: true }` para token valido. Erros estruturados conforme constitution.md regra 5 (code, message, requestId, timestamp).
+- [x] Criar route handler em `app/api/auth/password-reset/validate/route.ts` para GET. Extrair token da query string. Validar formato basico do token (nao vazio, tamanho minimo) — se malformado, retornar 400 com `{ code: "TOKEN_INVALID" }`. Delegar a `ValidateResetTokenUseCase.execute`. Mapear erros: 404 para token nao encontrado, 410 para token expirado, 200 com `{ valid: true }` para token valido. Erros estruturados conforme constitution.md regra 5 (code, message, requestId, timestamp).
 
 **Rastreabilidade:** REQ-7 · REQ-12 · REQ-13
 **Depende de:** T-10
