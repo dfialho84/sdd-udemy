@@ -648,7 +648,7 @@
 
 ### T-59: Cobrir IT-1 — `UserRepository.findByIdentifier` por username
 
-- [ ] Escrever teste de integração para `DrizzleUserRepository.findByIdentifier` por username: (a) usuário `active` retornado corretamente, (b) username inexistente retorna `null`, (c) usuário com `status = pending` retorna `null`.
+- [x] Escrever teste de integração para `DrizzleUserRepository.findByIdentifier` por username: (a) usuário `active` retornado corretamente, (b) username inexistente retorna `null`, (c) usuário com `status = pending` retorna `null`.
 
 **Rastreabilidade:** REQ-2 · REQ-5
 **Depende de:** —
