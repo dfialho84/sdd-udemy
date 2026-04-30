@@ -314,7 +314,7 @@
 
 ### T-21: Cobrir PasswordResetToken com testes unitarios (UT-1, UT-2, UT-3)
 
-- [ ] Implementar testes conforme test-strategy.md: UT-1 (isExpired com token futuro e passado), UT-2 (isUsed com used_at null e preenchido), UT-3 (compareHash com hash correto, incorreto e token vazio/nulo). Nenhum mock necessario — entidade pura.
+- [x] Implementar testes conforme test-strategy.md: UT-1 (isExpired com token futuro e passado), UT-2 (isUsed com used_at null e preenchido), UT-3 (compareHash com hash correto, incorreto e token vazio/nulo). Nenhum mock necessario — entidade pura.
 
 **Rastreabilidade:** REQ-4 · REQ-12 · REQ-6 · NFR-3 · NFR-4 · REQ-13
 **Depende de:** --
@@ -324,7 +324,7 @@
 
 ### T-22: Cobrir RequestPasswordResetUseCase com testes unitarios (UT-4, UT-5)
 
-- [ ] Implementar testes conforme test-strategy.md: UT-4 (email de conta ativa — gera token, persiste hash, chama IEmailService; expires_at = now + 12h). UT-5 (email inexistente — nao gera token, nao envia email, resposta identica ao caminho feliz). Mocks: IUserRepository, IPasswordResetTokenRepository, IEmailService.
+- [x] Implementar testes conforme test-strategy.md: UT-4 (email de conta ativa — gera token, persiste hash, chama IEmailService; expires_at = now + 12h). UT-5 (email inexistente — nao gera token, nao envia email, resposta identica ao caminho feliz). Mocks: IUserRepository, IPasswordResetTokenRepository, IEmailService.
 
 **Rastreabilidade:** REQ-4 · REQ-5 · REQ-2 · REQ-14
 **Depende de:** --
@@ -334,7 +334,7 @@
 
 ### T-23: Cobrir ValidateResetTokenUseCase com testes unitarios (UT-6, UT-7, UT-8)
 
-- [ ] Implementar testes conforme test-strategy.md: UT-6 (token valido retorna `{ valid: true }`), UT-7 (token expirado retorna erro `TOKEN_EXPIRED`), UT-8 (token nao encontrado retorna erro `TOKEN_INVALID`). Mock: IPasswordResetTokenRepository.
+- [x] Implementar testes conforme test-strategy.md: UT-6 (token valido retorna `{ valid: true }`), UT-7 (token expirado retorna erro `TOKEN_EXPIRED`), UT-8 (token nao encontrado retorna erro `TOKEN_INVALID`). Mock: IPasswordResetTokenRepository.
 
 **Rastreabilidade:** REQ-7 · REQ-13 · REQ-12
 **Depende de:** --
@@ -344,7 +344,7 @@
 
 ### T-24: Cobrir ResetPasswordUseCase com testes unitarios (UT-9, UT-10, UT-11, UT-12)
 
-- [ ] Implementar testes conforme test-strategy.md: UT-9 (redefinicao bem-sucedida — chama updatePassword, invalidateAllSessions, markAsUsed). UT-10 (senha fraca — rejeita sem alterar nada). UT-11 (token ja utilizado — rejeita sem alterar). UT-12 (token expirado — rejeita sem alterar). Mocks: IPasswordResetTokenRepository, IUserRepository.
+- [x] Implementar testes conforme test-strategy.md: UT-9 (redefinicao bem-sucedida — chama updatePassword, invalidateAllSessions, markAsUsed). UT-10 (senha fraca — rejeita sem alterar nada). UT-11 (token ja utilizado — rejeita sem alterar). UT-12 (token expirado — rejeita sem alterar). Mocks: IPasswordResetTokenRepository, IUserRepository.
 
 **Rastreabilidade:** REQ-6 · REQ-10 · REQ-8 · NFR-4 · REQ-12
 **Depende de:** --
@@ -366,7 +366,7 @@
 
 ### T-26: Cobrir PasswordResetTokenRepositoryDrizzle com testes de integracao (IT-1, IT-2, IT-3)
 
-- [ ] Implementar testes conforme test-strategy.md: IT-1 (create persiste registro com campos corretos; user_id inexistente viola FK). IT-2 (findByHash retorna registro correto ou null). IT-3 (markAsUsed preenche used_at; operacao idempotente em token ja marcado). Usar banco de dados de teste (MySQL/SQLite). Setup: usuario existente na tabela users.
+- [x] Implementar testes conforme test-strategy.md: IT-1 (create persiste registro com campos corretos; user_id inexistente viola FK). IT-2 (findByHash retorna registro correto ou null). IT-3 (markAsUsed preenche used_at; operacao idempotente em token ja marcado). Usar banco de dados de teste (MySQL/SQLite). Setup: usuario existente na tabela users.
 
 **Rastreabilidade:** REQ-4 · NFR-3 · REQ-7 · REQ-12 · REQ-13 · REQ-6 · NFR-4
 **Depende de:** --
@@ -396,7 +396,7 @@
 
 ### T-29: Cobrir RateLimitServiceAdapter com teste de integracao (IT-6)
 
-- [ ] Implementar teste conforme test-strategy.md: IT-6 testa check() (5 primeiras permitidas; 6a bloqueada; apos 1h IP desbloqueado). Controle de clock via mock de Date.now. Instancia limpa do adapter a cada teste.
+- [x] Implementar teste conforme test-strategy.md: IT-6 testa check() (5 primeiras permitidas; 6a bloqueada; apos 1h IP desbloqueado). Controle de clock via mock de Date.now. Instancia limpa do adapter a cada teste.
 
 **Rastreabilidade:** NFR-5 · REQ-16 · REQ-17
 **Depende de:** --
