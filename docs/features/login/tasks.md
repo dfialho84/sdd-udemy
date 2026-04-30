@@ -604,7 +604,7 @@
 
 ### T-55: Cobrir IT-6 — `EmailNotificationAdapter.sendLoginWarning`
 
-- [ ] Escrever teste de integração para `EmailNotificationAdapter.sendLoginWarning`: chamar o método com um endereço de teste e verificar que o email é recebido no Mailhog (via API do Mailhog ou inspeção direta).
+- [x] Escrever teste de integração para `EmailNotificationAdapter.sendLoginWarning`: chamar o método com um endereço de teste e verificar que o email é recebido no Mailhog (via API do Mailhog ou inspeção direta).
 
 **Rastreabilidade:** REQ-14 · NFR-8
 **Depende de:** —
