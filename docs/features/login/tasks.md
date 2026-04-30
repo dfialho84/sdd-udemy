@@ -430,7 +430,7 @@
 
 ### T-40: Cobrir E2E — Scenario "Bloquear após 3 tentativas erradas em 10 minutos"
 
-- [ ] Implementar steps Cypress/Cucumber para o scenario GH-6: realizar 3 tentativas falhas seguidas, verificar que na quarta tentativa a mensagem "Muitas tentativas fracassadas. Tente novamente em 15 minutos" é exibida e o login é bloqueado.
+- [x] Implementar steps Cypress/Cucumber para o scenario GH-6: realizar 3 tentativas falhas seguidas, verificar que na quarta tentativa a mensagem "Muitas tentativas fracassadas. Tente novamente em 15 minutos" é exibida e o login é bloqueado.
 
 **Rastreabilidade:** REQ-8 · REQ-9 · REQ-10 · NFR-3 · NFR-4 · Scenario: "Bloquear após 3 tentativas erradas em 10 minutos"
 **Depende de:** T-14 · T-32

@@ -6,6 +6,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { mysqlTable, varchar, mysqlEnum, date, timestamp, boolean } from "drizzle-orm/mysql-core";
 import { eq } from "drizzle-orm";
 import argon2 from "argon2";
+import crypto from "node:crypto";
 
 // Schemas inline para uso nas tasks do Cypress (sem importar do src/ que usa aliases Next.js)
 const users = mysqlTable("users", {
@@ -237,6 +238,81 @@ export default defineConfig({
           }
 
           return null;
+        },
+
+        // T-40: Insere usuario active + 3 tentativas fracassadas recentes para GH-6
+        // (Cenario: Bloquear apos 3 tentativas erradas em 10 minutos — REQ-8, REQ-9, NFR-3)
+        async seedFailedLoginAttempts({
+          userId,
+          name,
+          username,
+          email,
+          password,
+          status,
+          birthDate,
+          identifier,
+        }: {
+          userId: string;
+          name: string;
+          username: string;
+          email: string;
+          password: string;
+          status: "active" | "pending";
+          birthDate: string;
+          identifier: string;
+        }) {
+          const passwordHash = await argon2.hash(password, {
+            type: argon2.argon2id,
+            memoryCost: 64 * 1024,
+            timeCost: 3,
+            parallelism: 2,
+          });
+
+          // Limpa dados pre-existentes
+          await db.delete(users).where(eq(users.username, username));
+          await db.delete(users).where(eq(users.email, email));
+          await db.delete(users).where(eq(users.id, userId));
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, username));
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, email));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, username));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, email));
+
+          // Insere o usuario de teste (active)
+          await db.insert(users).values({
+            id: userId,
+            name,
+            username,
+            email,
+            passwordHash,
+            birthDate: new Date(birthDate),
+            status,
+          });
+
+          // Insere 3 tentativas fracassadas nos ultimos 10 minutos
+          // Timestamps: 9 min atras, 7 min atras, 5 min atras
+          const now = Date.now();
+          const offsetsMinutes = [9, 7, 5];
+          for (const offset of offsetsMinutes) {
+            await db.insert(loginAttempts).values({
+              id: crypto.randomUUID(),
+              identifier,
+              success: false,
+              createdAt: new Date(now - offset * 60 * 1000),
+            });
+          }
+
+          return { userId, username, email };
+        },
+
+        // T-40: Consulta bloqueio ativo para um identificador (GH-6, GH-7, GH-8)
+        async getLoginBlockForIdentifier({ identifier }: { identifier: string }) {
+          const rows = await db
+            .select({ blockedUntil: loginBlocks.blockedUntil })
+            .from(loginBlocks)
+            .where(eq(loginBlocks.identifier, identifier))
+            .limit(1);
+          const blockedUntil = rows[0]?.blockedUntil ?? null;
+          return blockedUntil ? new Date(blockedUntil).toISOString() : null;
         },
       });
 

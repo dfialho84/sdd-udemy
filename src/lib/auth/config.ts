@@ -5,6 +5,7 @@
 
 import Credentials from "next-auth/providers/credentials";
 import type { NextAuthConfig } from "next-auth";
+import { CredentialsSignin } from "next-auth";
 import { AuthenticationError, AccountBlockedError } from "@/application/use-cases/authenticate-user.use-case";
 import { authorizeCredentials } from "./authorize";
 import { getAuthDepsFactory } from "./deps";
@@ -27,8 +28,15 @@ export const authConfig: NextAuthConfig = {
             getAuthDepsFactory(),
           );
         } catch (err) {
-          if (err instanceof AuthenticationError || err instanceof AccountBlockedError) {
-            throw err;
+          if (err instanceof AccountBlockedError) {
+            const blockedError = new CredentialsSignin(
+              "Muitas tentativas fracassadas. Tente novamente em 15 minutos",
+            );
+            blockedError.code = "account_blocked";
+            throw blockedError;
+          }
+          if (err instanceof AuthenticationError) {
+            return null;
           }
           throw err;
         }

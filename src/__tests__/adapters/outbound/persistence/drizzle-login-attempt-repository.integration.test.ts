@@ -15,7 +15,7 @@ const ID_IT5 = "it5-test@example.com";
 
 // Fecha a conexão com o banco após todos os describes
 afterAll(async () => {
-  await (db.$client as { end?: () => Promise<void> }).end?.();
+  await (db.$client as { end?: () => void }).end?.();
 });
 
 // ───── IT-4: countRecentFailures ─────

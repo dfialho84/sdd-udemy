@@ -64,7 +64,9 @@ export default function LoginPage() {
       });
 
       if (!result || result.error) {
-        const errorCode = result?.error ?? "CredentialsSignin";
+        // Prefere o codigo customizado do CredentialsSignin (ex: "account_blocked")
+        // sobre o tipo generico "CredentialsSignin" para mensagens especificas (REQ-10, REQ-11)
+        const errorCode = result?.code ?? result?.error ?? "CredentialsSignin";
         const message =
           ERROR_MESSAGES[errorCode] ?? "Usuário ou senha incorretos";
         setErrorMessage(message);
