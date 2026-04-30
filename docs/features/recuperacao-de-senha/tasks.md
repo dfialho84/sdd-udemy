@@ -56,7 +56,7 @@
 
 ### T-04: Criar migration da tabela password_reset_tokens
 
-- [ ] Criar migration Drizzle com schema `password_reset_tokens` contendo campos: `id` (UUID, PK), `user_id` (UUID, FK->users.id), `token_hash` (VARCHAR 255, NOT NULL), `expires_at` (TIMESTAMP, NOT NULL), `used_at` (TIMESTAMP, nullable), `created_at` (TIMESTAMP, default NOW). Adicionar constraint de FK para `users.id`.
+- [x] Criar migration Drizzle com schema `password_reset_tokens` contendo campos: `id` (UUID, PK), `user_id` (UUID, FK->users.id), `token_hash` (VARCHAR 255, NOT NULL), `expires_at` (TIMESTAMP, NOT NULL), `used_at` (TIMESTAMP, nullable), `created_at` (TIMESTAMP, default NOW). Adicionar constraint de FK para `users.id`.
 
 **Rastreabilidade:** REQ-4
 **Depende de:** --

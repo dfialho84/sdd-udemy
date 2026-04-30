@@ -10,6 +10,7 @@ import {
   timestamp,
   boolean,
   index,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 // Tabela users — corresponde à entidade User em src/domain/entities/user.ts
@@ -79,3 +80,21 @@ export const confirmationTokens = mysqlTable("confirmation_tokens", {
   usedAt: timestamp("used_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// Tabela password_reset_tokens — corresponde à entidade PasswordResetToken em src/domain/entities/password-reset-token.ts
+// Rastreabilidade: T-04 · REQ-4 · NFR-3
+export const passwordResetTokens = mysqlTable(
+  "password_reset_tokens",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: varchar("user_id", { length: 36 }).notNull().references(() => users.id),
+    tokenHash: varchar("token_hash", { length: 255 }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("password_reset_tokens_token_hash_idx").on(table.tokenHash),
+    index("password_reset_tokens_user_id_idx").on(table.userId),
+  ],
+);
