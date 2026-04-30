@@ -213,7 +213,7 @@
 
 ### T-20: Cobrir E2E — Scenarios "Login com senha incorreta" e "Login com usuário inexistente"
 
-- [ ] Implementar steps Cypress/Cucumber para os scenarios GH-4 e GH-5: submeter formulário com senha incorreta e com usuário inexistente, verificar que a mensagem "Usuário ou senha incorretos" é exibida e o usuário permanece na página de login.
+- [x] Implementar steps Cypress/Cucumber para os scenarios GH-4 e GH-5: submeter formulário com senha incorreta e com usuário inexistente, verificar que a mensagem "Usuário ou senha incorretos" é exibida e o usuário permanece na página de login.
 
 **Rastreabilidade:** REQ-5 · REQ-7 · NFR-6 · Scenario: "Login com senha incorreta" · Scenario: "Login com usuário inexistente"
 **Depende de:** T-14
