@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { signIn, getSession } from "next-auth/react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 // Mapeamento de codigos de erro do next-auth para mensagens exibidas ao usuario (NFR-6)
@@ -149,6 +150,16 @@ export default function LoginPage() {
                 {errors.password.message}
               </p>
             )}
+          </div>
+
+          {/* Link para recuperacao de senha — T-01 · REQ-1 */}
+          <div className="mb-4 text-right">
+            <Link
+              href="/esqueci-senha"
+              className="text-xs text-blue-600 underline hover:text-blue-800"
+            >
+              Esqueci a senha
+            </Link>
           </div>
 
           {/* Botao de Submit — estado Loading: spinner interno + desabilitado (T-03 · NFR-1) */}

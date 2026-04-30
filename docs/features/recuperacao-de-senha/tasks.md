@@ -6,7 +6,7 @@
 
 ### T-01: Criar componente de UI da pagina de solicitacao de recuperacao de senha
 
-- [ ] Criar pagina em `app/(auth)/esqueci-senha/page.tsx` com formulario contendo campo de email e botao "Enviar link". Utilizar componente Input do design-system para o campo de email e Button `variant="default"` para submissao. Exibir mensagens de erro de validacao inline quando aplicavel. Garantir que o formulario seja exibido ao clicar em "Esqueci a senha" na tela de login.
+- [x] Criar pagina em `app/(auth)/esqueci-senha/page.tsx` com formulario contendo campo de email e botao "Enviar link". Utilizar componente Input do design-system para o campo de email e Button `variant="default"` para submissao. Exibir mensagens de erro de validacao inline quando aplicavel. Garantir que o formulario seja exibido ao clicar em "Esqueci a senha" na tela de login.
 
 **Rastreabilidade:** REQ-1
 **Depende de:** --
