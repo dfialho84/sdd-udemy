@@ -66,7 +66,7 @@
 
 ### T-05: Criar interface IPasswordResetTokenRepository (Port de saida)
 
-- [ ] Criar interface `IPasswordResetTokenRepository` na camada Domain com metodos: `create(data: CreatePasswordResetTokenParams): Promise<void>`, `findByHash(tokenHash: string): Promise<PasswordResetToken | null>`, `markAsUsed(tokenHash: string): Promise<void>`. A interface nao deve importar nada de infraestrutura (Drizzle, Next.js, etc.).
+- [x] Criar interface `IPasswordResetTokenRepository` na camada Domain com metodos: `create(data: CreatePasswordResetTokenParams): Promise<void>`, `findByHash(tokenHash: string): Promise<PasswordResetToken | null>`, `markAsUsed(tokenHash: string): Promise<void>`. A interface nao deve importar nada de infraestrutura (Drizzle, Next.js, etc.).
 
 **Rastreabilidade:** REQ-4 · REQ-6
 **Depende de:** T-03
