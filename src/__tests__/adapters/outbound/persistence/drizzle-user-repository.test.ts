@@ -6,11 +6,16 @@
 // DATABASE_URL deve apontar para o banco de teste.
 
 import { randomUUID } from "crypto";
+import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, passwordResetTokens } from "@/lib/db/schema";
 import { DrizzleUserRepository } from "@/adapters/outbound/persistence/drizzle-user-repository";
 import type { CreateUserInput } from "@/domain/ports/user-repository";
+
+function sha256(plain: string): string {
+  return createHash("sha256").update(plain).digest("hex");
+}
 
 // Helper para gerar um input válido de criação de usuário
 function makeCreateInput(overrides: Partial<CreateUserInput> = {}): CreateUserInput {
@@ -27,9 +32,105 @@ function makeCreateInput(overrides: Partial<CreateUserInput> = {}): CreateUserIn
   };
 }
 
-// Fecha a conexão com o banco após todos os describes
-afterAll(async () => {
-  await (db.$client as { end?: () => Promise<void> }).end?.();
+// ─── IT-4: updatePassword() e invalidateAllSessions() ─────────────────
+
+describe("IT-4: DrizzleUserRepository — updatePassword() e invalidateAllSessions() (REQ-10)", () => {
+  const repo = new DrizzleUserRepository();
+  let activeUserId: string;
+
+  beforeEach(async () => {
+    const input = makeCreateInput({ status: "active" });
+    const user = await repo.create(input);
+    activeUserId = user.id;
+  });
+
+  afterEach(async () => {
+    try {
+      await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, activeUserId));
+      await db.delete(users).where(eq(users.id, activeUserId));
+    } catch {
+      // ignore
+    }
+  });
+
+  describe("updatePassword()", () => {
+    it("atualiza password_hash do usuario no banco", async () => {
+      const newHash = "$argon2id$v=19$m=65536$new-hash";
+
+      await repo.updatePassword(activeUserId, newHash);
+
+      const updated = await repo.findById(activeUserId);
+      expect(updated).not.toBeNull();
+      expect(updated!.passwordHash).toBe(newHash);
+    });
+
+    it("updatePassword nao altera outros campos do usuario", async () => {
+      const before = await repo.findById(activeUserId);
+
+      await repo.updatePassword(activeUserId, "$argon2id$v=19$updated-hash");
+
+      const after = await repo.findById(activeUserId);
+      expect(after!.name).toBe(before!.name);
+      expect(after!.email).toBe(before!.email);
+      expect(after!.username).toBe(before!.username);
+      expect(after!.status).toBe(before!.status);
+    });
+  });
+
+  describe("invalidateAllSessions()", () => {
+    it("remove tokens de recuperacao associados ao usuario", async () => {
+      // Cria tokens de recuperacao para o usuario
+      const tokenHash1 = sha256("token-1");
+      const tokenHash2 = sha256("token-2");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+      await db.insert(passwordResetTokens).values([
+        { id: randomUUID(), userId: activeUserId, tokenHash: tokenHash1, expiresAt, usedAt: null },
+        { id: randomUUID(), userId: activeUserId, tokenHash: tokenHash2, expiresAt, usedAt: null },
+      ]);
+
+      await repo.invalidateAllSessions(activeUserId);
+
+      const remaining = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(eq(passwordResetTokens.userId, activeUserId));
+
+      expect(remaining.length).toBe(0);
+    });
+
+    it("nao remove tokens de outros usuarios", async () => {
+      // Cria usuario adicional
+      const otherInput = makeCreateInput({ status: "active" });
+      const otherUser = await repo.create(otherInput);
+
+      // Cria token para o outro usuario
+      const tokenHash = sha256("other-token");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await db.insert(passwordResetTokens).values({
+        id: randomUUID(),
+        userId: otherUser.id,
+        tokenHash,
+        expiresAt,
+        usedAt: null,
+      });
+
+      // Remove sessoes do usuario principal (nao do outro)
+      await repo.invalidateAllSessions(activeUserId);
+
+      // Token do outro usuario deve permanecer
+      const otherTokens = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(eq(passwordResetTokens.userId, otherUser.id));
+
+      expect(otherTokens.length).toBe(1);
+
+      // Cleanup
+      await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, otherUser.id));
+      await db.delete(users).where(eq(users.id, otherUser.id));
+    });
+  });
 });
 
 describe("IT-1: DrizzleUserRepository — create(), findByEmail() e findByUsername()", () => {

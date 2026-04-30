@@ -376,7 +376,7 @@
 
 ### T-27: Cobrir metodos do IUserRepository usados pela feature com testes de integracao (IT-4)
 
-- [ ] Implementar teste conforme test-strategy.md: IT-4 testa findByEmail (email existente retorna usuario; inexistente retorna null), updatePassword (password_hash atualizado), invalidateAllSessions (todos os registros de sessao removidos). Setup: usuario existente; sessoes ativas pre-criadas.
+- [x] Implementar teste conforme test-strategy.md: IT-4 testa findByEmail (email existente retorna usuario; inexistente retorna null), updatePassword (password_hash atualizado), invalidateAllSessions (todos os registros de sessao removidos). Setup: usuario existente; sessoes ativas pre-criadas.
 
 **Rastreabilidade:** REQ-10 · REQ-14
 **Depende de:** --
@@ -386,7 +386,7 @@
 
 ### T-28: Cobrir EmailServiceAdapter com teste de integracao (IT-5)
 
-- [ ] Implementar teste conforme test-strategy.md: IT-5 testa sendPasswordReset (email enviado com link contendo token via HTTPS; token nao exposto em logs). Provedor mockado (SMTP stub ou Resend sandbox). Setup via variavel de ambiente.
+- [x] Implementar teste conforme test-strategy.md: IT-5 testa sendPasswordReset (email enviado com link contendo token via HTTPS; token nao exposto em logs). Provedor mockado (SMTP stub ou Resend sandbox). Setup via variavel de ambiente.
 
 **Rastreabilidade:** REQ-5 · NFR-3
 **Depende de:** --
