@@ -174,7 +174,7 @@
 
 ### T-13: Implementar validacao de coincidencia de senhas no endpoint POST /api/auth/password-reset/confirm
 
-- [ ] No route handler de confirmacao, validar que `password === passwordConfirm` antes de delegar ao caso de uso. Se divergirem, retornar 400 com `{ code: "PASSWORDS_MISMATCH", message: "As senhas nao coincidem" }` sem invocar `ResetPasswordUseCase`. Validacao deve ocorrer no adapter HTTP inbound (constitution.md regra 4).
+- [x] No route handler de confirmacao, validar que `password === passwordConfirm` antes de delegar ao caso de uso. Se divergirem, retornar 400 com `{ code: "PASSWORDS_MISMATCH", message: "As senhas nao coincidem" }` sem invocar `ResetPasswordUseCase`. Validacao deve ocorrer no adapter HTTP inbound (constitution.md regra 4).
 
 **Rastreabilidade:** REQ-9
 **Depende de:** --
