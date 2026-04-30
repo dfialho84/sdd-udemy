@@ -354,7 +354,7 @@
 
 ### T-25: Cobrir PasswordRecoveryRouteHandler com teste unitario de validacao de entrada (UT-13)
 
-- [ ] Implementar teste conforme test-strategy.md: UT-13 (email invalido retorna 400 sem invocar use case; email ausente retorna 400; password !== passwordConfirm retorna 400 com code PASSWORDS_MISMATCH sem invocar use case). Mocks: RequestPasswordResetUseCase, ResetPasswordUseCase, IRateLimitService.
+- [x] Implementar teste conforme test-strategy.md: UT-13 (email invalido retorna 400 sem invocar use case; email ausente retorna 400; password !== passwordConfirm retorna 400 com code PASSWORDS_MISMATCH sem invocar use case). Mocks: RequestPasswordResetUseCase, ResetPasswordUseCase, IRateLimitService.
 
 **Rastreabilidade:** REQ-3 · REQ-9
 **Depende de:** --
