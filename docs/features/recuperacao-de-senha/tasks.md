@@ -258,7 +258,7 @@
 
 ### T-17: Implementar adapter RateLimitServiceAdapter (in-memory)
 
-- [ ] Implementar `RateLimitServiceAdapter` com `Map<ip, { count, firstAttemptAt }>` e TTL calculado a partir de `firstAttemptAt`. Limite: 5 tentativas por IP por hora (janela deslizante). `check(ip)` incrementa contador e retorna `{ allowed: true }` se < 5, ou `{ allowed: false }` se >= 5. Desbloqueio automatico apos 1 hora da primeira tentativa do intervalo (REQ-17). Troca futura para Redis deve ser possivel sem alterar Domain (interface ja definida).
+- [x] Implementar `RateLimitServiceAdapter` com `Map<ip, { count, firstAttemptAt }>` e TTL calculado a partir de `firstAttemptAt`. Limite: 5 tentativas por IP por hora (janela deslizante). `check(ip)` incrementa contador e retorna `{ allowed: true }` se < 5, ou `{ allowed: false }` se >= 5. Desbloqueio automatico apos 1 hora da primeira tentativa do intervalo (REQ-17). Troca futura para Redis deve ser possivel sem alterar Domain (interface ja definida).
 
 **Rastreabilidade:** REQ-16 · REQ-17 · NFR-5
 **Depende de:** T-16
