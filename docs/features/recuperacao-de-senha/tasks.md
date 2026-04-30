@@ -278,7 +278,7 @@
 
 ### T-18: Criar endpoint POST /api/auth/password-reset/request
 
-- [ ] Criar route handler em `app/api/auth/password-reset/route.ts` para POST `/request`. Validar formato do email com schema Zod — se invalido, retornar 400. Aplicar rate limiting via `IRateLimitService.check(ip)` — se bloqueado, retornar 429 com `{ code: "RATE_LIMIT_EXCEEDED", message: "Muitas tentativas de recuperacao. Tente novamente em 1 hora" }` e registrar bloqueio no AuditLogger. Delegar a `RequestPasswordResetUseCase.execute(email)`. Retornar 200 com mensagem generica e link para pagina de cadastro (REQ-15). Erros estruturados conforme constitution.md regra 5 (code, message, requestId, timestamp).
+- [x] Criar route handler em `app/api/auth/password-reset/route.ts` para POST `/request`. Validar formato do email com schema Zod — se invalido, retornar 400. Aplicar rate limiting via `IRateLimitService.check(ip)` — se bloqueado, retornar 429 com `{ code: "RATE_LIMIT_EXCEEDED", message: "Muitas tentativas de recuperacao. Tente novamente em 1 hora" }` e registrar bloqueio no AuditLogger. Delegar a `RequestPasswordResetUseCase.execute(email)`. Retornar 200 com mensagem generica e link para pagina de cadastro (REQ-15). Erros estruturados conforme constitution.md regra 5 (code, message, requestId, timestamp).
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-15 · REQ-16
 **Depende de:** T-07, T-17
