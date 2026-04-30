@@ -3,8 +3,9 @@ import createBundler from "@bahmutov/cypress-esbuild-preprocessor";
 import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-preprocessor";
 import createEsbuildPlugin from "@badeball/cypress-cucumber-preprocessor/esbuild";
 import { drizzle } from "drizzle-orm/mysql2";
-import { mysqlTable, varchar, mysqlEnum, date, timestamp } from "drizzle-orm/mysql-core";
+import { mysqlTable, varchar, mysqlEnum, date, timestamp, boolean } from "drizzle-orm/mysql-core";
 import { eq } from "drizzle-orm";
+import argon2 from "argon2";
 
 // Schemas inline para uso nas tasks do Cypress (sem importar do src/ que usa aliases Next.js)
 const users = mysqlTable("users", {
@@ -26,6 +27,20 @@ const confirmationTokens = mysqlTable("confirmation_tokens", {
   token: varchar("token", { length: 64 }).notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+const loginAttempts = mysqlTable("login_attempts", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  identifier: varchar("identifier", { length: 255 }).notNull(),
+  success: boolean("success").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+const loginBlocks = mysqlTable("login_blocks", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  identifier: varchar("identifier", { length: 255 }).notNull(),
+  blockedUntil: timestamp("blocked_until").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -153,6 +168,75 @@ export default defineConfig({
             .from(users)
             .where(eq(users.id, userId));
           return rows[0]?.status ?? null;
+        },
+
+        // T-16: Insere usuario active com hash argon2id para testes E2E de login (GH-1, GH-2)
+        async seedLoginUser({
+          userId,
+          name,
+          username,
+          email,
+          password,
+          status,
+          birthDate,
+        }: {
+          userId: string;
+          name: string;
+          username: string;
+          email: string;
+          password: string;
+          status: "active" | "pending";
+          birthDate: string;
+        }) {
+          // Gera hash argon2id com os mesmos parametros de producao (64 MB, 3 iteracoes, paralelismo 2)
+          const passwordHash = await argon2.hash(password, {
+            type: argon2.argon2id,
+            memoryCost: 64 * 1024, // 64 MB
+            timeCost: 3,           // 3 iteracoes
+            parallelism: 2,
+          });
+
+          // Remove usuario pre-existente com mesmo username/email (evita unique constraint)
+          await db.delete(users).where(eq(users.username, username));
+          await db.delete(users).where(eq(users.email, email));
+          await db.delete(users).where(eq(users.id, userId));
+          // Remove tentativas e bloqueios pre-existentes para o mesmo username/email
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, username));
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, email));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, username));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, email));
+
+          // Insere o usuario de teste
+          await db.insert(users).values({
+            id: userId,
+            name,
+            username,
+            email,
+            passwordHash,
+            birthDate: new Date(birthDate),
+            status,
+          });
+
+          return { userId, username, email };
+        },
+
+        // T-16: Remove usuarios de teste pelo prefixo do userId
+        async cleanupLoginTestUsers({ userIdPrefix }: { userIdPrefix: string }) {
+          const allUsers = await db
+            .select({ id: users.id, username: users.username, email: users.email })
+            .from(users);
+          const toDelete = allUsers.filter((u) => u.id.startsWith(userIdPrefix));
+
+          for (const user of toDelete) {
+            await db.delete(loginAttempts).where(eq(loginAttempts.identifier, user.username));
+            await db.delete(loginAttempts).where(eq(loginAttempts.identifier, user.email));
+            await db.delete(loginBlocks).where(eq(loginBlocks.identifier, user.username));
+            await db.delete(loginBlocks).where(eq(loginBlocks.identifier, user.email));
+            await db.delete(confirmationTokens).where(eq(confirmationTokens.userId, user.id));
+            await db.delete(users).where(eq(users.id, user.id));
+          }
+
+          return null;
         },
       });
 

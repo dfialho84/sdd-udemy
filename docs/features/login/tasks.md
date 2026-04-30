@@ -169,7 +169,7 @@
 
 ### T-16: Cobrir E2E — Scenarios "Login bem-sucedido com usuário" e "Login bem-sucedido com email"
 
-- [ ] Implementar steps Cypress/Cucumber para os scenarios GH-1 e GH-2: preencher formulário com credenciais válidas (por username e por email), submeter, verificar criação de sessão e redirecionamento para `/users/<id>`.
+- [x] Implementar steps Cypress/Cucumber para os scenarios GH-1 e GH-2: preencher formulário com credenciais válidas (por username e por email), submeter, verificar criação de sessão e redirecionamento para `/users/<id>`.
 
 **Rastreabilidade:** REQ-2 · REQ-3 · REQ-4 · Scenario: "Login bem-sucedido com usuário" · Scenario: "Login bem-sucedido com email"
 **Depende de:** T-14 · T-15
