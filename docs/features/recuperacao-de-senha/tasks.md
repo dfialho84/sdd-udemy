@@ -202,7 +202,7 @@
 
 ### T-15: Criar componente de UI da pagina de confirmacao de redefinicao
 
-- [ ] Criar componente de tela de confirmacao com mensagem "Senha redefinida com sucesso". Incluir botao/link para tela de login (`Button variant="link"` apontando para `/login`). Utilizar design-system tokens: icone de sucesso, cor foreground para titulo.
+- [x] Criar componente de tela de confirmacao com mensagem "Senha redefinida com sucesso". Incluir botao/link para tela de login (`Button variant="link"` apontando para `/login`). Utilizar design-system tokens: icone de sucesso, cor foreground para titulo.
 
 **Rastreabilidade:** REQ-11
 **Depende de:** --
