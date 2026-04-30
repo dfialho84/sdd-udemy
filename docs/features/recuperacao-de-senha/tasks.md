@@ -132,7 +132,7 @@
 
 ### T-10: Implementar caso de uso ValidateResetTokenUseCase.execute
 
-- [ ] Implementar metodo `execute(token: string)` no caso de uso. Calcular hash SHA-256 do token recebido. Consultar `IPasswordResetTokenRepository.findByHash`. Se token encontrado, `used_at IS NULL` e `expires_at > now`: retorna estado `{ valid: true }`. Se expirado: retorna erro `TOKEN_EXPIRED`. Se nao encontrado: retorna erro `TOKEN_INVALID`.
+- [x] Implementar metodo `execute(token: string)` no caso de uso. Calcular hash SHA-256 do token recebido. Consultar `IPasswordResetTokenRepository.findByHash`. Se token encontrado, `used_at IS NULL` e `expires_at > now`: retorna estado `{ valid: true }`. Se expirado: retorna erro `TOKEN_EXPIRED`. Se nao encontrado: retorna erro `TOKEN_INVALID`.
 
 **Rastreabilidade:** REQ-7 · REQ-12 · REQ-13 · NFR-4
 **Depende de:** T-05
