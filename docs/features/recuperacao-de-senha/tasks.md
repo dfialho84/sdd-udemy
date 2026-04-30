@@ -418,7 +418,7 @@
 
 ### T-31: Implementar teste E2E para GH-2 "Receber email com link valido"
 
-- [ ] Implementar step definitions para o cenario GH-2: chamar POST /api/auth/password-reset/request com email valido, verificar que EmailServiceAdapter foi chamado, verificar que expires_at do token no banco e created_at + 12h. Setup: usuario ativo; stub de email.
+- [x] Implementar step definitions para o cenario GH-2: chamar POST /api/auth/password-reset/request com email valido, verificar que EmailServiceAdapter foi chamado, verificar que expires_at do token no banco e created_at + 12h. Setup: usuario ativo; stub de email.
 
 **Rastreabilidade:** Scenario: "Receber email com link valido" · REQ-4 · REQ-5
 **Depende de:** --
