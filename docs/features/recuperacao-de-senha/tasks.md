@@ -76,7 +76,7 @@
 
 ### T-06: Implementar adapter PasswordResetTokenRepositoryDrizzle
 
-- [ ] Implementar `PasswordResetTokenRepositoryDrizzle` que implementa `IPasswordResetTokenRepository`. `create()` insere registro com user_id, token_hash, expires_at. `findByHash()` busca por token_hash e retorna entidade PasswordResetToken ou null. `markAsUsed()` atualiza used_at para timestamp atual. Usar Drizzle ORM exclusivamente (constitution.md regra 15).
+- [x] Implementar `PasswordResetTokenRepositoryDrizzle` que implementa `IPasswordResetTokenRepository`. `create()` insere registro com user_id, token_hash, expires_at. `findByHash()` busca por token_hash e retorna entidade PasswordResetToken ou null. `markAsUsed()` atualiza used_at para timestamp atual. Usar Drizzle ORM exclusivamente (constitution.md regra 15).
 
 **Rastreabilidade:** REQ-4 · REQ-6 · NFR-3
 **Depende de:** T-04, T-05
