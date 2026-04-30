@@ -614,7 +614,7 @@
 
 ### T-56: Cobrir E2E — Scenario "Email de aviso para senha incorreta"
 
-- [ ] Implementar steps Cypress/Cucumber para o scenario GH-9: submeter formulário com identificador válido e senha incorreta, verificar que o email de aviso é enviado para o endereço cadastrado (via Mailhog), a mensagem "Usuário ou senha incorretos" é exibida e o usuário permanece na página de login.
+- [x] Implementar steps Cypress/Cucumber para o scenario GH-9: submeter formulário com identificador válido e senha incorreta, verificar que o email de aviso é enviado para o endereço cadastrado (via Mailhog), a mensagem "Usuário ou senha incorretos" é exibida e o usuário permanece na página de login.
 
 **Rastreabilidade:** REQ-14 · NFR-8 · Scenario: "Email de aviso para senha incorreta"
 **Depende de:** T-14 · T-52
