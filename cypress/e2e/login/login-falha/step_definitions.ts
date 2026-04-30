@@ -2,11 +2,20 @@
 // Rastreabilidade: T-20 · T-23 · REQ-5 · REQ-6 · REQ-7 · NFR-6
 // Scenario: "Login com identificador vazio" · Scenario: "Login com senha incorreta" · Scenario: "Login com usuário inexistente"
 
-import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
+import { Given, When, Then, Before } from "@badeball/cypress-cucumber-preprocessor";
 
 // Senha de teste compartilhada — nao usada no fluxo de falha, mas mantida para seed
 const TEST_PASSWORD = "Senha@1234";
 const TEST_PREFIX = `t20-${Date.now()}`;
+
+// Identificador fixo usado no GH-5 — precisa ser limpo antes de cada run
+const NONEXISTENT_IDENTIFIER = "usuario_inexistente_abc123xyz";
+
+// GH-5: limpa tentativas e bloqueios acumulados entre runs para o identificador inexistente
+// Executa antes de cada scenario neste arquivo (inofensivo para GH-3 e GH-4)
+Before(() => {
+  cy.task("cleanupLoginIdentifier", { identifier: NONEXISTENT_IDENTIFIER });
+});
 
 // ─── GH-3: When tenta login sem preencher o identificador ──────────────────────
 

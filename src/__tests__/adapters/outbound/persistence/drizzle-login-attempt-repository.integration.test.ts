@@ -1,5 +1,6 @@
 // Testes de integração — DrizzleLoginAttemptRepository
-// Rastreabilidade: T-38 · IT-4 · T-39 · IT-5 · REQ-8 · REQ-9 · REQ-11 · REQ-12 · NFR-3 · NFR-4
+// Rastreabilidade: T-48 · IT-3 · T-38 · IT-4 · T-39 · IT-5
+//                 REQ-8 · REQ-9 · REQ-11 · REQ-12 · REQ-13 · NFR-3 · NFR-4 · NFR-7
 //
 // Pré-requisito: banco MySQL de teste rodando com migration aplicada.
 // DATABASE_URL deve apontar para o banco de teste.
@@ -10,12 +11,102 @@ import { db } from "@/lib/db";
 import { loginAttempts, loginBlocks } from "@/lib/db/schema";
 import { DrizzleLoginAttemptRepository } from "@/adapters/outbound/persistence/drizzle-login-attempt-repository";
 
+const ID_IT3 = "it3-test@example.com";
 const ID_IT4 = "it4-test@example.com";
 const ID_IT5 = "it5-test@example.com";
 
 // Fecha a conexão com o banco após todos os describes
 afterAll(async () => {
   await (db.$client as { end?: () => void }).end?.();
+});
+
+// ───── IT-3: save ─────
+
+describe("IT-3: DrizzleLoginAttemptRepository — save", () => {
+  const repo = new DrizzleLoginAttemptRepository();
+
+  // Limpa registros de teste antes e depois de cada caso
+  beforeEach(async () => {
+    await db.delete(loginAttempts).where(eq(loginAttempts.identifier, ID_IT3));
+  });
+
+  afterEach(async () => {
+    await db.delete(loginAttempts).where(eq(loginAttempts.identifier, ID_IT3));
+  });
+
+  describe("save com success: true", () => {
+    it("insere registro na tabela login_attempts com identifier, success=true e created_at corretos", async () => {
+      // Arrange
+      const now = new Date();
+      const attempt = { identifier: ID_IT3, success: true, created_at: now };
+
+      // Act
+      await repo.save(attempt);
+
+      // Assert: busca o registro inserido diretamente na tabela
+      const rows = await db
+        .select()
+        .from(loginAttempts)
+        .where(eq(loginAttempts.identifier, ID_IT3));
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.identifier).toBe(ID_IT3);
+      expect(rows[0]!.success).toBe(true);
+      // MySQL timestamp pode truncar milissegundos; tolerancia de 2 segundos
+      expect(Math.abs(rows[0]!.createdAt.getTime() - now.getTime())).toBeLessThanOrEqual(2000);
+    });
+  });
+
+  describe("save com success: false", () => {
+    it("insere registro na tabela login_attempts com success=false", async () => {
+      // Arrange
+      const now = new Date();
+      const attempt = { identifier: ID_IT3, success: false, created_at: now };
+
+      // Act
+      await repo.save(attempt);
+
+      // Assert
+      const rows = await db
+        .select()
+        .from(loginAttempts)
+        .where(eq(loginAttempts.identifier, ID_IT3));
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]!.identifier).toBe(ID_IT3);
+      expect(rows[0]!.success).toBe(false);
+      expect(Math.abs(rows[0]!.createdAt.getTime() - now.getTime())).toBeLessThanOrEqual(2000);
+    });
+  });
+
+  describe("save multiplas tentativas", () => {
+    it("insere ambas tentativas — bem-sucedida e fracassada — na tabela", async () => {
+      // Arrange
+      const now = new Date();
+      const successAttempt = { identifier: ID_IT3, success: true, created_at: new Date(now.getTime() - 1000) };
+      const failureAttempt = { identifier: ID_IT3, success: false, created_at: now };
+
+      // Act
+      await repo.save(successAttempt);
+      await repo.save(failureAttempt);
+
+      // Assert: ambos os registros existem
+      const rows = await db
+        .select()
+        .from(loginAttempts)
+        .where(eq(loginAttempts.identifier, ID_IT3));
+
+      expect(rows).toHaveLength(2);
+
+      const successRow = rows.find((r) => r.success === true);
+      const failureRow = rows.find((r) => r.success === false);
+
+      expect(successRow).toBeDefined();
+      expect(failureRow).toBeDefined();
+      expect(successRow!.identifier).toBe(ID_IT3);
+      expect(failureRow!.identifier).toBe(ID_IT3);
+    });
+  });
 });
 
 // ───── IT-4: countRecentFailures ─────

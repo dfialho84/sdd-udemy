@@ -530,7 +530,7 @@
 
 ### T-48: Cobrir IT-3 — `LoginAttemptRepository.save`
 
-- [ ] Escrever teste de integração para `DrizzleLoginAttemptRepository.save`: inserir uma tentativa bem-sucedida e uma fracassada e verificar que ambas aparecem na tabela `login_attempts` com `identifier`, `success` e `created_at` corretos.
+- [x] Escrever teste de integração para `DrizzleLoginAttemptRepository.save`: inserir uma tentativa bem-sucedida e uma fracassada e verificar que ambas aparecem na tabela `login_attempts` com `identifier`, `success` e `created_at` corretos.
 
 **Rastreabilidade:** REQ-13 · NFR-7
 **Depende de:** —

@@ -394,6 +394,13 @@ export default defineConfig({
           return { userId, username, email };
         },
 
+        // GH-5: Limpa tentativas e bloqueios de um identificador especifico (evita bloqueio acumulado entre runs)
+        async cleanupLoginIdentifier({ identifier }: { identifier: string }) {
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, identifier));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, identifier));
+          return null;
+        },
+
         // T-46: Verifica se existe login block para um identificador (GH-8)
         async loginBlockExistsForIdentifier({ identifier }: { identifier: string }) {
           const rows = await db
