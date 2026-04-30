@@ -506,7 +506,7 @@
 
 ### T-46: Cobrir E2E — Scenario "Desbloquear automaticamente após 15 minutos"
 
-- [ ] Implementar steps Cypress/Cucumber para o scenario GH-8: dado que o bloqueio do identificador "alice" expirou, tentar login com senha válida e verificar que o sistema remove o bloqueio, reseta o contador e autentica o usuário com sucesso.
+- [x] Implementar steps Cypress/Cucumber para o scenario GH-8: dado que o bloqueio do identificador "alice" expirou, tentar login com senha válida e verificar que o sistema remove o bloqueio, reseta o contador e autentica o usuário com sucesso.
 
 **Rastreabilidade:** REQ-12 · Scenario: "Desbloquear automaticamente após 15 minutos"
 **Depende de:** T-14 · T-44

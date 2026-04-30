@@ -94,8 +94,9 @@ export class AuthenticateUserUseCase {
     const now = new Date();
 
     // 1. Verificar bloqueio ativo (REQ-9, REQ-11)
-    const block = await loginAttemptRepository.findActiveBlock(identifier);
-    if (block !== null && block.blocked_until > now) {
+    // findActiveBlock so retorna bloqueios com blocked_until > now.
+    const activeBlock = await loginAttemptRepository.findActiveBlock(identifier);
+    if (activeBlock !== null) {
       logger.info(
         {
           timestamp: now.toISOString(),
@@ -109,8 +110,10 @@ export class AuthenticateUserUseCase {
       throw new AccountBlockedError();
     }
 
-    // Se havia bloqueio expirado, limpa (T-44 expandira com removeBlock + resetFailureCount)
-    if (block !== null && block.blocked_until <= now) {
+    // Se havia bloqueio expirado, limpa (T-44, REQ-12)
+    // findAnyBlock retorna qualquer bloqueio (ativo ou expirado).
+    const anyBlock = await loginAttemptRepository.findAnyBlock(identifier);
+    if (anyBlock !== null) {
       await loginAttemptRepository.removeBlock(identifier);
       await loginAttemptRepository.resetFailureCount(identifier);
     }

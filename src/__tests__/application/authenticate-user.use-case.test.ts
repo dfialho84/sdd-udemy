@@ -37,6 +37,7 @@ function makeMocks(overrides: {
   findByIdentifier?: jest.Mock;
   verify?: jest.Mock;
   findActiveBlock?: jest.Mock;
+  findAnyBlock?: jest.Mock;
   save?: jest.Mock;
   countRecentFailures?: jest.Mock;
   createBlock?: jest.Mock;
@@ -56,6 +57,7 @@ function makeMocks(overrides: {
     save: overrides.save ?? jest.fn().mockResolvedValue(undefined),
     countRecentFailures: overrides.countRecentFailures ?? jest.fn().mockResolvedValue(0),
     findActiveBlock: overrides.findActiveBlock ?? jest.fn().mockResolvedValue(null),
+    findAnyBlock: overrides.findAnyBlock ?? jest.fn().mockResolvedValue(null),
     createBlock: overrides.createBlock ?? jest.fn().mockResolvedValue(undefined),
     removeBlock: overrides.removeBlock ?? jest.fn().mockResolvedValue(undefined),
     resetFailureCount: overrides.resetFailureCount ?? jest.fn().mockResolvedValue(undefined),
@@ -325,7 +327,7 @@ describe("UT-12: AuthenticateUserUseCase.execute() — ativar bloqueio apos 3 fa
 // ─── UT-13: Bloqueio expirado (T-45) ─────────────────────────────────────
 
 describe("UT-13: AuthenticateUserUseCase.execute() — bloqueio expirado", () => {
-  it("findActiveBlock retorna bloqueio expirado: chama removeBlock e resetFailureCount antes de autenticar", async () => {
+  it("findAnyBlock retorna bloqueio expirado: chama removeBlock e resetFailureCount antes de autenticar", async () => {
     const expiredBlock: LoginBlock = {
       id: "block-uuid-2",
       identifier: "alice",
@@ -337,7 +339,10 @@ describe("UT-13: AuthenticateUserUseCase.execute() — bloqueio expirado", () =>
     const resetFailureCount = jest.fn().mockResolvedValue(undefined);
 
     const deps = makeMocks({
-      findActiveBlock: jest.fn().mockResolvedValue(expiredBlock),
+      // findActiveBlock retorna null — bloqueio expirado nao e ativo
+      findActiveBlock: jest.fn().mockResolvedValue(null),
+      // findAnyBlock retorna o bloqueio expirado — detectado e limpo
+      findAnyBlock: jest.fn().mockResolvedValue(expiredBlock),
       removeBlock,
       resetFailureCount,
     });

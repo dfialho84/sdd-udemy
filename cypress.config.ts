@@ -330,6 +330,99 @@ export default defineConfig({
           const blockedUntil = rows[0]?.blockedUntil ?? null;
           return blockedUntil ? new Date(blockedUntil).toISOString() : null;
         },
+
+        // T-46: Insere usuario active + login block expirado para GH-8
+        // (Scenario: Desbloquear automaticamente apos 15 minutos — REQ-12)
+        async seedExpiredLoginBlockAndUser({
+          userId,
+          username,
+          email,
+          password,
+        }: {
+          userId: string;
+          username: string;
+          email: string;
+          password: string;
+        }) {
+          const passwordHash = await argon2.hash(password, {
+            type: argon2.argon2id,
+            memoryCost: 64 * 1024,
+            timeCost: 3,
+            parallelism: 2,
+          });
+
+          // Limpa dados pre-existentes
+          await db.delete(users).where(eq(users.username, username));
+          await db.delete(users).where(eq(users.email, email));
+          await db.delete(users).where(eq(users.id, userId));
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, username));
+          await db.delete(loginAttempts).where(eq(loginAttempts.identifier, email));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, username));
+          await db.delete(loginBlocks).where(eq(loginBlocks.identifier, email));
+
+          // Insere o usuario de teste (active)
+          await db.insert(users).values({
+            id: userId,
+            name: `Visitante ${username}`,
+            username,
+            email,
+            passwordHash,
+            birthDate: new Date("1990-01-01"),
+            status: "active",
+          });
+
+          // Insere login block com blocked_until expirado (1 minuto no passado)
+          const blockedUntil = new Date(Date.now() - 60 * 1000); // -1 min
+          await db.insert(loginBlocks).values({
+            id: crypto.randomUUID(),
+            identifier: username,
+            blockedUntil,
+          });
+
+          // Insere 3 tentativas fracassadas recentes (devem ser resetadas após login bem-sucedido)
+          const now = Date.now();
+          const offsetsMinutes = [5, 3, 1];
+          for (const offset of offsetsMinutes) {
+            await db.insert(loginAttempts).values({
+              id: crypto.randomUUID(),
+              identifier: username,
+              success: false,
+              createdAt: new Date(now - offset * 60 * 1000),
+            });
+          }
+
+          return { userId, username, email };
+        },
+
+        // T-46: Verifica se existe login block para um identificador (GH-8)
+        async loginBlockExistsForIdentifier({ identifier }: { identifier: string }) {
+          const rows = await db
+            .select({ id: loginBlocks.id })
+            .from(loginBlocks)
+            .where(eq(loginBlocks.identifier, identifier))
+            .limit(1);
+          return rows.length > 0;
+        },
+
+        // T-46: Conta falhas recentes para um identificador (GH-8)
+        async getRecentFailuresCountForIdentifier({
+          identifier,
+          windowMinutes,
+        }: {
+          identifier: string;
+          windowMinutes: number;
+        }) {
+          const since = new Date(Date.now() - windowMinutes * 60 * 1000);
+          const rows = await db
+            .select({ createdAt: loginAttempts.createdAt, success: loginAttempts.success })
+            .from(loginAttempts)
+            .where(eq(loginAttempts.identifier, identifier));
+          // Filtra em JS — apenas tentativas fracassadas na janela
+          const failuresInWindow = rows.filter(
+            (row) => row.success === false && new Date(row.createdAt) >= since,
+          );
+          return failuresInWindow.length;
+        },
       });
 
       return config;

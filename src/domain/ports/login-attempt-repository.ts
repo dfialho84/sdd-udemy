@@ -35,6 +35,16 @@ export interface LoginAttemptRepository {
   findActiveBlock(identifier: string): Promise<LoginBlock | null>;
 
   /**
+   * Retorna o bloqueio mais recente para um identificador,
+   * independentemente de estar ativo ou expirado.
+   * Usado para deteccao de bloqueios expirados que precisam ser removidos (REQ-12).
+   *
+   * @param identifier - username ou email do identificador
+   * @returns LoginBlock mais recente ou null
+   */
+  findAnyBlock(identifier: string): Promise<LoginBlock | null>;
+
+  /**
    * Cria um novo bloqueio para o identificador com a data de expiracao informada.
    * Chamado quando failureCount >= 3 em 10 minutos (REQ-9).
    *

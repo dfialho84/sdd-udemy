@@ -5,7 +5,7 @@
 // REQ-8 · REQ-9 · REQ-11 · REQ-12 · REQ-13 · NFR-1 · NFR-3 · NFR-4 · NFR-7
 
 import { randomUUID } from "crypto";
-import { eq, and, lt, gte, count } from "drizzle-orm";
+import { eq, and, lt, gte, count, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { loginAttempts, loginBlocks } from "@/lib/db/schema";
 import type { LoginAttemptRepository } from "@/domain/ports/login-attempt-repository";
@@ -65,6 +65,31 @@ export class DrizzleLoginAttemptRepository implements LoginAttemptRepository {
           gte(loginBlocks.blockedUntil, now),
         ),
       )
+      .limit(1);
+
+    if (rows.length === 0) return null;
+
+    const row = rows[0]!;
+    return {
+      id: row.id,
+      identifier: row.identifier,
+      blocked_until: row.blockedUntil,
+      created_at: row.createdAt,
+    };
+  }
+
+  /**
+   * Retorna o bloqueio mais recente para o identificador,
+   * independentemente de estar ativo ou expirado (REQ-12).
+   * Usado para deteccao de bloqueios expirados que precisam ser removidos.
+   * Rastreabilidade: T-44 · T-46
+   */
+  async findAnyBlock(identifier: string): Promise<LoginBlock | null> {
+    const rows = await db
+      .select()
+      .from(loginBlocks)
+      .where(eq(loginBlocks.identifier, identifier))
+      .orderBy(loginBlocks.blockedUntil, "desc")
       .limit(1);
 
     if (rows.length === 0) return null;
