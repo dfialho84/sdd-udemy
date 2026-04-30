@@ -420,7 +420,7 @@
 
 ### T-39: Cobrir IT-5 — `LoginAttemptRepository` ciclo completo de bloqueio
 
-- [ ] Escrever teste de integração para o ciclo completo de `DrizzleLoginAttemptRepository`: `createBlock`, `findActiveBlock` (retorna bloqueio), expirar o `blocked_until`, `findActiveBlock` (retorna null após expiração).
+- [x] Escrever teste de integração para o ciclo completo de `DrizzleLoginAttemptRepository`: `createBlock`, `findActiveBlock` (retorna bloqueio), expirar o `blocked_until`, `findActiveBlock` (retorna null após expiração).
 
 **Rastreabilidade:** REQ-9 · REQ-12 · NFR-4
 **Depende de:** —

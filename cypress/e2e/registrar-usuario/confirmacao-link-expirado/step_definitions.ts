@@ -41,7 +41,7 @@ After({ tags: "@gh4" }, () => {
  */
 Given(
   "que um visitante possui um cadastro com status {string} e cujo link de confirmacao foi gerado ha mais de 24 horas",
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   (_status: string) => {
     // Setup ja realizado pelo hook Before — inicializa contexto do Cypress com failOnStatusCode: false
     // pois a rota raiz pode nao existir no ambiente de teste de API
