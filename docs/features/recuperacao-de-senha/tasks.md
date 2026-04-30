@@ -46,7 +46,7 @@
 
 ### T-03: Criar entidade de dominio PasswordResetToken
 
-- [ ] Criar entidade pura `PasswordResetToken` na camada Domain com propriedades: `tokenHash`, `expiresAt`, `usedAt` e `userId`. Implementar metodo `isExpired(): boolean` que retorna `true` quando `expiresAt <= now`. Implementar metodo `isUsed(): boolean` que retorna `true` quando `usedAt` nao e null. Implementar metodo `compareHash(plainToken: string): boolean` que calcula SHA-256 do token fornecido e compara com `tokenHash`. Nenhuma dependencia externa.
+- [x] Criar entidade pura `PasswordResetToken` na camada Domain com propriedades: `tokenHash`, `expiresAt`, `usedAt` e `userId`. Implementar metodo `isExpired(): boolean` que retorna `true` quando `expiresAt <= now`. Implementar metodo `isUsed(): boolean` que retorna `true` quando `usedAt` nao e null. Implementar metodo `compareHash(plainToken: string): boolean` que calcula SHA-256 do token fornecido e compara com `tokenHash`. Nenhuma dependencia externa.
 
 **Rastreabilidade:** REQ-4 · NFR-3 · REQ-12 · REQ-6
 **Depende de:** --
