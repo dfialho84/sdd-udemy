@@ -45,6 +45,16 @@ const loginBlocks = mysqlTable("login_blocks", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Schema para password_reset_tokens (T-30: GH-1 recuperacao de senha)
+const passwordResetTokens = mysqlTable("password_reset_tokens", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  userId: varchar("user_id", { length: 36 }).notNull(),
+  tokenHash: varchar("token_hash", { length: 255 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Instancia Drizzle reutilizavel para as tasks do Cypress
 const DB_URL = process.env.DATABASE_URL ?? "mysql://kanban:kanban@localhost:3306/kanban_db";
 const db = drizzle(DB_URL);
@@ -429,6 +439,43 @@ export default defineConfig({
             (row) => row.success === false && new Date(row.createdAt) >= since,
           );
           return failuresInWindow.length;
+        },
+
+        // T-30: Insere usuario active para testes E2E de recuperacao de senha (GH-1)
+        async seedActiveUserForPasswordReset({
+          userId,
+          username,
+          email,
+        }: {
+          userId: string;
+          username: string;
+          email: string;
+        }) {
+          // Remove usuario pre-existente (evita unique constraint)
+          await db.delete(users).where(eq(users.id, userId));
+          await db.delete(users).where(eq(users.username, username));
+          await db.delete(users).where(eq(users.email, email));
+
+          // Insere usuario active com hash stub (nao precisa de senha valida para este cenario)
+          await db.insert(users).values({
+            id: userId,
+            name: `Usuario GH1 Password Reset`,
+            username,
+            email,
+            passwordHash: "$argon2id$v=19$m=65536,t=3,p=2$stubhash",
+            birthDate: new Date("1990-01-01"),
+            status: "active",
+          });
+
+          return { userId, username, email };
+        },
+
+        // T-30: Remove usuario de teste pelo id (cleanup pos-GH-1)
+        async cleanupPasswordResetTestUser({ userId }: { userId: string }) {
+          // Remove tokens antes do usuario (FK constraint)
+          await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+          await db.delete(users).where(eq(users.id, userId));
+          return null;
         },
       });
 

@@ -31,7 +31,7 @@ export default function EsqueciSenhaPage() {
   async function onSubmit(data: EsqueciSenhaFormValues) {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/password-reset/request", {
+      const response = await fetch("/api/auth/password-reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: data.email }),

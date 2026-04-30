@@ -408,7 +408,7 @@
 
 ### T-30: Implementar teste E2E para GH-1 "Solicitar recuperacao com email valido"
 
-- [ ] Implementar step definitions para o cenario GH-1: navegar para `/login`, clicar em "Esqueci a senha", verificar formulario com campo de email, preencher email valido e submeter, verificar resposta 200 com mensagem generica. Setup: usuario cadastrado ativo no banco.
+- [x] Implementar step definitions para o cenario GH-1: navegar para `/login`, clicar em "Esqueci a senha", verificar formulario com campo de email, preencher email valido e submeter, verificar resposta 200 com mensagem generica. Setup: usuario cadastrado ativo no banco.
 
 **Rastreabilidade:** Scenario: "Solicitar recuperacao com email valido" · REQ-1 · REQ-2 · REQ-3
 **Depende de:** --
