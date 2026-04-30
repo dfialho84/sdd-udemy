@@ -690,7 +690,7 @@
 
 ### T-63: Cobrir PT-3 — SLA de entrega do email de aviso
 
-- [ ] Implementar verificação automatizada que registra o timestamp da requisição de login com senha incorreta e consulta a API do Mailhog em intervalos de 30 segundos, verificando que o email de aviso é entregue em até 5 minutos.
+- [x] Implementar verificação automatizada que registra o timestamp da requisição de login com senha incorreta e consulta a API do Mailhog em intervalos de 30 segundos, verificando que o email de aviso é entregue em até 5 minutos.
 
 **Rastreabilidade:** NFR-8
 **Depende de:** T-52
