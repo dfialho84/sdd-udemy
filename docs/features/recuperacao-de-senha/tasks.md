@@ -100,7 +100,7 @@
 
 ### T-08: Criar interface IEmailService (Port de saida)
 
-- [ ] Criar interface `IEmailService` na camada Domain com metodo `sendPasswordReset(email: string, token: string): Promise<void>`. O contrato nao deve depender de implementacao de envio (SMTP, API, etc.). O token em texto plano e passado para montagem do link pelo adapter.
+- [x] Criar interface `IEmailService` na camada Domain com metodo `sendPasswordReset(email: string, token: string): Promise<void>`. O contrato nao deve depender de implementacao de envio (SMTP, API, etc.). O token em texto plano e passado para montagem do link pelo adapter.
 
 **Rastreabilidade:** REQ-5
 **Depende de:** --
