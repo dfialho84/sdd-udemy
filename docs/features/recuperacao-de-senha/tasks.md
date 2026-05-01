@@ -510,7 +510,7 @@
 
 ### T-40: Implementar teste de seguranca ST-2: Prevencao de reutilizacao de token
 
-- [ ] Implementar teste conforme test-strategy.md: realizar redefinicao bem-sucedida com token valido (resposta 200). Tentar reutilizar o mesmo token (chamar POST /confirm novamente). Verificar que segunda tentativa retorna 410 com code TOKEN_INVALID. Verificar que used_at foi preenchido no banco.
+- [x] Implementar teste conforme test-strategy.md: realizar redefinicao bem-sucedida com token valido (resposta 200). Tentar reutilizar o mesmo token (chamar POST /confirm novamente). Verificar que segunda tentativa retorna 410 com code TOKEN_INVALID. Verificar que used_at foi preenchido no banco.
 
 **Rastreabilidade:** NFR-4 · REQ-6
 **Depende de:** --

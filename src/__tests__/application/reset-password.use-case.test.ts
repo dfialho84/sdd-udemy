@@ -4,6 +4,7 @@
 
 import {
   ResetPasswordUseCase,
+  TokenAlreadyUsedError,
   TokenExpiredError,
   TokenInvalidError,
   WeakPasswordError,
@@ -240,7 +241,7 @@ describe("UT-11: ResetPasswordUseCase.execute() — token ja utilizado (REQ-6 ·
     );
 
     await expect(useCase.execute("used-token", STRONG_PASSWORD)).rejects.toThrow(
-      TokenInvalidError,
+      TokenAlreadyUsedError,
     );
     expect(updatePassword).not.toHaveBeenCalled();
     expect(invalidateAllSessions).not.toHaveBeenCalled();

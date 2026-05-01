@@ -29,6 +29,15 @@ export class TokenInvalidError extends Error {
   }
 }
 
+export class TokenAlreadyUsedError extends Error {
+  readonly code = "TOKEN_INVALID" as const;
+
+  constructor() {
+    super("O link de recuperacao e invalido");
+    this.name = "TokenAlreadyUsedError";
+  }
+}
+
 export class WeakPasswordError extends Error {
   readonly code = "WEAK_PASSWORD" as const;
   readonly criteria: string[];
@@ -119,7 +128,7 @@ export class ResetPasswordUseCase {
     }
 
     if (found.isUsed()) {
-      throw new TokenInvalidError();
+      throw new TokenAlreadyUsedError();
     }
 
     // 2. Validar forca da senha (REQ-8)

@@ -8,6 +8,7 @@ import {
   ResetPasswordUseCase,
   TokenExpiredError,
   TokenInvalidError,
+  TokenAlreadyUsedError,
   WeakPasswordError,
 } from "@/application/use-cases/reset-password.use-case";
 import { buildResetPasswordUseCase } from "./deps";
@@ -102,6 +103,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (error instanceof TokenInvalidError) {
       return errorResponse(404, "TOKEN_INVALID", error.message, requestId);
     }
+    if (error instanceof TokenAlreadyUsedError) {
+      return errorResponse(410, "TOKEN_INVALID", error.message, requestId);
+    }
+
     if (error instanceof TokenExpiredError) {
       return errorResponse(410, "TOKEN_EXPIRED", error.message, requestId);
     }
