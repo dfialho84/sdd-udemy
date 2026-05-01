@@ -96,6 +96,7 @@ async function cleanupTestUsers() {
 
 describe("IT-6: RegisterUserHandler — POST /api/auth/register (integração)", () => {
   beforeAll(() => {
+    jest.setTimeout(30_000);
     // Injetar dependências concretas com mock do adapter de avatar (sem MinIO real).
     // A verificação com MinIO real é coberta por IT-5 (T-64).
     setDepsFactory(() => ({

@@ -520,7 +520,7 @@
 
 ### T-41: Implementar teste de seguranca ST-3: Rate limiting por IP
 
-- [ ] Implementar teste conforme test-strategy.md: enviar 5 requisicoes do mesmo IP (200), enviar 6a requisicao (429). Verificar log de auditoria com evento de bloqueio. Enviar requisicao de IP diferente apos bloqueio do primeiro — deve retornar 200 (bloqueio por IP, nao global).
+- [x] Implementar teste conforme test-strategy.md: enviar 5 requisicoes do mesmo IP (200), enviar 6a requisicao (429). Verificar log de auditoria com evento de bloqueio. Enviar requisicao de IP diferente apos bloqueio do primeiro — deve retornar 200 (bloqueio por IP, nao global).
 
 **Rastreabilidade:** NFR-5 · REQ-16
 **Depende de:** --
@@ -530,7 +530,7 @@
 
 ### T-42: Implementar teste de seguranca ST-4: Token nao exposto em logs, respostas ou erros
 
-- [ ] Implementar teste conforme test-strategy.md: apos solicitacao com email valido, verificar que logs de auditoria nao contem token em texto plano. Apos tentativa com token invalido, verificar que mensagem de erro nao ecoa o token recebido. Verificar que nenhum campo de resposta de nenhum endpoint contem o token completo.
+- [x] Implementar teste conforme test-strategy.md: apos solicitacao com email valido, verificar que logs de auditoria nao contem token em texto plano. Apos tentativa com token invalido, verificar que mensagem de erro nao ecoa o token recebido. Verificar que nenhum campo de resposta de nenhum endpoint contem o token completo.
 
 **Rastreabilidade:** NFR-3
 **Depende de:** --
@@ -540,7 +540,7 @@
 
 ### T-43: Implementar teste de seguranca ST-5: Invalidacao de sessoes ativas apos redefinicao
 
-- [ ] Implementar teste conforme test-strategy.md: criar sessao ativa para usuario antes da redefinicao. Executar POST /confirm com sucesso. Tentar usar token de sessao anterior em requisicao autenticada — verificar 401. Verificar que multiplas sessoes sao todas invalidadas.
+- [x] Implementar teste conforme test-strategy.md: criar sessao ativa para usuario antes da redefinicao. Executar POST /confirm com sucesso. Tentar usar token de sessao anterior em requisicao autenticada — verificar 401. Verificar que multiplas sessoes sao todas invalidadas.
 
 **Rastreabilidade:** REQ-10
 **Depende de:** --
@@ -552,7 +552,7 @@
 
 ### T-44: Implementar teste de performance PT-1: Latencia do endpoint POST /api/auth/password-reset/confirm (p95)
 
-- [ ] Implementar benchmark conforme test-strategy.md: 100 requisicoes sequenciais com tokens unicos pre-criados. Medir p95 do tempo de resposta do endpoint confirm (validacao de token, atualizacao de senha, invalidacao de sessoes). Threshold: p95 <= 500ms. Usar autocannon ou k6 contra servidor em modo de teste com banco real.
+- [x] Implementar benchmark conforme test-strategy.md: 100 requisicoes sequenciais com tokens unicos pre-criados. Medir p95 do tempo de resposta do endpoint confirm (validacao de token, atualizacao de senha, invalidacao de sessoes). Threshold: p95 <= 500ms. Usar autocannon ou k6 contra servidor em modo de teste com banco real.
 
 **Rastreabilidade:** NFR-2
 **Depende de:** --
@@ -562,7 +562,7 @@
 
 ### T-45: Implementar teste de performance PT-2: Tempo de disparo do envio de email (p95)
 
-- [ ] Implementar benchmark conforme test-strategy.md: 50 execucoes com emails distintos. Medir intervalo entre resposta HTTP do endpoint request e chamada ao EmailServiceAdapter disparando o envio. Threshold: disparo em <= 5s para 95% dos casos. Usar stub de email instrumentado com timestamp de chamada.
+- [x] Implementar benchmark conforme test-strategy.md: 50 execucoes com emails distintos. Medir intervalo entre resposta HTTP do endpoint request e chamada ao EmailServiceAdapter disparando o envio. Threshold: disparo em <= 5s para 95% dos casos. Usar stub de email instrumentado com timestamp de chamada.
 
 **Rastreabilidade:** NFR-1
 **Depende de:** --

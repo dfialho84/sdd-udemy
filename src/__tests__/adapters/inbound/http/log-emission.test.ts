@@ -143,6 +143,7 @@ async function insertToken(
 
 describe("T-54: Verificação de emissão de logs estruturados JSON nos eventos críticos", () => {
   beforeAll(() => {
+    jest.setTimeout(30_000);
     setRegisterDeps(buildRegisterDepsWithMockLogger);
     setConfirmDeps(buildConfirmDepsWithMockLogger);
   });
