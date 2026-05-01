@@ -500,7 +500,7 @@
 
 ### T-39: Implementar teste de seguranca ST-1: Prevencao de enumeracao de contas
 
-- [ ] Implementar teste conforme test-strategy.md: enviar POST /request para email cadastrado e nao cadastrado. Verificar que ambas as respostas sao identicas em status HTTP (200) e body. Medir diferenca de tempo de resposta: p95 dos dois conjuntos deve ter diferenca < 50ms (anti-enumeracao temporal).
+- [x] Implementar teste conforme test-strategy.md: enviar POST /request para email cadastrado e nao cadastrado. Verificar que ambas as respostas sao identicas em status HTTP (200) e body. Medir diferenca de tempo de resposta: p95 dos dois conjuntos deve ter diferenca < 50ms (anti-enumeracao temporal).
 
 **Rastreabilidade:** NFR-3 · REQ-14
 **Depende de:** --
