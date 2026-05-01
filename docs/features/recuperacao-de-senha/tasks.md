@@ -458,7 +458,7 @@
 
 ### T-35: Implementar teste E2E para GH-6 "Solicitar recuperacao com email inexistente"
 
-- [ ] Implementar step definitions para o cenario GH-6: submeter POST /api/auth/password-reset/request com email nao cadastrado, verificar resposta 200 (nao 404), verificar mensagem generica, verificar link para cadastro, verificar que email nao foi enviado (stub). Setup: email nao cadastrado no banco.
+- [x] Implementar step definitions para o cenario GH-6: submeter POST /api/auth/password-reset/request com email nao cadastrado, verificar resposta 200 (nao 404), verificar mensagem generica, verificar link para cadastro, verificar que email nao foi enviado (stub). Setup: email nao cadastrado no banco.
 
 **Rastreabilidade:** Scenario: "Solicitar recuperacao com email inexistente" · REQ-2 · REQ-14 · REQ-15
 **Depende de:** --

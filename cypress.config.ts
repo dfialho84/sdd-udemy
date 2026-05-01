@@ -4,7 +4,7 @@ import { addCucumberPreprocessorPlugin } from "@badeball/cypress-cucumber-prepro
 import createEsbuildPlugin from "@badeball/cypress-cucumber-preprocessor/esbuild";
 import { drizzle } from "drizzle-orm/mysql2";
 import { mysqlTable, varchar, mysqlEnum, date, timestamp, boolean } from "drizzle-orm/mysql-core";
-import { eq } from "drizzle-orm";
+import { eq, gte } from "drizzle-orm";
 import argon2 from "argon2";
 import crypto from "node:crypto";
 
@@ -565,6 +565,16 @@ export default defineConfig({
             .where(eq(passwordResetTokens.userId, userId))
             .limit(1);
           return rows[0] ?? null;
+        },
+
+        // T-35: Conta tokens de redefinicao criados apos um timestamp (GH-6 — anti-enumeracao)
+        async countPasswordResetTokensSince({ since }: { since: number }) {
+          const sinceDate = new Date(since);
+          const rows = await db
+            .select({ id: passwordResetTokens.id })
+            .from(passwordResetTokens)
+            .where(gte(passwordResetTokens.createdAt, sinceDate));
+          return rows.length;
         },
       });
 
