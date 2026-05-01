@@ -576,6 +576,15 @@ export default defineConfig({
             .where(gte(passwordResetTokens.createdAt, sinceDate));
           return rows.length;
         },
+
+        // T-36: Atualiza expires_at do token para o passado (GH-7 — simular token expirado)
+        async updateTokenExpiresAt({ userId, expiresAt }: { userId: string; expiresAt: string }) {
+          await db
+            .update(passwordResetTokens)
+            .set({ expiresAt: new Date(expiresAt) })
+            .where(eq(passwordResetTokens.userId, userId));
+          return null;
+        },
       });
 
       return config;
