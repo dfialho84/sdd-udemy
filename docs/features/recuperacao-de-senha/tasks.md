@@ -468,7 +468,7 @@
 
 ### T-36: Implementar teste E2E para GH-7 "Acessar link expirado"
 
-- [ ] Implementar step definitions para o cenario GH-7: criar token no banco com expires_at no futuro, atualizar expires_at para o passado via SQL direto, chamar GET /validate, verificar resposta 410 com code TOKEN_EXPIRED, verificar opcao de solicitar novo link. Setup: token inserido no banco.
+- [x] Implementar step definitions para o cenario GH-7: criar token no banco com expires_at no futuro, atualizar expires_at para o passado via SQL direto, chamar GET /validate, verificar resposta 410 com code TOKEN_EXPIRED, verificar opcao de solicitar novo link. Setup: token inserido no banco.
 
 **Rastreabilidade:** Scenario: "Acessar link expirado" · REQ-12
 **Depende de:** --
@@ -478,7 +478,7 @@
 
 ### T-37: Implementar teste E2E para GH-8 "Acessar link com token invalido"
 
-- [ ] Implementar step definitions para o cenario GH-8: preparar token malformado (string curta) e token com formato valido mas inexistente no banco. Chamar GET /validate em ambos os casos. Verificar resposta 400 (malformado) ou 404 (nao encontrado) com code TOKEN_INVALID. Setup: banco sem token usado.
+- [x] Implementar step definitions para o cenario GH-8: preparar token malformado (string curta) e token com formato valido mas inexistente no banco. Chamar GET /validate em ambos os casos. Verificar resposta 400 (malformado) ou 404 (nao encontrado) com code TOKEN_INVALID. Setup: banco sem token usado.
 
 **Rastreabilidade:** Scenario: "Acessar link com token invalido" · REQ-13
 **Depende de:** --
