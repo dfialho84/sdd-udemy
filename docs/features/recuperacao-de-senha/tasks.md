@@ -438,7 +438,7 @@
 
 ### T-33: Implementar teste E2E para GH-4 "Redefinir senha com senhas nao coincidentes"
 
-- [ ] Implementar step definitions para o cenario GH-4: criar token valido, chamar GET /validate com sucesso, submeter POST /confirm com password !== passwordConfirm, verificar resposta 400 com code PASSWORDS_MISMATCH, verificar que formulario permanece visivel. Step "Given que o usuario acessou a tela de redefinicao" reutilizavel com GH-5.
+- [x] Implementar step definitions para o cenario GH-4: criar token valido, chamar GET /validate com sucesso, submeter POST /confirm com password !== passwordConfirm, verificar resposta 400 com code PASSWORDS_MISMATCH, verificar que formulario permanece visivel. Step "Given que o usuario acessou a tela de redefinicao" reutilizavel com GH-5.
 
 **Rastreabilidade:** Scenario: "Redefinir senha com senhas nao coincidentes" · REQ-9
 **Depende de:** --
@@ -448,7 +448,7 @@
 
 ### T-34: Implementar teste E2E para GH-5 "Redefinir senha com senha fraca"
 
-- [ ] Implementar step definitions para o cenario GH-5: criar token valido, submeter POST /confirm com senha invalida (ex: "12345678"), verificar resposta 400 com code WEAK_PASSWORD e criterios nao atendidos, verificar que formulario permanece visivel. Reutilizar step "Given que o usuario acessou a tela de redefinicao" de GH-4.
+- [x] Implementar step definitions para o cenario GH-5: criar token valido, submeter POST /confirm com senha invalida (ex: "12345678"), verificar resposta 400 com code WEAK_PASSWORD e criterios nao atendidos, verificar que formulario permanece visivel. Reutilizar step "Given que o usuario acessou a tela de redefinicao" de GH-4.
 
 **Rastreabilidade:** Scenario: "Redefinir senha com senha fraca" · REQ-8
 **Depende de:** --
