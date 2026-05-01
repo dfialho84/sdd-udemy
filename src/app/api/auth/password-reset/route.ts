@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { emailSchema } from "@/lib/validation/email.schema";
+import { AuditLogger } from "@/lib/observability/audit-logger";
 import { buildRequestPasswordResetUseCase, getRateLimiter } from "./deps";
 
 // ─── Erro padronizado (constitution.md regra 5) ───────────────────────
@@ -82,6 +83,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const rateCheck = await rateLimiter.check(ip);
 
     if (!rateCheck.allowed) {
+      // Registra bloqueio em log de auditoria (NFR-6)
+      const auditLogger = new AuditLogger();
+      await auditLogger.log({
+        type: "PASSWORD_RESET_RATE_LIMIT_BLOCKED",
+        timestamp: new Date(),
+        ip,
+        metadata: { requestId, reason: "RATE_LIMIT_EXCEEDED" },
+      });
+
       return errorResponse(
         429,
         "RATE_LIMIT_EXCEEDED",

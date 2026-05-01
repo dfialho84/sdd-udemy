@@ -488,7 +488,7 @@
 
 ### T-38: Implementar teste E2E para GH-9 "Exceder limite de tentativas de solicitacao"
 
-- [ ] Implementar step definitions para o cenario GH-9: chamar POST /request 5 vezes com mesmo IP, verificar 200 em todas. Chamar 6a vez, verificar resposta 429 com code RATE_LIMIT_EXCEEDED e mensagem de 1 hora. Verificar que caso de uso nao foi invocado na 6a tentativa. Verificar log de auditoria registrado. Setup: IP fixo via header X-Forwarded-For; adapter com estado zerado.
+- [x] Implementar step definitions para o cenario GH-9: chamar POST /request 5 vezes com mesmo IP, verificar 200 em todas. Chamar 6a vez, verificar resposta 429 com code RATE_LIMIT_EXCEEDED e mensagem de 1 hora. Verificar que caso de uso nao foi invocado na 6a tentativa. Verificar log de auditoria registrado. Setup: IP fixo via header X-Forwarded-For; adapter com estado zerado.
 
 **Rastreabilidade:** Scenario: "Exceder limite de tentativas de solicitacao" · REQ-16 · NFR-5 · NFR-6
 **Depende de:** --

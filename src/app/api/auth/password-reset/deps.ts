@@ -40,8 +40,19 @@ export function buildRequestPasswordResetUseCase(): RequestPasswordResetUseCase 
   });
 }
 
+let rateLimiterInstance: IRateLimitService | null = null;
+
 export function getRateLimiter(): IRateLimitService {
-  return new PasswordResetRateLimiter();
+  if (!rateLimiterInstance) {
+    rateLimiterInstance = new PasswordResetRateLimiter();
+  }
+  return rateLimiterInstance;
+}
+
+export function resetRateLimiter(): void {
+  if (rateLimiterInstance instanceof PasswordResetRateLimiter) {
+    rateLimiterInstance.resetAll();
+  }
 }
 
 export function setDepsFactory(factory: () => RequestDeps): void {
